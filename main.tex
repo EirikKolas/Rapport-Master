@@ -1,0 +1,60 @@
+% !TeX root = ./main.tex
+%% Master Thesis Template
+%% Please update the specification through this link: https://daim.idi.ntnu.no/howto_thesis_submission.pdf
+
+% \documentclass[pdftex,10pt,b5paper,twoside,openany]{book}
+\documentclass[pdftex,10pt,b5paper,twoside]{book}
+\usepackage[lmargin=25mm,rmargin=25mm,tmargin=27mm,bmargin=30mm]{geometry}
+\usepackage[titletoc]{appendix}
+\input{docsetup.tex}
+\input{glossary.tex}
+
+\begin{document}
+
+%% PART 1
+%%The title page will be automatically generated and added by the DAIM system
+% \input{titlepage.tex}
+\input{dedication.tex}		%% Optional
+
+%% PART 2
+\input{abstract.tex}		%% Optional
+\input{preface.tex}		    %% Optional
+\input{list.tex}			%% Generate TOC, list of tables, and list of figures automatically
+\input{abbreviations.tex}	%% Optional
+
+%% PART 3 -- The Chapters
+\input{chapter1.tex}		%% Edit each chapter
+\input{chapter2.tex}
+\input{chapter3.tex}
+\input{chapter4.tex}
+\input{chapter5.tex}
+% \input{chapter6.tex}
+
+%% PART 4
+\input{references.tex}	    %% Edit your references in "mylib.bib"
+\begin{appendices}
+    \appendix
+    % \crefalias{section}{appendix}
+    \input{appendix.tex}		%% Optional
+\end{appendices}
+
+\end{document}
+
+% 1. Introduction
+% 1.1  Motivation
+% 1.2 Previous work
+% 1.3 Problem Description
+% Kort bullet points om problem description
+% 4. Contributions
+% 5 Outline of the report
+
+%. 2 Background Theory (Grunnteori som er relevant for det jeg har jobba med
+% 3 Metode og utvikling som jeg har gjort
+% 4 Simuleringsresultater + diskusjon
+% Oppsummerende diskusjon til slutt
+% 5 Conclusions and future work
+% Kort oppsummering (1-1.5 sider)
+% .5 - 1 sider future work (bullet points
+
+% referanseliste + appendix
+% test

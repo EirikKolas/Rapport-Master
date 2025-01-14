@@ -1,0 +1,112 @@
+% !TeX root = main.tex
+\usepackage[parfill]{parskip}
+\usepackage{setspace}
+\usepackage[export]{adjustbox}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{xargs}
+\usepackage{subcaption}
+\usepackage[pdftex,dvipsnames]{xcolor}
+\usepackage{transparent}
+\usepackage{svg}
+\usepackage[colorinlistoftodos,prependcaption,textsize=small]{todonotes}
+\usepackage[Lenny]{fncychap}
+\usepackage[pdftex,bookmarks=true]{hyperref}
+\usepackage[pdftex]{hyperref}
+\hypersetup{
+    colorlinks,%
+    citecolor=black,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=black
+}
+\usepackage[capitalize]{cleveref}
+\crefname{equation}{}{}
+\crefname{figure}{Figure}{figures}
+\crefname{section}{Section}{sections}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{fancyhdr}
+\usepackage{times}
+%\usepackage[intoc]{nomencl}
+%\renewcommand{\nomname}{List of Abbreviations}
+%\makenomenclature
+\usepackage{natbib}
+\usepackage[style=altsuper4col,acronym]{glossaries}
+% \usepackage[style=altsuper4colheader]{glossaries}
+\usepackage{float}
+\usepackage[section,below,above]{placeins} % Prevent floats from floating into the next section
+%\floatstyle{boxed} 
+\restylefloat{figure}
+
+% ShareLaTeX does not support glossaries now. Sorry...
+%\usepackage[number=none]{glossary}
+%\makeglossary
+%\newglossarytype[abr]{abbr}{abt}{abl}
+%\newglossarytype[alg]{acronyms}{acr}{acn}
+%\newcommand{\abbrname}{Abbreviations} 
+%\newcommand{\shortabbrname}{Abbreviations}
+%%\makeabbr
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\renewcommand*\contentsname{Table of Contents}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter.\ #1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+\renewcommand{\headrulewidth}{0.1ex}
+\renewcommand{\footrulewidth}{0.1ex}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[LE,RO]{\thepage}\renewcommand{\headrulewidth}{0ex}}
+
+\makeglossaries
+
+\DeclareMathOperator{\asin}{asin}
+\DeclareMathOperator{\acos}{acos}
+\DeclareMathOperator{\atan}{atan}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,
+bordercolor=red,#1]{#2}} \newcommandx{\change}[2][1=]{\todo[linecolor=blue,
+backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+\newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!
+25,bordercolor=OliveGreen,#1]{#2}}
+\newcommandx{\improvement}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,
+bordercolor=Plum,#1]{#2}} 
+\newcommandx{\emil}[2][1=]{\todo[linecolor=LimeGreen,backgroundcolor=LimeGreen!25,
+bordercolor=LimeGreen,#1]{#2}}
+\newcommandx{\morten}[2][1=]{\todo[linecolor=ForestGreen,backgroundcolor=ForestGreen!25,
+bordercolor=ForestGreen,#1]{#2}}
+
+
+%% Algorithm
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc} % set input encoding
+\usepackage{varwidth}
+
+\usepackage{newfloat}
+\DeclareFloatingEnvironment[placement=htp]{algorithm}
+\usepackage{algpseudocodex}
+
+\usepackage{caption}
+\let\globalcaption=\caption
+\usepackage{setspace}
+
+% Change caption format
+\captionsetup[algorithm]{
+    belowskip=0pt,
+    aboveskip=0pt,
+    % font=scriptsize,
+    justification = raggedright,
+    singlelinecheck = false,
+    name = Algorithm
+}
+
+% Change width of horizontal lines 
+\makeatletter
+\newcommand{\algrule}[1][1pt]{\par\vskip.5\baselineskip\hrule height#1\vskip.5\baselineskip}
+\makeatother

@@ -1,5 +1,62 @@
 % !TeX root = main.tex
 %===================================== CHAP 2 =================================
 
-\chapter{Background Theory}\label{chap:background-theory}
+\chapter{Background Theory}
+\label{chap:background-theory}
 
+\section{B-splines}
+
+\subsection{Definition}
+The following definition is from \cite{Grimstad2016}:
+A B-spline $f: \mathbb R \rightarrow \mathbb R$ is given by $n$ \emph{B-spline coefficients} $\mathbf c = [c_j]_{j=0}^{n-1}$ and $n+p+1$ knots $\mathbf t = [t_j]_{j=0}^{n+p}$ as
+
+\begin{equation}\label{eq:b-spline-def}
+    f(x ; \mathbf{c}, p, \mathbf{t})=\sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)=\mathbf{c}^{\top} \mathbf{B}_{\mathrm{p}, \mathrm{t}}(\mathrm{x})
+\end{equation}
+
+When the parameters $\mathbf{c}, p$, and $\mathbf{t}$ are given by the context $f(x ; \mathbf{c}, p, \mathbf{t})$ is simply denoted $f(x)$. In \cref{eq:b-spline-def}, $\mathbf{B}_{p, \mathbf{t}}(x)=\left[B_{j, p, \mathbf{t}}(x)\right]_{j=0}^{n-1}$ is a column vector of $p$ th-degree B-spline basis functions, defined by the recurrence relation
+
+\begin{equation}    
+    \begin{aligned}
+        B_{j, p, \mathbf{t}}(x) & =\frac{x-t_j}{t_{j+p}-t_j} B_{j, p-1, \mathrm{t}}(x)+\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}} B_{j+1, p-1, \mathrm{t}}(x) \\
+        B_{j, 0, \mathbf{t}}(x) & = 
+        \begin{cases}
+            1, & t_j \leq x<t_{j+1} \\
+            0, & \text { otherwise }
+        \end{cases}
+    \end{aligned}
+\end{equation}
+
+
+\subsection{Useful Properties}
+Property 1
+
+(Nonnegativity) $B_{j, p, \mathbf{t}}(x) \geq 0$ for all $j, p$, and $x$.
+
+Property 2
+
+(Local support) $B_{j, p, \mathbf{t}}(x)=0$ for all $x \notin\left[t_j, t_{j+p+1}\right.)$.
+
+Property 3
+
+(Partition of unity) $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1$ for all $x \in\left[t_i, t_{i+1}\right.)$.
+
+
+\subsection{Operations on B-splines}
+
+Derivative
+
+Anti-Derivative and Integrals
+
+Knot Insertion and Degree Elevation
+
+Addition ans subtraction - Linear
+
+Multiplication of univariate B-splines
+
+Inner Product
+
+
+These operations allows for the formulation of constraints $\mathbf g(x)$ that exploit the convex hull property to gaurantee constraint-satisfaction for all $x$.
+
+\section{Semi-infinite Programming}

@@ -26,6 +26,7 @@
 }
 \usepackage[capitalize]{cleveref}
 \crefname{equation}{}{}
+\Crefname{equation}{Equation}{}
 \crefname{figure}{Figure}{figures}
 \crefname{section}{Section}{sections}
 \usepackage[font=small,labelfont=bf]{caption}
@@ -110,3 +111,9 @@ bordercolor=ForestGreen,#1]{#2}}
 \makeatletter
 \newcommand{\algrule}[1][1pt]{\par\vskip.5\baselineskip\hrule height#1\vskip.5\baselineskip}
 \makeatother
+
+
+
+% Add numbered property environment
+\newtheorem{property}{Property}
+\crefname{property}{Property}{properties}

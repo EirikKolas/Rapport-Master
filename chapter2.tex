@@ -6,41 +6,64 @@
 
 \section{B-splines}
 
-\subsection{Definition}
+\subsection{Definition and Properties}
 The following definition is from \cite{Grimstad2016}:
-A B-spline $f: \mathbb R \rightarrow \mathbb R$ is given by $n$ \emph{B-spline coefficients} $\mathbf c = [c_j]_{j=0}^{n-1}$ and $n+p+1$ knots $\mathbf t = [t_j]_{j=0}^{n+p}$ as
+A B-spline $f: \mathbb R \rightarrow \mathbb R^m$ is given by $n$ \emph{B-spline coefficients} $\mathbf c = [c_j]_{j=0}^{n-1}$ and $n+p+1$ non-decreasing knots $\mathbf t = [t_j]_{j=0}^{n+p}$ as follows:
 
 \begin{equation}\label{eq:b-spline-def}
     f(x ; \mathbf{c}, p, \mathbf{t})=\sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)=\mathbf{c}^{\top} \mathbf{B}_{\mathrm{p}, \mathrm{t}}(\mathrm{x})
 \end{equation}
 
-When the parameters $\mathbf{c}, p$, and $\mathbf{t}$ are given by the context $f(x ; \mathbf{c}, p, \mathbf{t})$ is simply denoted $f(x)$. In \cref{eq:b-spline-def}, $\mathbf{B}_{p, \mathbf{t}}(x)=\left[B_{j, p, \mathbf{t}}(x)\right]_{j=0}^{n-1}$ is a column vector of $p$ th-degree B-spline basis functions, defined by the recurrence relation
+When the parameters $\mathbf{c}, p$, and $\mathbf{t}$ are given by the context, $f(x ; \mathbf{c}, p, \mathbf{t})$ is simply denoted $f(x)$. The sequence of coefficients $c_j\in\mathbb R^m$ are the control points of the B-spline, and the degree $p$ is a non-negative integer. The B-spline basis functions $B_{j, p, \mathbf{t}}(x)$ are defined recursively in terms of the degree $p$ and the knots $\mathbf t$ to form the column vector $\mathbf{B}_{p, \mathbf{t}}(x) = [B_{j, p, \mathbf{t}}(x)]_{j=0}^{n-1}$. 
+in \cref{eq:b-spline-def}. These B-spline basis functions are defined as
 
-\begin{equation}    
-    \begin{aligned}
-        B_{j, p, \mathbf{t}}(x) & =\frac{x-t_j}{t_{j+p}-t_j} B_{j, p-1, \mathrm{t}}(x)+\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}} B_{j+1, p-1, \mathrm{t}}(x) \\
+\begin{subequations}\label{eq:b-spline-recurrence}
+    \begin{align}
+        B_{j, p, \mathbf{t}}(x) & =\frac{x-t_j}{t_{j+p}-t_j} B_{j, p-1, \mathrm{t}}(x)+\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}} B_{j+1, p-1, \mathrm{t}}(x) \label{eq:b-spline-recurrence-p} \\
         B_{j, 0, \mathbf{t}}(x) & = 
         \begin{cases}
             1, & t_j \leq x<t_{j+1} \\
             0, & \text { otherwise }
-        \end{cases}
-    \end{aligned}
+        \end{cases} \label{eq:b-spline-recurrence-0}
+    \end{align}
+\end{subequations}
+
+From \cref{eq:b-spline-recurrence}, it is clear that the B-spline basis functions are all non-negative, as \cref{eq:b-spline-recurrence-0} gives $B_{j, 0, \mathbf{t}}(x) \geq 0 \quad\forall j, x$, and the coefficients $\frac{x-t_j}{t_{j+p}-t_j}$ and $\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}}$
+in \cref{eq:b-spline-recurrence-p} are also non-negative $\forall x, j\in[0,\dots,n-1], p, \mathbf t$ by the non-decreasing condition on the knots $\mathbf t$. 
+
+\Cref{eq:b-spline-recurrence} also implies $B_{j, p, \mathbf{t}}(x)$ has local support on the interval $\left[t_j, t_{j+p+1}\right.)$, as $\text{supp}(B_{j, 0, \mathbf{t}}) = \left[t_j, t_{j+1}\right.)$ and each for each of the $p$ recurrence steps in \cref{eq:b-spline-recurrence-p}, one knot is added to the support of the basis function. It can also be shown that the B-spline basis functions are a partition of unity, i.e. $\sum_{j=0}^{n-1} B_{j, p, \mathbf{t}}(x) = 1 \quad\forall x \in \left[t_0, t_{n+p}\right.)$ \citep{deBoor1978practicalguide}.
+
+These properties are well-documented in the literature and are summarized as follows:
+\begin{property}[Nonnegativity]\label{b-prop:nonnegativity}
+    $B_{j, p, \mathbf{t}}(x) \geq 0 \quad\forall j, p$, and $x$.
+\end{property}
+
+\begin{property}[Local support]\label{b-prop:localsupport}
+    $B_{j, p, \mathbf{t}}(x)=0 \quad\forall x \notin\left[t_j, t_{j+p+1}\right.)$.
+\end{property}
+
+\begin{property}[Partition of unity]\label{b-prop:partitionofunity}
+    $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1 \quad\forall x \in\left[t_i, t_{i+1}\right.)$.
+\end{property}
+
+Together, \cref{b-prop:nonnegativity,b-prop:partitionofunity} imply that the B-spline in \cref{eq:b-spline-def} is a convex combination of the coefficients $\mathbf c$. This means that the B-spline is always within the convex hull of the control points $\mathbf c$.
+
+\begin{property}[Convex hull]\label{b-prop:convexhull}
+    $f(x) \in \text{conv}(\mathbf{c})
+    \quad\forall x$.
+\end{property}
+
+The convex hull $\text{conv}(\mathbf{c})$ of a set of points $\mathbf{c} = \{c_1, c_2, \ldots, c_n\}$ is defined as the set of all convex combinations of the points. Mathematically, it is given by:
+
+\begin{equation}
+    \text{conv}(\mathbf{c}) = \left\{ \sum_{i=1}^n \lambda_i c_i \mid \lambda_i \geq 0, \sum_{i=1}^n \lambda_i = 1 \right\}
 \end{equation}
 
-
-\subsection{Useful Properties}
-Property 1
-
-(Nonnegativity) $B_{j, p, \mathbf{t}}(x) \geq 0$ for all $j, p$, and $x$.
-
-Property 2
-
-(Local support) $B_{j, p, \mathbf{t}}(x)=0$ for all $x \notin\left[t_j, t_{j+p+1}\right.)$.
-
-Property 3
-
-(Partition of unity) $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1$ for all $x \in\left[t_i, t_{i+1}\right.)$.
-
+In the context of optimization, this property is useful for formulating constraints, as a constraint on a B-spline function can be enforced by imposing them on the control points \citep{mercy2017spline}. 
+\begin{equation}
+    a \leq c_i \leq b \quad \forall i\in\{1,2,\ldots,n\} \implies a \leq f(x) \leq b \quad \forall x
+\end{equation}
+Here $a$ and $b$ are constants of appropriate dimensions and the $\leq$ operator is applied element-wise.
 
 \subsection{Operations on B-splines}
 

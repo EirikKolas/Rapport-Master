@@ -1,26 +1,27 @@
 % !TeX root = main.tex
 %===================================== CHAP 2 =================================
 
-\chapter{Background Theory}
-\label{chap:background-theory}
+\chapter{B-spline Theory}
+\label{chap:b-spline-theory}
 
-\section{B-splines}
+The goal of this chapter is to provide enough information about B-splines to understand the subsequent chapters in addition to being able to implement B-splines in a numerical optimization context from scratch. The chapter will cover the definition of B-splines, their properties, and operations that can be performed on them.
 
-\subsection{Definition and Properties}
+\section{Definition and Properties}
 The following definition is from \cite{Grimstad2016}:
-A B-spline $f: \mathbb R \rightarrow \mathbb R^m$ is given by $n$ \emph{B-spline coefficients} $\mathbf c = [c_j]_{j=0}^{n-1}$ and $n+p+1$ non-decreasing knots $\mathbf t = [t_j]_{j=0}^{n+p}$ as follows:
+A B-spline $f: \mathbb R \rightarrow \mathbb R$ is given by $n$ \emph{B-spline coefficients} $\mathbf c = [c_j]_{j=0}^{n-1}$ and $n+p+1$ non-decreasing knots $\mathbf t = [t_j]_{j=0}^{n+p}$ as follows:
 
 \begin{equation}\label{eq:b-spline-def}
     f(x ; \mathbf{c}, p, \mathbf{t})=\sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)=\mathbf{c}^{\top} \mathbf{B}_{\mathrm{p}, \mathrm{t}}(\mathrm{x})
 \end{equation}
 
-When the parameters $\mathbf{c}, p$, and $\mathbf{t}$ are given by the context, $f(x ; \mathbf{c}, p, \mathbf{t})$ is simply denoted $f(x)$. The sequence of coefficients $c_j\in\mathbb R^m$ are the control points of the B-spline, and the degree $p$ is a non-negative integer. The B-spline basis functions $B_{j, p, \mathbf{t}}(x)$ are defined recursively in terms of the degree $p$ and the knots $\mathbf t$ to form the column vector $\mathbf{B}_{p, \mathbf{t}}(x) = [B_{j, p, \mathbf{t}}(x)]_{j=0}^{n-1}$. 
+When the parameters $\mathbf{c}, p$, and $\mathbf{t}$ are given by the context, $f(x ; \mathbf{c}, p, \mathbf{t})$ is simply denoted $f(x)$. The sequence of coefficients $c_j$ control the shape of the B-spline, and the degree $p$ is a non-negative integer. The B-spline basis functions $B_{j, p, \mathbf{t}}(x)$ are defined recursively in terms of the degree $p$ and the knots $\mathbf t$ to form the column vector $\mathbf{B}_{p, \mathbf{t}}(x) = [B_{j, p, \mathbf{t}}(x)]_{j=0}^{n-1}$. 
 in \cref{eq:b-spline-def}. These B-spline basis functions are defined as
 
 \begin{subequations}\label{eq:b-spline-recurrence}
     \begin{align}
         B_{j, p, \mathbf{t}}(x) & =\frac{x-t_j}{t_{j+p}-t_j} B_{j, p-1, \mathrm{t}}(x)+\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}} B_{j+1, p-1, \mathrm{t}}(x) \label{eq:b-spline-recurrence-p} \\
-        B_{j, 0, \mathbf{t}}(x) & = 
+        B_{j, 0, \mathbf{t}}(x) & := 
+        \mathbf 1_{\left[t_j, t_{j+1}\right)} =
         \begin{cases}
             1, & t_j \leq x<t_{j+1} \\
             0, & \text { otherwise }
@@ -31,7 +32,9 @@ in \cref{eq:b-spline-def}. These B-spline basis functions are defined as
 From \cref{eq:b-spline-recurrence}, it is clear that the B-spline basis functions are all non-negative, as \cref{eq:b-spline-recurrence-0} gives $B_{j, 0, \mathbf{t}}(x) \geq 0 \quad\forall j, x$, and the coefficients $\frac{x-t_j}{t_{j+p}-t_j}$ and $\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}}$
 in \cref{eq:b-spline-recurrence-p} are also non-negative $\forall x, j\in[0,\dots,n-1], p, \mathbf t$ by the non-decreasing condition on the knots $\mathbf t$. 
 
-\Cref{eq:b-spline-recurrence} also implies $B_{j, p, \mathbf{t}}(x)$ has local support on the interval $\left[t_j, t_{j+p+1}\right.)$, as $\text{supp}(B_{j, 0, \mathbf{t}}) = \left[t_j, t_{j+1}\right.)$ and each for each of the $p$ recurrence steps in \cref{eq:b-spline-recurrence-p}, one knot is added to the support of the basis function. It can also be shown that the B-spline basis functions are a partition of unity, i.e. $\sum_{j=0}^{n-1} B_{j, p, \mathbf{t}}(x) = 1 \quad\forall x \in \left[t_0, t_{n+p}\right.)$ \citep{deBoor1978practicalguide}.
+\Cref{eq:b-spline-recurrence} also implies $B_{j, p, \mathbf{t}}(x)$ has local support on the interval $\left[t_j, t_{j+p+1}\right.)$. This can be seen by noting that the support of $B_{j, 0, \mathbf{t}}$, $\text{supp}(B_{j, 0, \mathbf{t}}) = \left[t_j, t_{j+1}\right.)$ and for each of the $p$ recurrence steps in \cref{eq:b-spline-recurrence-p}, the support is extended by one knot. 
+
+It can also be shown that the B-spline basis functions are a partition of unity, i.e. $\sum_{j=0}^{n-1} B_{j, p, \mathbf{t}}(x) = 1 \quad\forall x \in \left[t_0, t_{n+p}\right.)$ \citep{deBoor1978practicalguide}.
 
 These properties are well-documented in the literature and are summarized as follows:
 \begin{property}[Nonnegativity]\label{b-prop:nonnegativity}
@@ -45,6 +48,15 @@ These properties are well-documented in the literature and are summarized as fol
 \begin{property}[Partition of unity]\label{b-prop:partitionofunity}
     $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1 \quad\forall x \in\left[t_i, t_{i+1}\right.)$.
 \end{property}
+
+So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by simply allowing the coefficients $c_j$ to be vectors. In this case the B-spline is a vector-valued function $f: \mathbb R \rightarrow \mathbb R^m$. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} still hold, as the basis functions themselves are still scalar-valued.
+
+\begin{figure}
+    \centering
+    \includesvg[width=0.8\textwidth]{fig/b-spline/knots + control points.svg}
+    \caption{A 3rd degree B-spline (full) with 4 control points, knot vector \raggedright{$\mathbf t = [0, 0, 0, 0.5, 1, 1, 1]$} and corresponding control polygon (dashed).}
+    \label{fig:b-spline-knots-control-points}
+\end{figure}
 
 Together, \cref{b-prop:nonnegativity,b-prop:partitionofunity} imply that the B-spline in \cref{eq:b-spline-def} is a convex combination of the coefficients $\mathbf c$. This means that the B-spline is always within the convex hull of the control points $\mathbf c$.
 
@@ -65,21 +77,68 @@ In the context of optimization, this property is useful for formulating constrai
 \end{equation}
 Here $a$ and $b$ are constants of appropriate dimensions and the $\leq$ operator is applied element-wise.
 
-\subsection{Operations on B-splines}
-
-Derivative
-
-Anti-Derivative and Integrals
-
-Knot Insertion and Degree Elevation
-
-Addition ans subtraction - Linear
-
-Multiplication of univariate B-splines
-
-Inner Product
+\section{Operations on B-splines}
+From the recursive relation in \cref{eq:b-spline-recurrence} it follows that the B-spline basis functions are piecewise polynomial functions in $x$ of degree $p$. This property makes it clear that all polynomial operations on B-splines will result in a new B-spline. Some 
 
 
-These operations allows for the formulation of constraints $\mathbf g(x)$ that exploit the convex hull property to gaurantee constraint-satisfaction for all $x$.
+\subsection{Differentiation}
+Given a B-spline $f(x) = \sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)$,
+the derivative of the B-spline can be computed by simply differencing its coefficients. 
+\begin{equation}\label{eq:b-spline-derivative}
+    \frac{d}{dx} f(x) = (p-1) \sum_{j=1}^{n-1} \frac{c_j-c_{j-1}}{t_{j+p-1}-t_j} B_{j, p-1, \boldsymbol{\tau}}(x)
+\end{equation}
+where $\boldsymbol{\tau} = [t_j]_{j=1}^{n+p-1}$ is the same knot vector as $\mathbf{t}$, but with the first and last knot removed in order to maintain \todo{finn ord som passer}.
 
-\section{Semi-infinite Programming}
+The new coefficients can be expressed using a transformation matrix $\mathbf T_D$ such that $\mathbf{c}' = \mathbf T_D \mathbf{c}$, where $\mathbf{c}'$ is the vector of coefficients of the derivative B-spline. The transformation matrix is defined as an $(n-1) \times n$ matrix with elements:
+
+\begin{equation}
+    \mathbf T_D = (p-1) \begin{bmatrix}
+        q_{1,p,\mathbf{t}}^{-1} & -q_{1,p,\mathbf{t}}^{-1} & 0 & \cdots & 0 \\
+        0 & q_{2,p,\mathbf{t}}^{-1} & -q_{2,p,\mathbf{t}}^{-1} & \cdots & 0 \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        0 & \cdots & 0 & q_{n-1,p,\mathbf{t}}^{-1} & -q_{n-1,p,\mathbf{t}}^{-1} 
+    \end{bmatrix},
+\end{equation}
+where $q_{j,p,\mathbf{t}} = (t_{j+p+1}-t_j)$.
+
+\subsection{Integration}
+Given a degree $p$ and initial knot vector $\mathbf t$. \cref{eq:b-spline-derivative}, gives
+\begin{equation}\label{eq:b-spline-integral-pre}
+    p \sum_{j=1}^{n-1} \gamma_j B_{j, p, \boldsymbol{t}}(x) 
+    = \frac{d}{dx} \sum_{j=0}^{n-1} c_j B_{j, p+1, \boldsymbol{\tau}}(x),
+\end{equation}
+given that
+\begin{equation}
+    \gamma_j = \frac{c_j-c_{j-1}}{t_{j+p}-t_j},
+\end{equation}
+holds. Here, $\boldsymbol{\tau}$ is now the knot vector $\mathbf{t}$ with 1 additional knot at the beginning and end. Defining
+the new coefficients on the right hand side of \cref{eq:b-spline-integral-pre} can be expressed as 
+\begin{equation}\label{eq:b-spline-integral-coefficients}
+    c_j = c_{j-1} + \gamma_j \frac{t_{j+p}-t_j}{p}.
+\end{equation}
+This then gives the general anti-derivative of a B-spline as
+\begin{equation}\label{eq:b-spline-integral}
+    \int f(x) dx = \sum_{j=0}^{n-1} c_j B_{j, p+1, \boldsymbol{\tau}}(x)
+\end{equation}
+where $[c_j]_1^{n-1}$ are given by \cref{eq:b-spline-integral-coefficients} and $c_0$ is a constant of integration and $[\gamma_j]_1^{n-1}$ are the original coefficients of $f(x)$. In matrix form, the transformation matrix $\mathbf T_I$ is defined as an $(n+1) \times n$ matrix with elements:
+\begin{equation}
+    \mathbf T_I = \begin{bmatrix}
+        c_0 & 0 & 0 & \cdots & 0 \\
+        c_0 & \frac{q_{1,p-1,\mathbf{t}}}{p} & 0 & \cdots & 0 \\
+        c_0 & \frac{q_{1,p-1,\mathbf{t}}}{p} & \frac{q_{2,p-1,\mathbf{t}}}{p} & \cdots & 0 \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        c_0 & \frac{q_{1,p-1,\mathbf{t}}}{p} & \frac{q_{2,p-1,\mathbf{t}}}{p} & \cdots & \frac{q_{n-1,p-1,\mathbf{t}}}{p}
+    \end{bmatrix},
+\end{equation}
+
+\subsection{Knot Insertion and Degree Elevation}
+
+
+\subsection{Addition and Subtraction - Linear}
+
+\subsection{Multiplication of Univariate B-splines}
+
+\subsection{Inner Product}
+
+
+

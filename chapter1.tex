@@ -11,17 +11,18 @@
 
 \section{Problem Description}
 \begin{itemize}
-    \item 
-    Robust COLREGS compliant motion planning. 
-    \item 
-    Stable solution for multiple target ships.  
+    \item Robust COLREGS aware motion planning. 
+    \item Stable solution for multiple target ships.  
+    \item The algorithm should be real-time capable.
 
 \end{itemize}
 \section{Contributions}
 
 \begin{itemize}
-    \item COLREGs-aware optimal control problem for path following with dynamic and static constraints using B-splines.
-    \item A global solution is found using the global optimazation method in \citep{Grimstad2016}
+    \item A comprehensive introduction to B-spline curves and their use in trajectory planning, covering the steps from mathematical representation to a practical implementation.
+    \item COLREGs-aware optimal control problem formulation for path following with dynamic and static constraints using B-splines. The problem is parameterized in a cross-track and along-track coordinate system relative to the reference path, using mixed integer programming to ensure passage on the COLREGs-compliant side of the target ships.
+    \item A global solution is found using the global optimazation method in \citep{Grimstad2016}, and the robustness is verified using batch simulations in different scenarios.
+    \item The B-spline based algorithm provides a sparse parameterization of the path while maintaining smoothness and constraint satisfaction. Additionally, the side to pass the target ships on are decided using one decision variable each, ensuring few integer variables in the optimization problem.
 \end{itemize}
 
 

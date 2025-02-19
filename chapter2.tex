@@ -21,7 +21,7 @@ in \cref{eq:b-spline-def}. These B-spline basis functions are defined as
     \begin{align}
         B_{j, p, \mathbf{t}}(x) & =\frac{x-t_j}{t_{j+p}-t_j} B_{j, p-1, \mathrm{t}}(x)+\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}} B_{j+1, p-1, \mathrm{t}}(x) \label{eq:b-spline-recurrence-p} \\
         B_{j, 0, \mathbf{t}}(x) & := 
-        \mathbf 1_{\left[t_j, t_{j+1}\right)} =
+        \mathbf 1_{[t_j, t_{j+1})} =
         \begin{cases}
             1, & t_j \leq x<t_{j+1} \\
             0, & \text { otherwise }
@@ -89,17 +89,20 @@ the derivative of the B-spline can be computed by simply differencing its coeffi
 \end{equation}
 where $\boldsymbol{\tau} = [t_j]_{j=1}^{n+p-1}$ is the same knot vector as $\mathbf{t}$, but with the first and last knot removed in order to maintain \todo{finn ord som passer}.
 
-The new coefficients can be expressed using a transformation matrix $\mathbf T_D$ such that $\mathbf{c}' = \mathbf T_D \mathbf{c}$, where $\mathbf{c}'$ is the vector of coefficients of the derivative B-spline. The transformation matrix is defined as an $(n-1) \times n$ matrix with elements:
+The new coefficients can be expressed using a transformation matrix $\mathbf T_D$ such that $\mathbf{c}_D = \mathbf T_D \mathbf{c}$, where $\mathbf{c}_D$ is the vector of coefficients of the derivative B-spline. The transformation matrix is defined as an $(n-1) \times n$ matrix with elements:
 
 \begin{equation}
     \mathbf T_D = (p-1) \begin{bmatrix}
-        q_{1,p,\mathbf{t}}^{-1} & -q_{1,p,\mathbf{t}}^{-1} & 0 & \cdots & 0 \\
-        0 & q_{2,p,\mathbf{t}}^{-1} & -q_{2,p,\mathbf{t}}^{-1} & \cdots & 0 \\
+        -q_{1,p-1,\mathbf{t}}^{-1} & q_{1,p-1,\mathbf{t}}^{-1} & 0 & \cdots & 0 \\
+        0 & -q_{2,p-1,\mathbf{t}}^{-1} & q_{2,p-1,\mathbf{t}}^{-1} & \cdots & 0 \\
         \vdots & \vdots & \vdots & \ddots & \vdots \\
-        0 & \cdots & 0 & q_{n-1,p,\mathbf{t}}^{-1} & -q_{n-1,p,\mathbf{t}}^{-1} 
+        0 & \cdots & 0 & -q_{n-1,p-1,\mathbf{t}}^{-1} & q_{n-1,p-1,\mathbf{t}}^{-1} 
     \end{bmatrix},
 \end{equation}
-where $q_{j,p,\mathbf{t}} = (t_{j+p+1}-t_j)$.
+where $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$.
+
+
+The denominator $t_{j+p}-t_j$ in \cref{eq:b-spline-derivative} illustrates the continuity of the B-spline with respect to knot multiplicity. If a knot is repeated more than $p$ times, the denominator will be zero, and the derivative is not defined at that knot.
 
 \subsection{Integration}
 Given a degree $p$ and initial knot vector $\mathbf t$. \cref{eq:b-spline-derivative}, gives
@@ -111,7 +114,7 @@ given that
 \begin{equation}
     \gamma_j = \frac{c_j-c_{j-1}}{t_{j+p}-t_j},
 \end{equation}
-holds. Here, $\boldsymbol{\tau}$ is now the knot vector $\mathbf{t}$ with 1 additional knot at the beginning and end. Defining
+holds. Here, $\boldsymbol{\tau}$ is now the knot vector $\mathbf{t}$ with 1 additional knot at the beginning and end. Now
 the new coefficients on the right hand side of \cref{eq:b-spline-integral-pre} can be expressed as 
 \begin{equation}\label{eq:b-spline-integral-coefficients}
     c_j = c_{j-1} + \gamma_j \frac{t_{j+p}-t_j}{p}.
@@ -120,19 +123,45 @@ This then gives the general anti-derivative of a B-spline as
 \begin{equation}\label{eq:b-spline-integral}
     \int f(x) dx = \sum_{j=0}^{n-1} c_j B_{j, p+1, \boldsymbol{\tau}}(x)
 \end{equation}
-where $[c_j]_1^{n-1}$ are given by \cref{eq:b-spline-integral-coefficients} and $c_0$ is a constant of integration and $[\gamma_j]_1^{n-1}$ are the original coefficients of $f(x)$. In matrix form, the transformation matrix $\mathbf T_I$ is defined as an $(n+1) \times n$ matrix with elements:
+where $[c_j]_1^{n-1}$ are given by \cref{eq:b-spline-integral-coefficients} and $c_0$ is the constant of integration and $[\gamma_j]_1^{n-1}$ are the original coefficients of $f(x)$. In matrix form, the coefficients of the integral B-spline can be expressed as
+\begin{equation}\label{eq:b-spline-integral-matrix}
+    \mathbf{c}_I = \mathbf T_I \mathbf{c} + \mathbf{c}_0,
+\end{equation}
+where
 \begin{equation}
-    \mathbf T_I = \begin{bmatrix}
-        c_0 & 0 & 0 & \cdots & 0 \\
-        c_0 & \frac{q_{1,p-1,\mathbf{t}}}{p} & 0 & \cdots & 0 \\
-        c_0 & \frac{q_{1,p-1,\mathbf{t}}}{p} & \frac{q_{2,p-1,\mathbf{t}}}{p} & \cdots & 0 \\
-        \vdots & \vdots & \vdots & \ddots & \vdots \\
-        c_0 & \frac{q_{1,p-1,\mathbf{t}}}{p} & \frac{q_{2,p-1,\mathbf{t}}}{p} & \cdots & \frac{q_{n-1,p-1,\mathbf{t}}}{p}
-    \end{bmatrix},
+    \mathbf T_I = \frac{1}{p}\begin{bmatrix}
+        0 & 0 & \cdots & 0 \\
+        q_{1,p,\mathbf{t}} & 0 & \cdots & 0 \\
+        q_{1,p,\mathbf{t}} & q_{2,p,\mathbf{t}} & \cdots & 0 \\
+        \vdots & \vdots & \ddots & \vdots \\
+        q_{1,p,\mathbf{t}} & q_{2,p,\mathbf{t}} & \cdots & q_{n-1,p,\mathbf{t}}
+    \end{bmatrix},\quad
+    \mathbf{c}_0 = \begin{bmatrix}
+        c_0 \\
+        c_0 \\
+        \vdots \\
+        c_0
+    \end{bmatrix}
 \end{equation}
 
-\subsection{Knot Insertion and Degree Elevation}
+and, $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$ still.
 
+\subsection{Knot Insertion}
+In order to perform binary operations on spline functions (e.g. addition), it is convenient to have them be represeted in the same basis, e.g., have the same degree and knot vector. If this is not the case, the B-splines must be transformed to a common form. This motivates the need for operations that can transform B-splines between different bases without changing the shape of the curve.
+
+Knot insertion is, as the name suggests, the operation of extending the knot vector by adding new knots. Given a spline function $f(x) = \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x)$ with knot vector $\mathbf t$, the goal is to express the same function in a new basis $\mathbf{B}_{p, \boldsymbol{\tau}}(x)$ with knot vector $\boldsymbol{\tau}$.
+
+A simple example of a knot vector $\mathbf t$ and a refinement $\boldsymbol \tau$ is given by
+$$
+    \mathbf t = [0, 0, 0, 1, 2, 3, 5, 5, 5], \quad \boldsymbol \tau = [0, 0, 0, 1, 1, 1, 2, 2, 3, 4, 5, 5, 5].
+$$
+Here two knots have been added at 1, one at 2, and one at 4.
+
+One can use  a recurrence relation for discrete B-splines to find the transformation matrix.
+
+There are more sophisticated algorithms that avoid computing zero-valued basis functions, such as the Oslo algorithms, but that is beyond the scope of this thesis.
+
+\subsection{Degree Elevation}
 
 \subsection{Addition and Subtraction - Linear}
 

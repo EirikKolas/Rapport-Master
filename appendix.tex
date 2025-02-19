@@ -1,4 +1,38 @@
+% !TeX root = main.tex
+%=================================== APPENDIX ===============================
 
 
-% \chapter{Feasible Heading Given Linear Velocity Constraints}
+\chapter{\textbf{Homogeneous Integration Matrix}}
 
+\section{\textbf{Introduction}}
+
+To correctly define the integration operator $\mathbf{T}_I$ in matrix form while preserving degrees of freedom, we extend the system using homogeneous coordinates. This ensures that integration does not lose information due to the absence of a known constant term.
+
+\section{\textbf{Homogeneous Representation of Integration}}
+
+In \cref{eq:b-spline-integral-matrix}, the coefficients of the integral B-spline are expressed as
+\begin{equation}
+    \mathbf{c}_I = \mathbf T_I \mathbf{c}_D + \mathbf{c}_0.
+\end{equation}
+By prepending the coefficient vector $\mathbf{c}_D$ with 1, we can write this whole expression in homogeneous form as
+\begin{equation}
+    \mathbf{c}_I = 
+    \underbrace{
+        \begin{bmatrix}
+            \mathbf{c}_0 & \mathbf T_I
+        \end{bmatrix} 
+    } _{\mathbf{\tilde T}_I}
+    \underbrace{
+        \begin{bmatrix}
+            1 \\
+            \mathbf{c}_D
+        \end{bmatrix}
+    }_{\mathbf{\tilde c}_D}.
+\end{equation}
+
+By inverting the transformation matrix $\mathbf{\tilde T}_I$, we can express the derivative coefficients as
+\begin{equation}
+    \mathbf{\tilde c}_D = \mathbf{\tilde T}_I^{-1} \mathbf{c}_I.
+\end{equation}
+
+Proof:

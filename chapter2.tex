@@ -1,10 +1,11 @@
 % !TeX root = main.tex
 %===================================== CHAP 2 =================================
 
-\chapter{B-spline Theory}
+\chapter{The B-spline}
 \label{chap:b-spline-theory}
+This chapter will introduce B-splines, a type of spline function that is widely used in computer graphics, computer-aided design, and numerical optimization. B-splines are piecewise polynomial functions that are defined recursively in terms of a degree $p$ and a set of so-called knots. The chapter will cover the definition of B-splines, their properties, and common operations that can be performed on them. 
 
-The goal of this chapter is to provide enough information about B-splines to understand the subsequent chapters in addition to being able to implement B-splines in a numerical optimization context from scratch. The chapter will cover the definition of B-splines, their properties, and operations that can be performed on them.
+Important properties and operations on B-splines are presented, providing discussion and intuition around results and theorems without going into the full mathematical details. The goal is to provide the reader with the necessary background to understand the subsequent chapters in addition to being able to implement B-splines in a numerical optimization context from scratch.
 
 \section{Definition and Properties}
 The following definition is from \cite{Grimstad2016}:
@@ -81,7 +82,7 @@ Here $a$ and $b$ are constants of appropriate dimensions and the $\leq$ operator
 From the recursive relation in \cref{eq:b-spline-recurrence} it follows that the B-spline basis functions are piecewise polynomial functions in $x$ of degree $p$. This property makes it clear that all polynomial operations on B-splines will result in a new B-spline. Some 
 
 
-\subsection{Differentiation}
+\section{Differentiation}
 Given a B-spline $f(x) = \sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)$,
 the derivative of the B-spline can be computed by simply differencing its coefficients. 
 \begin{equation}\label{eq:b-spline-derivative}
@@ -104,7 +105,7 @@ where $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$.
 
 The denominator $t_{j+p}-t_j$ in \cref{eq:b-spline-derivative} illustrates the continuity of the B-spline with respect to knot multiplicity. If a knot is repeated more than $p$ times, the denominator will be zero, and the derivative is not defined at that knot.
 
-\subsection{Integration}
+\section{Integration}
 Given a degree $p$ and initial knot vector $\mathbf t$. \cref{eq:b-spline-derivative}, gives
 \begin{equation}\label{eq:b-spline-integral-pre}
     p \sum_{j=1}^{n-1} \gamma_j B_{j, p, \boldsymbol{t}}(x) 
@@ -123,7 +124,7 @@ This then gives the general anti-derivative of a B-spline as
 \begin{equation}\label{eq:b-spline-integral}
     \int f(x) dx = \sum_{j=0}^{n-1} c_j B_{j, p+1, \boldsymbol{\tau}}(x)
 \end{equation}
-where $[c_j]_1^{n-1}$ are given by \cref{eq:b-spline-integral-coefficients} and $c_0$ is the constant of integration and $[\gamma_j]_1^{n-1}$ are the original coefficients of $f(x)$. In matrix form, the coefficients of the integral B-spline can be expressed as
+where $[c_j]_{j=1}^{n-1}$ are given by \cref{eq:b-spline-integral-coefficients}, $c_0$ is the constant of integration and $[\gamma_j]_1^{n-1}$ are the original coefficients of $f(x)$. In matrix form, the coefficients of the integral B-spline can be expressed as
 \begin{equation}\label{eq:b-spline-integral-matrix}
     \mathbf{c}_I = \mathbf T_I \mathbf{c} + \mathbf{c}_0,
 \end{equation}
@@ -145,9 +146,11 @@ where
 \end{equation}
 
 and, $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$ still.
+As integration and differentiation are inverse operations, it should come as no surprise that the transformation matrices $\mathbf T_I$ and $\mathbf T_D$ are similirly related. This is explored further in \cref{app:homogeneous-integration-matrix}.
 
-\subsection{Knot Insertion}
-In order to perform binary operations on spline functions (e.g. addition), it is convenient to have them be represeted in the same basis, e.g., have the same degree and knot vector. If this is not the case, the B-splines must be transformed to a common form. This motivates the need for operations that can transform B-splines between different bases without changing the shape of the curve.
+
+\section{Knot Insertion}
+In order to perform binary operations on spline functions (e.g. addition), it is convenient to have them be represeted in the same basis, e.g., have the same degree and knot vector. If this is not the case, the B-splines must be transformed to a common form. This motivates the need for operations that can transform B-splines between different bases without changing the shape of the curve. This explanations in this section are based on lecture notes from \cite{bspline-uio}.
 
 Knot insertion is, as the name suggests, the operation of extending the knot vector by adding new knots. Given a spline function $f(x) = \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x)$ with knot vector $\mathbf t$, the goal is to express the same function in a new basis $\mathbf{B}_{p, \boldsymbol{\tau}}(x)$ with knot vector $\boldsymbol{\tau}$.
 
@@ -157,17 +160,72 @@ $$
 $$
 Here two knots have been added at 1, one at 2, and one at 4.
 
-One can use  a recurrence relation for discrete B-splines to find the transformation matrix.
+To relate the coefficients of the B-spline in the original basis to the refined basis, one can use so-called discrete B-splines \citep{Cohen1980}. \todo{Forklar subskript $\tau$} The B-spline basis $B_{j, p, \boldsymbol{\tau}}(x)$ and its discrete counterpart $\alpha_{j,p, \boldsymbol{\tau}, \mathbf t}(i)$ are related by setting $x = t_{i+p}$ for $B_{j, d, \boldsymbol{\tau}}(x)$ in \cref{eq:b-spline-recurrence-p}, 
+\begin{equation}\label{eq:discrete-b-spline-recurrence-p}
+    \alpha_{j,p}(i) = B_{j, p, \boldsymbol{\tau}}(t_{i+p}) = 
+    \frac{t_{i+p}-\tau_j}{\tau_{j+p}-\tau_j} \alpha_{j,p-1}(i) + \frac{\tau_{j+1+p}-t_{i+p}}{\tau_{j+1+p}-\tau_{j+1}} \alpha_{j+1,p-1}(i)
+\end{equation}
+and 
+\begin{equation}\label{eq:discrete-b-spline-recurrence-0}
+\alpha_{j,0}(i) = B_{j, 0, \boldsymbol{\tau}}(t_{i}) = \mathbf 1_{[\tau_j, \tau_{j+1})}(t_{i})
+\end{equation}
+ in \cref{eq:b-spline-recurrence-0}. Notice that $t_i$ is used instead of $t_{i+p}$ in \cref{eq:discrete-b-spline-recurrence-0}. Intuitively, this can be thought of as weighting the contributions from the knot vector $\mathbf t$ to the new knot vector $\boldsymbol \tau$ in the interval of the new knot span $[\tau_j, \tau_{j+1})$. The interested reader is referred to \cite{bspline-uio} for a more detailed derivation.
 
-There are more sophisticated algorithms that avoid computing zero-valued basis functions, such as the Oslo algorithms, but that is beyond the scope of this thesis.
+With the discrete B-splines, the transformation matrix $\mathbf A$ that relates the coefficients of the B-spline in the original basis $\mathbf c$ to the coefficients in the refined basis $\mathbf c'$ can now be found. Each row $A_i$ of $\mathbf A = [A_i^T]_0^{m-1}$ is given by selecting a non-empty knot span $[\tau_\mu, \tau_{\mu+1})$ in the refined basis and computing the corresponding discrete B-spline values $\alpha_{j,p}(\mu)$ for all $j$ in the original basis, which is summarized in \cref{alg:knot-insertion}.
 
-\subsection{Degree Elevation}
+\begin{algorithm}
+    \caption{Naive Knot Insertion}\label{alg:knot-insertion}
+    \begin{algorithmic}
+        \For {$i = 0$ to $m-1$}
+        \State Determine $\mu$ such that $t_i \in [\tau_\mu, \tau_{\mu+1})$
+        \State Compute $A_i = [\alpha_{j,p}(\mu)]_{j=0}^{n-1}$
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
 
-\subsection{Addition and Subtraction - Linear}
+This is also the core idea of the Oslo algorithm \citep{Cohen1980}, for which \cref{alg:knot-insertion} is a simplified version. The complete Oslo algorithm avoids computing zero-valued coefficients in the transformation matrix $\mathbf A$ by making use of the fact that $\alpha_{j,p}(\mu) = 0$ if $t_i \notin [\tau_{\mu-p}, \tau_{\mu})$. The full Oslo algorithm is then given in \cref{alg:oslo-knot-insertion}.
 
-\subsection{Multiplication of Univariate B-splines}
+\begin{algorithm}
+    \caption{Oslo Algorithm}\label{alg:oslo-knot-insertion}
+    \begin{algorithmic}
+        \For {$i = 0$ to $m-1$}
+        \State Determine $\mu$ such that $t_i \in [\tau_\mu, \tau_{\mu+1})$
+        \State Set $A_i = [A_{i,j}]_{j=0}^{n-1} = \mathbf 0$
+        \State Compute entries $[A_{i,j}]_{j=\mu-p}^\mu = [\alpha_{j,p}(\mu)]_{j=\mu-p}^{\mu}$
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
 
-\subsection{Inner Product}
+\section{Degree Elevation}
+
+The goal of degree elevation is to express a spline function $f(x) = \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x)$ in a new basis $\mathbf{B}_{p+1, \boldsymbol{\tau}}(x)$ with a higher degree $p+1$. 
+
+There are many ways to elevate the degree of a B-spline \citep{piegl1994,Prautzsch1984,lee2000degree} with different strengths and weaknesses in regards to computational complexity and implementation. one of the simpler methods to implement is developed by \cite{Cohen1986} and will be presented here.
+
+Given a knot sequence
+\begin{equation}
+    \mathbf t = \big[\underbrace{t_0, \ldots, t_0}_{p+1}, \underbrace{t_1, \ldots, t_1}_{m_1}, \ldots, \underbrace{t_k, \ldots, t_k}_{m_k}, \ldots, \underbrace{t_{n-1}, \ldots, t_{n-1}}_{p+1}\big],
+\end{equation}
+
+the continuity of the spline function is determined by its degree $p$ and knot multiplicity $m_k$ in that it has $p-m_k-1$ continuous derivatives in a neighbourhood around $t_k$ \citep{Cohen1986}.
+Since the degree-elevated B-spline represents the same spline function it should also have the same continuity. The new knot sequence $\boldsymbol \tau$ is then given by increasing the multiplicity of each knot in $\mathbf t$ by 1:
+\begin{equation}
+    \boldsymbol \tau = \big[\underbrace{t_0, \ldots, t_0}_{p+2}, \underbrace{t_1, \ldots, t_1}_{m_1+1}, \ldots, \underbrace{t_k, \ldots, t_k}_{m_k+1}, \ldots, \underbrace{t_{n-1}, \ldots, t_{n-1}}_{p+2}\big].
+\end{equation}
+
+Th
 
 
+\section{Addition and Subtraction}
+
+Finding the sum or difference of two B-splines that share the same basis is a simple task as the coefficients can just be added together:
+\begin{equation}
+    f(x) \pm g(x) = \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x) \pm \mathbf{d}^{\top} \mathbf{B}_{p, \mathbf{t}}(x) 
+    =(\mathbf{c} \pm \mathbf{d})^{\top} \mathbf{B}_{p, \mathbf{t}}(x)
+\end{equation}
+However, if the B-splines are in different bases, they must be transformed to a common basis before the addition can be performed. This section explains how to find this common basis.
+
+
+
+\section{Multiplication and Inner Product}
 

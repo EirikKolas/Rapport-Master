@@ -1,8 +1,38 @@
 % !TeX root = main.tex
 %===================================== CHAP 3 =================================
 
-\chapter{Control System Theory}\label{chap:control-system-theory}
-
-These operations allows for the formulation of constraints $\mathbf g(x)$ that exploit the convex hull property to gaurantee constraint-satisfaction for all $x$.
+\chapter{Optimal Control Theory}\label{chap:optimal-control-theory}
 
 \section{Semi-infinite Programming}\label{sec:semi-infinite-programming}
+
+Semi-infinite programming is a class of optimization problems where the objective function is defined over a finite number of variables, while the constraints are defined over an infinite number of variables \citep{Bonnans2013-gt}. The general form of a semi-infinite programming problem is given by
+\begin{equation}\label{eq:semi-infinite-programming}
+    \begin{aligned}
+        \min_{\mathbf x \in \mathbb R^n} \quad & f(\mathbf x) \\
+        \text{s.t.} \quad & g(\mathbf x, \omega) \leq 0, \quad \forall \omega \in \Omega,
+    \end{aligned}
+\end{equation}
+where $f : \mathbb R^n \to \mathbb R$ and $g : \mathbb R^n \times \Omega \to \mathbb R$ are continuous functions, and $\Omega$ is a compact metric space, usually a continuous interval. If $\Omega$ is a finite set, e.g. $\Omega = \{\omega_1,\ldots,\omega_n\}$, \cref{eq:semi-infinite-programming} is reduced to a standard non-linear programming problem, as the feasible set can then be written as $g_i(\cdot) \leq 0, i = 1,\ldots,n$, where $g_i(\cdot) := g(\cdot, \omega_i)$ \citep{Bonnans2013-gt}.
+
+An optimal control problem in its continuous form can be formulated as a semi-infinite programming problem:
+\begin{equation}\label{eq:optimal-control-problem}
+    \begin{aligned}
+        \min_{\mathbf{x}(\cdot), \mathbf{u}(\cdot)} \quad & \int_{T} J(\mathbf{x}(t), \mathbf{u}(t), t) \, dt \\
+        \text{s.t.} \quad & \dot{\mathbf{x}}(t) = \mathbf f(\mathbf{x}(t), \mathbf{u}(t), t), \quad \mathbf{x}(t_0) = \mathbf{x}_0, \\
+        & \mathbf g(\mathbf{x}(t), \mathbf{u}(t), t) \leq \mathbf 0, \quad \forall t \in T,
+    \end{aligned}
+\end{equation}
+where $T = [t_0, t_f]$ is the time interval, $\mathbf{x}(t) \in \mathbb R^{n_x}$ is the state, $\mathbf{u}(t) \in \mathbb R^{n_u}$ is the control input, $J : \mathbb R^{n_x} \times \mathbb R^{n_u} \times \mathbb R \to \mathbb R$ is the cost functional, $\mathbf f : \mathbb R^{n_x} \times \mathbb R^{n_u} \times T \to \mathbb R^{n_x}$ is the state equation, and $\mathbf g : \mathbb R^{n_x} \times \mathbb R^{n_u} \times T \to \mathbb R^{n_g}$ are the algebraic path constraints.
+
+There are two main approaches to solve semi-infinite programming problems: discretization and relaxation. Discretization methods transform the infinite-dimensional problem into a finite-dimensional one by sampling the infinite set of constraints $\Omega$ at a finite number of points $\omega_i \in \Omega, i = 1, \ldots, N$. The resulting problem can then be solved using standard optimization techniques. Relaxation methods also replace the infinite constraint set with a finite set of constraints, but instead of sampling the infinite set, they introduce auxiliary variables to approximate the infinite-dimensional problem. This is often done by writing $g(\cdot, \omega)$ and $f$ in terms of a finite-dimentional basis, such as B-splines, and then solving the resulting finite-dimensional problem \citep{Dierckx1993}. More details on these methods are given in \cref{sec:multiple-shooting,sec:b-spline-relaxation}.
+
+\section{Multiple Shooting}\label{sec:multiple-shooting}
+Multiple shooting discretizes the infinite set of constraints by splitting the time interval $T = [t_0,t_f]$ into a finite set of points $\{t_0, t_1, \ldots, t_N\}$. At each shooting node, the state and control are introduced as separate variables. The continuous dynamics are then integrated on each subinterval, typically using Runge-Kutta methods, to ensure continuity between successive nodes.
+ 
+\section{B-Spline Relaxation}\label{sec:b-spline-relaxation}
+\begin{itemize}
+    \item B-spline basis functions
+    \item Convex hull property
+    \item Conservativeness
+    \item Knot insertion
+\end{itemize}

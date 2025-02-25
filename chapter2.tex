@@ -33,9 +33,9 @@ in \cref{eq:b-spline-def}. These B-spline basis functions are defined as
 From \cref{eq:b-spline-recurrence}, it is clear that the B-spline basis functions are all non-negative, as \cref{eq:b-spline-recurrence-0} gives $B_{j, 0, \mathbf{t}}(x) \geq 0 \quad\forall j, x$, and the coefficients $\frac{x-t_j}{t_{j+p}-t_j}$ and $\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}}$
 in \cref{eq:b-spline-recurrence-p} are also non-negative $\forall x, j\in[0,\dots,n-1], p, \mathbf t$ by the non-decreasing condition on the knots $\mathbf t$. 
 
-\Cref{eq:b-spline-recurrence} also implies $B_{j, p, \mathbf{t}}(x)$ has local support on the interval $\left[t_j, t_{j+p+1}\right.)$. This can be seen by noting that the support of $B_{j, 0, \mathbf{t}}$, $\text{supp}(B_{j, 0, \mathbf{t}}) = \left[t_j, t_{j+1}\right.)$ and for each of the $p$ recurrence steps in \cref{eq:b-spline-recurrence-p}, the support is extended by one knot. 
+\Cref{eq:b-spline-recurrence} also implies $B_{j, p, \mathbf{t}}(x)$ has local support on the interval $[t_j, t_{j+p+1})$. This can be seen by noting that the support of $B_{j, 0, \mathbf{t}}$, $\text{supp}(B_{j, 0, \mathbf{t}}) = [t_j, t_{j+1})$ and for each of the $p$ recurrence steps in \cref{eq:b-spline-recurrence-p}, the support is extended by one knot. 
 
-It can also be shown that the B-spline basis functions are a partition of unity, i.e. $\sum_{j=0}^{n-1} B_{j, p, \mathbf{t}}(x) = 1 \quad\forall x \in \left[t_0, t_{n+p}\right.)$ \citep{deBoor1978practicalguide}.
+It can also be shown that the B-spline basis functions are a partition of unity, i.e. $\sum_{j=0}^{n-1} B_{j, p, \mathbf{t}}(x) = 1 \quad\forall x \in [t_0, t_{n+p})$ \citep{deBoor1978practicalguide}.
 
 These properties are well-documented in the literature and are summarized as follows:
 \begin{property}[Nonnegativity]\label{b-prop:nonnegativity}
@@ -43,11 +43,11 @@ These properties are well-documented in the literature and are summarized as fol
 \end{property}
 
 \begin{property}[Local support]\label{b-prop:localsupport}
-    $B_{j, p, \mathbf{t}}(x)=0 \quad\forall x \notin\left[t_j, t_{j+p+1}\right.)$.
+    $B_{j, p, \mathbf{t}}(x)=0 \quad\forall x \notin [t_j, t_{j+p+1})$.
 \end{property}
 
 \begin{property}[Partition of unity]\label{b-prop:partitionofunity}
-    $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1 \quad\forall x \in\left[t_i, t_{i+1}\right.)$.
+    $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1 \quad\forall x \in [t_i, t_{i+1})$.
 \end{property}
 
 So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by simply allowing the coefficients $c_j$ to be vectors. In this case the B-spline is a vector-valued function $f: \mathbb R \rightarrow \mathbb R^m$. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} still hold, as the basis functions themselves are still scalar-valued.
@@ -90,7 +90,7 @@ the derivative of the B-spline can be computed by simply differencing its coeffi
 \end{equation}
 where $\boldsymbol{\tau} = [t_j]_{j=1}^{n+p-1}$ is the same knot vector as $\mathbf{t}$, but with the first and last knot removed in order to maintain \todo{finn ord som passer}.
 
-The new coefficients can be expressed using a transformation matrix $\mathbf T_D$ such that $\mathbf{c}_D = \mathbf T_D \mathbf{c}$, where $\mathbf{c}_D$ is the vector of coefficients of the derivative B-spline. The transformation matrix is defined as an $(n-1) \times n$ matrix with elements:
+The new coefficients can be expressed using a transformation matrix $\mathbf T_D$ such that $\mathbf{c}_D = \mathbf T_D \mathbf{c}$, where $\mathbf{c}_D$ is the vector of coefficients of the derivative B-spline. The transformation matrix is then an $(n-1) \times n$ matrix with elements:
 
 \begin{equation}
     \mathbf T_D = (p-1) \begin{bmatrix}
@@ -128,7 +128,7 @@ where $[c_j]_{j=1}^{n-1}$ are given by \cref{eq:b-spline-integral-coefficients},
 \begin{equation}\label{eq:b-spline-integral-matrix}
     \mathbf{c}_I = \mathbf T_I \mathbf{c} + \mathbf{c}_0,
 \end{equation}
-where
+where $\mathbf T_I$ is an $n \times (n-1)$ matrix with elements
 \begin{equation}
     \mathbf T_I = \frac{1}{p}\begin{bmatrix}
         0 & 0 & \cdots & 0 \\
@@ -156,7 +156,7 @@ Knot insertion is, as the name suggests, the operation of extending the knot vec
 
 A simple example of a knot vector $\mathbf t$ and a refinement $\boldsymbol \tau$ is given by
 $$
-    \mathbf t = [0, 0, 0, 1, 2, 3, 5, 5, 5], \quad \boldsymbol \tau = [0, 0, 0, 1, 1, 1, 2, 2, 3, 4, 5, 5, 5].
+    \mathbf t = [0, 0, 0, 0, 1, 2, 3, 5, 5, 5, 5], \quad \boldsymbol \tau = [0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 4, 5, 5, 5, 5].
 $$
 Here two knots have been added at 1, one at 2, and one at 4.
 
@@ -209,23 +209,61 @@ Given a knot sequence
 
 the continuity of the spline function is determined by its degree $p$ and knot multiplicity $m_k$ in that it has $p-m_k-1$ continuous derivatives in a neighbourhood around $t_k$ \citep{Cohen1986}.
 Since the degree-elevated B-spline represents the same spline function it should also have the same continuity. The new knot sequence $\boldsymbol \tau$ is then given by increasing the multiplicity of each knot in $\mathbf t$ by 1:
-\begin{equation}
+\begin{equation}\label{eq:degree-elevation-knots}
     \boldsymbol \tau = \big[\underbrace{t_0, \ldots, t_0}_{p+2}, \underbrace{t_1, \ldots, t_1}_{m_1+1}, \ldots, \underbrace{t_k, \ldots, t_k}_{m_k+1}, \ldots, \underbrace{t_{n-1}, \ldots, t_{n-1}}_{p+2}\big].
 \end{equation}
 
-Th
+There are two key ideas needed do find the new coefficients:
+\begin{enumerate}
+    \item The $k$-th of the B-splines are equal to each other for all $k\in\mathbb{N}_+$.
+    \item The $p$-th derivative of the B-splines are zero.
+\end{enumerate}
+For the second point to be true, the new coefficients $\mathbf{\tilde c}$ must satisfy
+\begin{equation}
+    \frac{d^p}{dx^p} f(x) = 0 \Rightarrow \frac{d^p}{dx^p} \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x) = 
+    \frac{d^p}{dx^p} \mathbf{\tilde c}^{\top} \mathbf{B}_{p+1, \boldsymbol{\tau}}(x) = 0,
+\end{equation}
+which is only possible if $\mathbf{\tilde c}^p = \mathbf 0$. From here, the integral matrix $\mathbf T_I$ can be used to find the new coefficients $\mathbf{\tilde c}$, setting $\mathbf{\tilde c}_0^p = \mathbf 0, \mathbf{\tilde c}_0^k = \mathbf c_0^k$, and applying the integral matrix $k$ times:
+\begin{equation}\label{eq:degree-elevation-coefficients}
+    \begin{aligned}
+        \mathbf{\tilde c}^k &= \mathbf T^{k+1}_{I,\boldsymbol\tau} \mathbf{\tilde c}^{k+1} + \mathbf{c}_0^{k+1} \\
+        \mathbf{\tilde c} &= \mathbf{\tilde c}^0
+    \end{aligned}
+\end{equation}
+Here, $\mathbf T^k_{I,\boldsymbol\tau}$ is the integral matrix for the $k$-th derivative of the B-spline basis functions with knot vector $\boldsymbol\tau$, and $\mathbf{c}^k = [c_0^k]_{j=1}^{n+1-k}$ is a vector of appropriate length with all elements set to the first coefficient of the $k$-th derivative. This is summarized in \cref{alg:degree-elevation}, which is a simplified version of the degree elevation algorithm presented by \cite{lee2000degree}. \todo{forklar regular knot vector}
 
+\begin{algorithm}
+    \caption{Degree Elevation}\label{alg:degree-elevation}
+    \begin{algorithmic}
+        \State Let $\mathbf B_{p, \mathbf t}(x)$ be the B-spline basis with degree $p$ and regular knot vector $\mathbf t$, and $\mathbf B_{p+1, \boldsymbol \tau}(x)$ be the basis with $\boldsymbol \tau$ given by \cref{eq:degree-elevation-knots}.
+        \For {$k = p$ to $0$}
+            \State Compute $\mathbf{\tilde c}^k$ from \cref{eq:degree-elevation-coefficients}.
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
 
 \section{Addition and Subtraction}
 
 Finding the sum or difference of two B-splines that share the same basis is a simple task as the coefficients can just be added together:
 \begin{equation}
-    f(x) \pm g(x) = \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x) \pm \mathbf{d}^{\top} \mathbf{B}_{p, \mathbf{t}}(x) 
-    =(\mathbf{c} \pm \mathbf{d})^{\top} \mathbf{B}_{p, \mathbf{t}}(x)
+    f(x) \pm g(x) = \mathbf{c}_1^{\top} \mathbf{B}_{p, \mathbf{t}}(x) \pm \mathbf{c}_2^{\top} \mathbf{B}_{p, \mathbf{t}}(x) 
+    =(\mathbf{c}_1 \pm \mathbf{c}_2)^{\top} \mathbf{B}_{p, \mathbf{t}}(x)
 \end{equation}
-However, if the B-splines are in different bases, they must be transformed to a common basis before the addition can be performed. This section explains how to find this common basis.
+However, if the B-splines are in different bases, they must be transformed to a common basis before the addition can be performed. More formalized the problem is as follows: For the spline functions $f(x) = \mathbf{c}_1^{\top} \mathbf{B}_{p, \mathbf{t}_1}(x)$ and $g(x) = \mathbf{c}_2^{\top} \mathbf{B}_{q, \mathbf{t}_2}(x)$, with degrees $p$ and $q$ and knot vectors $\mathbf t_1$ and $\mathbf t_2$, the goal is to find a common basis $\mathbf{B}_{r, \boldsymbol{\tau}}(x)$ with degree $r$ and knot vector $\boldsymbol{\tau}$ such that $h(x) = \mathbf d^{\top} \mathbf{B}_{r, \boldsymbol{\tau}}(x) = f(x) + g(x)$. To do this, the degree elevation and knot insertion algorithms presented in the previous sections can be used. The full algorithm is given in \cref{alg:addition}.
+
+\begin{algorithm}
+    \caption{Addition}\label{alg:addition}
+    \begin{algorithmic}
+        \State Find the degree $r = \max(p, q)$
+        \State Elevate the degree of the B-splines to $r$ using \cref{alg:degree-elevation} to get $\mathbf c_1'^\top\mathbf B_{r, \mathbf t_1'}(x)$ and $\mathbf c_2'^\top\mathbf B_{r, \mathbf t_2'}(x)$.
+        \State Find the common basis $\boldsymbol{\tau}$ as the union of $\mathbf t_1$ and $\mathbf t_2$, setting the multiplicity of each knot to the maximum of the two.
+        \State Find the transformation matrices $\mathbf A_1$ from $\mathbf B_{r, \mathbf t_1'}(x)$ to $\mathbf B_{r, \boldsymbol{\tau}}(x)$ and $\mathbf A_2$ from $\mathbf B_{r, \mathbf t_2'}(x)$ to $\mathbf B_{r, \boldsymbol{\tau}}(x)$ using \cref{alg:oslo-knot-insertion}.
+        \State The new basis is then $\mathbf B_{r, \boldsymbol{\tau}}(x)$ with coefficients $\mathbf{d} = \mathbf A_1 \mathbf c'_1 + \mathbf A_2 \mathbf c'_2$
+    \end{algorithmic}
+\end{algorithm}
 
 
 
-\section{Multiplication and Inner Product}
+
+\section{Multiplication and Dot Product}
 

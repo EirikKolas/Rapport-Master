@@ -9,9 +9,113 @@
     \item Dubins model
 \end{itemize}
 
+The ship dynamics are modeled using Dubins model (unicycle model), which escribes a vehicle moving in a plane where the velocity points in the direction of the heading:
+\begin{subequations}\label{eq:dubins-model}
+    \begin{align}
+        \dot x &= V \cos(\chi),       \label{eq:dubins-x} \\
+        \dot y &= V \sin(\chi),       \label{eq:dubins-y} \\
+        \dot \chi &= \omega,          \label{eq:dubins-chi} \\
+        0 \leq V &\leq V_{\max},      \label{eq:dubins-V} \\
+        |\omega| &\leq \omega_{\max}, \label{eq:dubins-omega}
+    \end{align}
+\end{subequations}
+where $x$ and $y$ are the position coordinates, $V$ is the speed, and $\chi$ is the heading angle. The control input is the turn rate $\omega$.
+
+In order to perform a B-spline relaxation on this model, all symbols in \cref{eq:dubins-model} need to be polynomial functions of each other. One way to  achieve this, is to use the tangent half-angle substitution
+\begin{equation}\label{eq:tangent-half-angle}
+    r \defeq \tan\left(\frac{\chi}{2}\right).
+\end{equation}
+In this section, the $\defeq$ symbol denotes a change of variables, to avoid confusion with the $=$ symbol used for equality in constraints. 
+
+Now $\cos(\chi)$ and $\sin(\chi)$ can be expressed in terms of $r$ as
+\begin{subequations}\label{eq:cos-sin-r}
+    \begin{align}
+        \cos(\chi) &\defeq \frac{1 - r^2}{1 + r^2}, \label{eq:cos-r} \\
+        \sin(\chi) &\defeq \frac{2r}{1 + r^2}.      \label{eq:sin-r}
+    \end{align}
+\end{subequations}
+To find polynomial expressions for $\dot x$ and $\dot y$, the variable $\tilde v$ is intruduced to satisfy the equation
+\begin{equation}\label{eq:constraint-V}
+    V = \tilde v (1 + r^2).
+\end{equation}
+Now, \cref{eq:dubins-x,eq:dubins-y} can be written as
+\begin{subequations}\label{eq:dubins-xy}
+    \begin{align}
+        \dot x &= \tilde v (1 - r^2), \label{eq:dubins-x-r} \\
+        \dot y &= 2\tilde v r.        \label{eq:dubins-y-r}
+    \end{align}
+\end{subequations}
+
+Up to this point, the derivation in this section has been based on the work of \citet{mercy2017spline}, which used the bicycle model. The next step is to find a polynomial expression for \cref{eq:dubins-chi} in terms of $r$ and $\omega$. This is done by first differentiating \cref{eq:tangent-half-angle} with respect to time
+\begin{equation}\label{eq:rdot}
+    \begin{aligned}
+        &&\atan(r) &= \frac{\chi}{2}, \\
+        &\implies& \frac{1}{1 + r^2} \dot r &= \frac{1}{2} \dot \chi, \\
+        &\implies& \dot r &= \frac{1}{2} \dot \chi (1 + r^2),
+    \end{aligned}
+\end{equation}
+before substituting \cref{eq:dubins-chi} into \cref{eq:rdot} to get
+\begin{equation}\label{eq:rdot-omega}
+    \dot r = \frac{1}{2} \omega (1 + r^2),
+\end{equation}
+where the $\dot{}$ notation denotes differentiation with respect to time.
+To fulfill the constraint on $\omega$ in \cref{eq:dubins-omega}, \cref{eq:rdot-omega} is solved for $\omega$ to get
+\begin{equation}\label{eq:omega-r}
+    \omega \defeq \frac{2 \dot r}{1 + r^2}.
+\end{equation}
+Substituting \cref{eq:omega-r} into \cref{eq:rdot-omega} gives
+\begin{equation}\label{eq:rdot-omega-r}
+    \left|\frac{2 \dot r}{1 + r^2}\right| \leq \omega_{\max},
+\end{equation}
+which can be split into the two constraints
+\begin{subequations}\label{eq:rdot-omega-r-constraints}
+    \begin{align}
+        2 \dot r &\leq \omega_{\max} (1 + r^2), \label{eq:rdot-omega-r-constraint1} \\
+        2 \dot r &\geq -\omega_{\max} (1 + r^2). \label{eq:rdot-omega-r-constraint2}
+    \end{align}
+\end{subequations}
+The speed constraint in \cref{eq:dubins-V} can similarly be expressed in terms of $r$ and $\tilde v$ as
+\begin{subequations}\label{eq:V-r}
+    \begin{align}
+        \tilde v &\ge 0, \\
+        \tilde v (1 + r^2) &\leq V_{\max}.
+    \end{align}
+\end{subequations}
+
+The full model is implemented by letting $r(t)$ and $\tilde v(t)$ be spline functions on a chosen B-spline basis under the constraints in \cref{eq:rdot-omega-r-constraints,eq:V-r}, using the expressions in \cref{eq:dubins-xy} to calculate $\dot x$ and $\dot y$ using the algorithms in \cref{chap:b-spline-theory}. Notice that $V$, $\chi$, and $\omega$ are now entirely removed from the model, which is fully described by $r$ and $\tilde v$. The coefficients of the B-spline representation of $\dot r$ are simply linear combinations of the coefficients of $r$, as explained in \cref{sec:derivative} and the position can be found by integrating the expressions in \cref{eq:dubins-xy}.
+
+To implement the inequality constraint $f(t) \le g(t)$, for two spline functions $f(t)$ and $g(t)$, the constraint is enforced by ensuring the coefficients of the B-spline representation of $f(t) - g(t)$ are non-positive, exploiting the convex hull property of B-splines.
+More details in\todo{referanse til seksjon}.
+
 \section{Target Ships}
 \begin{itemize}
     \item hyperplane separation theorem
     \item COLREGS constraints
     \item mixed integer programming
 \end{itemize}
+
+The standard way to enforce collision constraints between the OS and TS is to apply a minumum distance constraint between the two ships as
+\begin{equation}\label{eq:minimum-distance}
+    (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \cdot (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \geq d_{\text{min}}^2,
+\end{equation}
+where $\mathbf p_{\text{OS}}$ and $\mathbf p_{\text{TS}}$ are the positions of the OS and TS, respectively, and $d_{\text{min}}$ is the minimum distance between the two ships. The $\cdot$ symbol denotes the dot product. 
+
+The hyperplane separation theorem states that for two disjoint convex sets $\mathcal A$ and $\mathcal B$, there exists a hyperplane $\{\mathbf x \mid \mathbf a^\top \mathbf x = b, \mathbf a\ne \mathbf 0\}$ that separates the two sets \citep{Boyd2004-ih}. In other words, there exists a function $a^\top x - b$ that is non-negative for all $x \in \mathcal A$ and non-positive for all $x \in \mathcal B$. 
+
+Using this theorem the collision avoidance problem is essentially transformed into a classification problem, where the goal is to find a line that separates points $\mathbf p_i$ representing the edges of a polygonal OS from points $\mathbf q_j$ belonging to an obstacle.
+\begin{subequations}\label{eq:minimum-distance-hyperplane}
+    \begin{align}
+        \mathbf p_{i}(t) \cdot{\mathbf a}(t) &\ge b(t), \quad\forall i\in\mathbf P
+        \label{eq:hyperplane-os} \\
+        \mathbf q_{j}(t) \cdot{\mathbf a}(t) &\le b(t) + d_{j}, \quad\forall j\in\mathbf Q
+        \label{eq:hyperplane-ts} \\
+        \|{\mathbf a}(t)\|_\infty &\le 1.
+        \label{eq:hyperplane-norm}
+    \end{align}
+\end{subequations}
+The constraints in \cref{eq:hyperplane-os,eq:hyperplane-ts} are enforced by
+letting $\mathbf a(t)$ and $b(t)$ be optimization variables. \Cref{eq:hyperplane-norm} is a box constraint on $\mathbf a(t)$, ensuring that the hyperplane normal doesn't become too large. The minimum distance constraint in \cref{eq:minimum-distance} can be equivalently expressed using the hyperplane separation theorem by letting $\mathbf p_0 = \mathbf p_{\text{OS}}$, $\mathbf q_0 = \mathbf p_{\text{TS}}$ and $d_0 = d_{\text{min}}$ for $\mathbf P = \{0\}$ and $\mathbf Q = \{0\}$ in \cref{eq:minimum-distance-hyperplane}.
+
+\section{COLREGS Constraints}
+
+bla bla bla Mixed integer bla bla bla point relative reference trajectory or OS bla bla bla

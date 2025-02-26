@@ -82,7 +82,7 @@ Here $a$ and $b$ are constants of appropriate dimensions and the $\leq$ operator
 From the recursive relation in \cref{eq:b-spline-recurrence} it follows that the B-spline basis functions are piecewise polynomial functions in $x$ of degree $p$. This property makes it clear that all polynomial operations on B-splines will result in a new B-spline. Some 
 
 
-\section{Differentiation}
+\section{Differentiation}\label{sec:derivative}
 Given a B-spline $f(x) = \sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)$,
 the derivative of the B-spline can be computed by simply differencing its coefficients. 
 \begin{equation}\label{eq:b-spline-derivative}
@@ -183,7 +183,7 @@ With the discrete B-splines, the transformation matrix $\mathbf A$ that relates 
     \end{algorithmic}
 \end{algorithm}
 
-This is also the core idea of the Oslo algorithm \citep{Cohen1980}, for which \cref{alg:knot-insertion} is a simplified version. The complete Oslo algorithm avoids computing zero-valued coefficients in the transformation matrix $\mathbf A$ by making use of the fact that $\alpha_{j,p}(\mu) = 0$ if $t_i \notin [\tau_{\mu-p}, \tau_{\mu})$. The full Oslo algorithm is then given in \cref{alg:oslo-knot-insertion}.
+This is also the core idea of the Oslo algorithm \citep{Cohen1980}, for which \cref{alg:knot-insertion} is a simplified version. The complete Oslo algorithm avoids computing zero-valued coefficients in the transformation matrix $\mathbf A$ by making use of the fact that $\alpha_{j,p}(\mu) = 0$ if $t_i \notin [\tau_{\mu-p}, \tau_{\mu})$. The full Oslo algorithm is given in \cref{alg:oslo-knot-insertion}.
 
 \begin{algorithm}
     \caption{Oslo Algorithm}\label{alg:oslo-knot-insertion}

@@ -9,14 +9,14 @@
     \item Dubins model
 \end{itemize}
 
-The ship dynamics are modeled using Dubins model (unicycle model), which escribes a vehicle moving in a plane where the velocity points in the direction of the heading:
+The ship dynamics are represented using Dubins model (unicycle model), which escribes a vehicle moving in a plane where the velocity points in the direction of the heading:
 \begin{subequations}\label{eq:dubins-model}
     \begin{align}
         \dot x &= V \cos(\chi),       \label{eq:dubins-x} \\
         \dot y &= V \sin(\chi),       \label{eq:dubins-y} \\
         \dot \chi &= \omega,          \label{eq:dubins-chi} \\
-        0 \leq V &\leq V_{\max},      \label{eq:dubins-V} \\
-        |\omega| &\leq \omega_{\max}, \label{eq:dubins-omega}
+        |\omega| &\leq \omega_{\max}, \label{eq:dubins-omega} \\
+        0 \leq V &\leq V_{\max},      \label{eq:dubins-V} 
     \end{align}
 \end{subequations}
 where $x$ and $y$ are the position coordinates, $V$ is the speed, and $\chi$ is the heading angle. The control input is the turn rate $\omega$.
@@ -58,7 +58,7 @@ before substituting \cref{eq:dubins-chi} into \cref{eq:rdot} to get
 \begin{equation}\label{eq:rdot-omega}
     \dot r = \frac{1}{2} \omega (1 + r^2),
 \end{equation}
-where the $\dot{}$ notation denotes differentiation with respect to time.
+where the dot notation denotes differentiation with respect to time.
 To fulfill the constraint on $\omega$ in \cref{eq:dubins-omega}, \cref{eq:rdot-omega} is solved for $\omega$ to get
 \begin{equation}\label{eq:omega-r}
     \omega \defeq \frac{2 \dot r}{1 + r^2}.
@@ -118,4 +118,4 @@ letting $\mathbf a(t)$ and $b(t)$ be optimization variables. \Cref{eq:hyperplane
 
 \section{COLREGS Constraints}
 
-bla bla bla Mixed integer bla bla bla point relative reference trajectory or OS bla bla bla
+The COLREGS

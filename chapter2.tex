@@ -106,7 +106,7 @@ where $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$.
 The denominator $t_{j+p}-t_j$ in \cref{eq:b-spline-derivative} illustrates the continuity of the B-spline with respect to knot multiplicity. If a knot is repeated more than $p$ times, the denominator will be zero, and the derivative is not defined at that knot.
 
 \section{Integration}
-Given a degree $p$ and initial knot vector $\mathbf t$. \cref{eq:b-spline-derivative}, gives
+Given a degree $p$ and initial knot sequence $\mathbf t$, \cref{eq:b-spline-derivative}, gives
 \begin{equation}\label{eq:b-spline-integral-pre}
     p \sum_{j=1}^{n-1} \gamma_j B_{j, p, \boldsymbol{t}}(x) 
     = \frac{d}{dx} \sum_{j=0}^{n-1} c_j B_{j, p+1, \boldsymbol{\tau}}(x),
@@ -145,7 +145,7 @@ where $\mathbf T_I$ is an $n \times (n-1)$ matrix with elements
     \end{bmatrix}
 \end{equation}
 
-and, $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$ still.
+and $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$ still.
 As integration and differentiation are inverse operations, it should come as no surprise that the transformation matrices $\mathbf T_I$ and $\mathbf T_D$ are similirly related. This is explored further in \cref{app:homogeneous-integration-matrix}.
 
 
@@ -226,7 +226,7 @@ For the second point to be true, the new coefficients $\mathbf{\tilde c}$ must s
 which is only possible if $\mathbf{\tilde c}^p = \mathbf 0$. From here, the integral matrix $\mathbf T_I$ can be used to find the new coefficients $\mathbf{\tilde c}$, setting $\mathbf{\tilde c}_0^p = \mathbf 0, \mathbf{\tilde c}_0^k = \mathbf c_0^k$, and applying the integral matrix $k$ times:
 \begin{equation}\label{eq:degree-elevation-coefficients}
     \begin{aligned}
-        \mathbf{\tilde c}^k &= \mathbf T^{k+1}_{I,\boldsymbol\tau} \mathbf{\tilde c}^{k+1} + \mathbf{c}_0^{k+1} \\
+        \mathbf{\tilde c}^k &= \mathbf T^{k+1}_{I,\boldsymbol\tau} \mathbf{\tilde c}^{k+1} + \mathbf{c}_0^{k} \\
         \mathbf{\tilde c} &= \mathbf{\tilde c}^0
     \end{aligned}
 \end{equation}

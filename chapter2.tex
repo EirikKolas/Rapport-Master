@@ -149,8 +149,176 @@ and $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$ still.
 As integration and differentiation are inverse operations, it should come as no surprise that the transformation matrices $\mathbf T_I$ and $\mathbf T_D$ are similirly related. This is explored further in \cref{app:homogeneous-integration-matrix}.
 
 
+\section{Knot Refinement and Degree Elevation}
+In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$. Moreover, the coefficients of the new basis can be found by solving a linear system of equations. This is the core idea behind the knot refinement and degree elevation algorithms presented here.
+
+The goal is to find the transformation matrix $\mathbf T$ such that $\mathbf c_{q, \boldsymbol \tau} = \mathbf T \mathbf c_{p, \mathbf t}$, where $\mathbf c_{q, \boldsymbol \tau}$ and $\mathbf c_{p, \mathbf t}$ are the coefficients of the spline function $\mathbf S$ in the bases $\mathbf B_{q,\boldsymbol \tau}$ and $\mathbf B_{p,\mathbf t}$, respectively.
+
+%The strategy to find $\mathbf T$ involves expressing the coefficients of the original basis $\mathbf c_{p, \mathbf t}$ as a linear combination of the refined basis $\mathbf c_{q,\boldsymbol \tau}$.
+Noting that the two spline functions $\mathbf B_{q,\boldsymbol \tau}^\top \mathbf c_{q, \boldsymbol \tau}$, $\mathbf B_{p,\mathbf t}^\top \mathbf c_{p, \mathbf t}$ have to be equal,
+the transformation matrix $\mathbf T$ can be found by sampling the B-spline basis functions at strategic points in the interval $[\tau_0, \tau_{n+q})$ to obtain a system of $m$ linear equations with $m$ unknowns.
+
+The Greville abscissae $\boldsymbol \zeta_{q,\boldsymbol \tau}=[\zeta_{q,\boldsymbol \tau}]_{i=0}^{n-1}$ are a natural choice for the sampling points, as they represent the points at which the $i$-th basis function is most influential. 
+They are given by the mean of the knots in the knot span  of each basis function$[\tau_i, \tau_{i+q+1})$ as
+\begin{equation}
+    \zeta_{q,\boldsymbol \tau}(i) = \frac{1}{q+1} \sum_{j=i}^{i+q} \tau_j.
+\end{equation}
+The transformation matrix $\mathbf T$ can then be found by evaluating the B-spline basis functions at the Greville abscissae and solving the linear system of equations
+\begin{equation}
+    \mathbf B_{q,\boldsymbol \tau}(\zeta_{q,\boldsymbol \tau}(i))^\top \mathbf c_{q, \boldsymbol \tau} = \mathbf B_{p,\mathbf t}(\zeta_{q,\boldsymbol \tau}(i))^\top \mathbf c_{p, \mathbf t} \quad \forall i\in\{0,1,\ldots,m-1\}
+\end{equation}
+for $\mathbf c_{q, \boldsymbol \tau}$. This can be written in matrix form as
+\begin{equation}
+    \underbrace{\begin{bmatrix}
+        \mathbf B_{q,\boldsymbol \tau}(\zeta_{q,\boldsymbol \tau}(0))^\top \\
+        \mathbf B_{q,\boldsymbol \tau}(\zeta_{q,\boldsymbol \tau}(1))^\top \\
+        \vdots                                                             \\
+        \mathbf B_{q,\boldsymbol \tau}(\zeta_{q,\boldsymbol \tau}(m-1))^\top
+    \end{bmatrix}}_{m \times m}
+    \underbrace{\begin{bmatrix}
+        c_{q, \boldsymbol \tau, 0}   \\
+        c_{q, \boldsymbol \tau, 1}   \\
+        \vdots                       \\
+        c_{q, \boldsymbol \tau, m-1} \\
+    \end{bmatrix}}_{m \times 1}
+    = 
+    \underbrace{\begin{bmatrix}
+        \mathbf B_{p,\mathbf t}(\zeta_{q,\boldsymbol \tau}(0))^\top  \\
+        \mathbf B_{p,\mathbf t}(\zeta_{q,\boldsymbol \tau}(1))^\top  \\
+        \vdots                                                       \\
+        \mathbf B_{p,\mathbf t}(\zeta_{q,\boldsymbol \tau}(m-1))^\top
+    \end{bmatrix}}_{m \times n}
+    \underbrace{\begin{bmatrix}
+        c_{p, \mathbf t, 0}   \\
+        c_{p, \mathbf t, 1}   \\
+        \vdots                \\
+        c_{p, \mathbf t, n-1}
+    \end{bmatrix}}_{n \times 1},
+\end{equation}
+or more compactly as
+\begin{equation}
+    [\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \zeta_{q,\boldsymbol \tau})^\top] \mathbf c_{q, \boldsymbol \tau} = [\mathbf B_{p,\mathbf t}(\boldsymbol \zeta_{q,\boldsymbol \tau})^\top] \mathbf c_{p, \mathbf t}.
+\end{equation}
+
+The matrix $\mathbf T$ is then simply
+\begin{equation}
+    \mathbf T = [\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \zeta_{q,\boldsymbol \tau})^\top]^{-1} [\mathbf B_{p,\mathbf t}(\boldsymbol \zeta_{q,\boldsymbol \tau})^{\top}].
+\end{equation}
+
+\begin{example}[Degree Elevation]
+    We want to express the constant spline $f(x) =\mathbf B_{0, \mathbf t}^\top\mathbf c$ with knot vector $\mathbf t = \left[0, 1\right]$ as a linear spline $g(x) = \mathbf B_{1, \boldsymbol \tau}^\top \mathbf d$ with knot vector $\boldsymbol \tau = \left[0, 0, 1, 1\right]$. 
+
+    The Greville abscissae for the linear spline are 
+    \begin{equation*}
+        \boldsymbol \zeta_{1,\boldsymbol \tau} = 
+        \begin{bmatrix}
+            \frac{\tau_0 + \tau_1 + \tau_2}{3} &
+            \frac{\tau_1 + \tau_2 + \tau_3}{3} 
+        \end{bmatrix}
+        =
+        \begin{bmatrix}
+            \frac{0 + 0 + 1}{3} & \frac{0 + 1 + 1}{3}
+        \end{bmatrix} = \begin{bmatrix}
+            \frac{1}{3} & \frac{2}{3}
+        \end{bmatrix}.
+    \end{equation*}
+    Evaluating $\mathbf B_{0, \mathbf t}$ and $\mathbf B_{1, \boldsymbol \tau}$  at the Greville abscissae gives\todo{legg til plot av konstant spline og linear spline}
+    \begin{equation*}
+        \begin{aligned}
+            \mathbf B_{0, \mathbf t}\begin{pmatrix}\frac{1}{3}\end{pmatrix} &= \begin{bmatrix} 1 \end{bmatrix}, 
+            &\mathbf B_{0, \mathbf t}\begin{pmatrix}\frac{2}{3}\end{pmatrix} &= \begin{bmatrix} 1 \end{bmatrix} 
+            \\
+            \mathbf B_{1, \boldsymbol \tau}\begin{pmatrix}\frac{1}{3}\end{pmatrix} &= \begin{bmatrix} \frac{2}{3} & \frac{1}{3} \end{bmatrix}^\top, 
+            &\mathbf B_{1, \boldsymbol \tau}\begin{pmatrix}\frac{2}{3}\end{pmatrix} &= \begin{bmatrix} \frac{1}{3} & \frac{2}{3} \end{bmatrix}^\top
+        \end{aligned}
+    \end{equation*}
+    Solving
+    \begin{equation*}
+        \begin{bmatrix}
+            \frac{2}{3} & \frac{1}{3} \\
+            \frac{1}{3} & \frac{2}{3}
+        \end{bmatrix}
+        \begin{bmatrix}
+            d_0 \\
+            d_1
+        \end{bmatrix}
+        =
+        \begin{bmatrix}
+            1 \\
+            1
+        \end{bmatrix}
+        \begin{bmatrix}
+            c_0
+        \end{bmatrix}
+    \end{equation*}
+    gives the solution
+    \begin{equation*}
+        \begin{bmatrix}
+            d_0 \\
+            d_1
+        \end{bmatrix}
+        =
+        \begin{bmatrix}
+            2 & -1 \\
+            -1 & 2
+        \end{bmatrix}
+        \begin{bmatrix}
+            1 \\
+            1
+        \end{bmatrix}
+        \begin{bmatrix}
+            c_0
+        \end{bmatrix}
+        =
+        \begin{bmatrix}
+            1 \\
+            1
+        \end{bmatrix}
+        \begin{bmatrix}
+            c_0
+        \end{bmatrix}
+    \end{equation*}
+\end{example}
+
+
+\begin{example}[Knot Refinement]
+    Given a linear spline function $f(x) = \mathbf B_{1, \mathbf t}^\top \mathbf c$ with knot vector $\mathbf t = \begin{bmatrix} 0 & 0 & \frac{1}{2} & 1 & 1\end{bmatrix}$, the goal is to express it with in the basis $\mathbf B_{1, \boldsymbol \tau}$ with the refined knot vector $\boldsymbol \tau = \begin{bmatrix} 0 & 0 & \frac{1}{4} & \frac{1}{2} & \frac{3}{4} & 1 & 1\end{bmatrix}$.
+
+    The Greville abscissae for the refined basis are
+    \begin{equation*}
+        \boldsymbol \zeta_{1,\boldsymbol \tau} = 
+        \begin{bmatrix}
+            \frac{1}{12} & \frac{3}{12} & \frac{6}{12} & \frac{9}{12} & \frac{11}{12}
+        \end{bmatrix}.
+    \end{equation*}
+    Using \cref{tab:linear-spline-evaluation} to evaluate the B-spline basis functions at the Greville abscissae gives
+    \begin{equation*}
+        \begin{aligned}
+            \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{1}{12}\end{pmatrix} &= \begin{bmatrix} \frac{3}{4} & \frac{1}{4} & 0 & 0 & 0 \end{bmatrix}^\top,
+            &\mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{3}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 1 & 0 & 0 & 0 \end{bmatrix}^\top, \\
+            \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{6}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 1 & 0 & 0 & 0 \end{bmatrix}^\top,
+            &\mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{9}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 0 & 1 & 0 \end{bmatrix}^\top, \\
+            \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{11}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 0 & \frac{1}{4} & \frac{3}{4} \end{bmatrix}^\top.
+        \end{aligned}
+    \end{equation*}
+
+    \begin{table*}[h]
+        \centering
+        \begin{tabular}{c|c|c|c|c|c}
+            Knot Interval & $\mathbf B_{1, \boldsymbol\tau, 0}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 1}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 2}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 3}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 4}(x)$ \\
+            \hline
+            \rule{0pt}{2.5ex} $\left[0,\frac{1}{4}\right]$ & $1-4x$ & $4x$ & 0 & 0 & 0 \\[5pt]
+            \rule{0pt}{2.5ex} $\left[\frac{1}{4},\frac{1}{2}\right]$ & 0 & $2-4x$ & $-1+4x$ & 0 & 0 \\[5pt]
+            \rule{0pt}{2.5ex} $\left[\frac{1}{2},\frac{3}{4}\right]$ & 0 & 0 & $3-4x$ & $-2+4x$ & 0 \\[5pt]
+            \rule{0pt}{2.5ex} $\left[\frac{3}{4},1\right]$ & 0 & 0 & 0 & $4-4x$ & $-3+4x$ \\[5pt]
+        \end{tabular}
+        \caption{The polynomial functions of each basis function in the knot intervals}
+        \label{tab:linear-spline-evaluation}
+    \end{table*}
+\end{example}
+
 \section{Knot Insertion}
-In order to perform binary operations on spline functions (e.g. addition), it is convenient to have them be represeted in the same basis, e.g., have the same degree and knot vector. If this is not the case, the B-splines must be transformed to a common form. This motivates the need for operations that can transform B-splines between different bases without changing the shape of the curve. This explanations in this section are based on lecture notes from \cite{bspline-uio}.
+In order to perform binary operations on spline functions (e.g. addition and Multiplication), it is convenient to have them be represeted in the same basis, e.g., have the same degree and knot vector. If this is not the case, the B-splines must be transformed to a common form. This motivates the need for operations that can transform B-splines between different bases without changing the shape of the curve. The explanations in this section are based on lecture notes from \cite{bspline-uio}.
 
 Knot insertion is, as the name suggests, the operation of extending the knot vector by adding new knots. Given a spline function $f(x) = \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x)$ with knot vector $\mathbf t$, the goal is to express the same function in a new basis $\mathbf{B}_{p, \boldsymbol{\tau}}(x)$ with knot vector $\boldsymbol{\tau}$.
 

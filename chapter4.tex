@@ -4,11 +4,10 @@
 \chapter{B-spline MINMPC}\label{chap:b-spline-minmpc}
 
 \section{Dynamic Model}
-\begin{itemize}
-    \item Double Integrator
-    \item Dubins model
-\end{itemize}
+\subsection{Double Integrator}
+The double integrator model is a simple model
 
+\subsection{Dubins Model}
 The ship dynamics are represented using Dubins model (unicycle model), which escribes a vehicle moving in a plane where the velocity points in the direction of the heading:
 \begin{subequations}\label{eq:dubins-model}
     \begin{align}
@@ -84,8 +83,7 @@ The speed constraint in \cref{eq:dubins-V} can similarly be expressed in terms o
 
 The full model is implemented by letting $r(t)$ and $\tilde v(t)$ be spline functions on a chosen B-spline basis under the constraints in \cref{eq:rdot-omega-r-constraints,eq:V-r}, using the expressions in \cref{eq:dubins-xy} to calculate $\dot x$ and $\dot y$ using the algorithms in \cref{chap:b-spline-theory}. Notice that $V$, $\chi$, and $\omega$ are now entirely removed from the model, which is fully described by $r$ and $\tilde v$. The coefficients of the B-spline representation of $\dot r$ are simply linear combinations of the coefficients of $r$, as explained in \cref{sec:derivative} and the position can be found by integrating the expressions in \cref{eq:dubins-xy}.
 
-To implement the inequality constraint $f(t) \le g(t)$, for two spline functions $f(t)$ and $g(t)$, the constraint is enforced by ensuring the coefficients of the B-spline representation of $f(t) - g(t)$ are non-positive, exploiting the convex hull property of B-splines.
-More details in\todo{referanse til seksjon}.
+To implement the inequality constraint $f(t) \le g(t)$, for two spline functions $f(t)$ and $g(t)$, the constraint is enforced by ensuring the coefficients of the B-spline representation of $f(t) - g(t)$ are non-positive, exploiting the convex hull property of B-splines. 
 
 \section{Target Ships}
 \begin{itemize}

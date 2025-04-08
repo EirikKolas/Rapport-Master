@@ -421,119 +421,6 @@ $\mathbf u = \unique(t) = \{a, \eta_1, \dots, \eta_n, b\}$
         \end{table*}
 \end{example}
 
-% \section{Knot Insertion}
-% In order to perform binary operations on spline functions (e.g. addition and Multiplication), it is convenient to have them be represeted in the same basis, e.g., have the same degree and knot vector. If this is not the case, the B-splines must be transformed to a common form. This motivates the need for operations that can transform B-splines between different bases without changing the shape of the curve. The explanations in this section are based on lecture notes from \cite{bspline-uio}.
-
-% Knot insertion is, as the name suggests, the operation of extending the knot vector by adding new knots. Given a spline function $f(x) = \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x)$ with knot vector $\mathbf t$, the goal is to express the same function in a new basis $\mathbf{B}_{p, \boldsymbol{\tau}}(x)$ with knot vector $\boldsymbol{\tau}$.
-
-% A simple example of a knot vector $\mathbf t$ and a refinement $\boldsymbol \tau$ is given by
-% $$
-%     \mathbf t = [0, 0, 0, 0, 1, 2, 3, 5, 5, 5, 5], \quad \boldsymbol \tau = [0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 4, 5, 5, 5, 5].
-% $$
-% Here two knots have been added at 1, one at 2, and one at 4.
-
-% To relate the coefficients of the B-spline in the original basis to the refined basis, one can use so-called discrete B-splines \citep{Cohen1980}. \todo{Forklar subskript $\tau$} The B-spline basis $B_{j, p, \boldsymbol{\tau}}(x)$ and its discrete counterpart $\alpha_{j,p, \boldsymbol{\tau}, \mathbf t}(i)$ are related by setting $x = t_{i+p}$ for $B_{j, d, \boldsymbol{\tau}}(x)$ in \cref{eq:b-spline-recurrence-p}, 
-% \begin{equation}\label{eq:discrete-b-spline-recurrence-p}
-%     \alpha_{j,p}(i) = B_{j, p, \boldsymbol{\tau}}(t_{i+p}) = 
-%     \frac{t_{i+p}-\tau_j}{\tau_{j+p}-\tau_j} \alpha_{j,p-1}(i) + \frac{\tau_{j+1+p}-t_{i+p}}{\tau_{j+1+p}-\tau_{j+1}} \alpha_{j+1,p-1}(i)
-% \end{equation}
-% and 
-% \begin{equation}\label{eq:discrete-b-spline-recurrence-0}
-% \alpha_{j,0}(i) = B_{j, 0, \boldsymbol{\tau}}(t_{i}) = \mathbf 1_{[\tau_j, \tau_{j+1})}(t_{i})
-% \end{equation}
-%  in \cref{eq:b-spline-recurrence-0}. Notice that $t_i$ is used instead of $t_{i+p}$ in \cref{eq:discrete-b-spline-recurrence-0}. Intuitively, this can be thought of as weighting the contributions from the knot vector $\mathbf t$ to the new knot vector $\boldsymbol \tau$ in the interval of the new knot span $[\tau_j, \tau_{j+1})$. The interested reader is referred to \cite{bspline-uio} for a more detailed derivation.
-
-% With the discrete B-splines, the transformation matrix $\mathbf A$ that relates the coefficients of the B-spline in the original basis $\mathbf c$ to the coefficients in the refined basis $\mathbf c'$ can now be found. Each row $A_i$ of $\mathbf A = [A_i^T]_0^{m-1}$ is given by selecting a non-empty knot span $[\tau_\mu, \tau_{\mu+1})$ in the refined basis and computing the corresponding discrete B-spline values $\alpha_{j,p}(\mu)$ for all $j$ in the original basis, which is summarized in \cref{alg:knot-insertion}.
-
-% \begin{algorithm}
-%     \caption{Naive Knot Insertion}\label{alg:knot-insertion}
-%     \begin{algorithmic}
-%         \For {$i = 0$ to $m-1$}
-%         \State Determine $\mu$ such that $t_i \in [\tau_\mu, \tau_{\mu+1})$
-%         \State Compute $A_i = [\alpha_{j,p}(\mu)]_{j=0}^{n-1}$
-%         \EndFor
-%     \end{algorithmic}
-% \end{algorithm}
-
-% This is also the core idea of the Oslo algorithm \citep{Cohen1980}, for which \cref{alg:knot-insertion} is a simplified version. The complete Oslo algorithm avoids computing zero-valued coefficients in the transformation matrix $\mathbf A$ by making use of the fact that $\alpha_{j,p}(\mu) = 0$ if $t_i \notin [\tau_{\mu-p}, \tau_{\mu})$. The full Oslo algorithm is given in \cref{alg:oslo-knot-insertion}.
-
-% \begin{algorithm}
-%     \caption{Oslo Algorithm}\label{alg:oslo-knot-insertion}
-%     \begin{algorithmic}
-%         \For {$i = 0$ to $m-1$}
-%         \State Determine $\mu$ such that $t_i \in [\tau_\mu, \tau_{\mu+1})$
-%         \State Set $A_i = [A_{i,j}]_{j=0}^{n-1} = \mathbf 0$
-%         \State Compute entries $[A_{i,j}]_{j=\mu-p}^\mu = [\alpha_{j,p}(\mu)]_{j=\mu-p}^{\mu}$
-%         \EndFor
-%     \end{algorithmic}
-% \end{algorithm}
-
-% \section{Degree Elevation}
-
-% The goal of degree elevation is to express a spline function $f(x) = \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x)$ in a new basis $\mathbf{B}_{p+1, \boldsymbol{\tau}}(x)$ with a higher degree $p+1$. 
-
-% There are many ways to elevate the degree of a B-spline \citep{piegl1994,Prautzsch1984,lee2000degree} with different strengths and weaknesses in regards to computational complexity and implementation. one of the simpler methods to implement is developed by \cite{Cohen1986} and will be presented here.
-
-% Given a knot sequence
-% \begin{equation}
-%     \mathbf t = \big[\underbrace{t_0, \ldots, t_0}_{p+1}, \underbrace{t_1, \ldots, t_1}_{m_1}, \ldots, \underbrace{t_k, \ldots, t_k}_{m_k}, \ldots, \underbrace{t_{n-1}, \ldots, t_{n-1}}_{p+1}\big],
-% \end{equation}
-
-% the continuity of the spline function is determined by its degree $p$ and knot multiplicity $m_k$ in that it has $p-m_k-1$ continuous derivatives in a neighbourhood around $t_k$ \citep{Cohen1986}.
-% Since the degree-elevated B-spline represents the same spline function it should also have the same continuity. The new knot sequence $\boldsymbol \tau$ is then given by increasing the multiplicity of each knot in $\mathbf t$ by 1:
-% \begin{equation}\label{eq:degree-elevation-knots}
-%     \boldsymbol \tau = \big[\underbrace{t_0, \ldots, t_0}_{p+2}, \underbrace{t_1, \ldots, t_1}_{m_1+1}, \ldots, \underbrace{t_k, \ldots, t_k}_{m_k+1}, \ldots, \underbrace{t_{n-1}, \ldots, t_{n-1}}_{p+2}\big].
-% \end{equation}
-
-% There are two key ideas needed do find the new coefficients:
-% \begin{enumerate}
-%     \item The $k$-th of the B-splines are equal to each other for all $k\in\mathbb{N}_+$.
-%     \item The $p$-th derivative of the B-splines are zero.
-% \end{enumerate}
-% For the second point to be true, the new coefficients $\mathbf{\tilde c}$ must satisfy
-% \begin{equation}
-%     \frac{d^p}{dx^p} f(x) = 0 \Rightarrow \frac{d^p}{dx^p} \mathbf{c}^{\top} \mathbf{B}_{p, \mathbf{t}}(x) = 
-%     \frac{d^p}{dx^p} \mathbf{\tilde c}^{\top} \mathbf{B}_{p+1, \boldsymbol{\tau}}(x) = 0,
-% \end{equation}
-% which is only possible if $\mathbf{\tilde c}^p = \mathbf 0$. From here, the integral matrix $\mathbf T_I$ can be used to find the new coefficients $\mathbf{\tilde c}$, setting $\mathbf{\tilde c}_0^p = \mathbf 0, \mathbf{\tilde c}_0^k = \mathbf c_0^k$, and applying the integral matrix $k$ times:
-% \begin{equation}\label{eq:degree-elevation-coefficients}
-%     \begin{aligned}
-%         \mathbf{\tilde c}^k &= \mathbf T^{k+1}_{I,\boldsymbol\tau} \mathbf{\tilde c}^{k+1} + \mathbf{c}_0^{k} \\
-%         \mathbf{\tilde c} &= \mathbf{\tilde c}^0
-%     \end{aligned}
-% \end{equation}
-% Here, $\mathbf T^k_{I,\boldsymbol\tau}$ is the integral matrix for the $k$-th derivative of the B-spline basis functions with knot vector $\boldsymbol\tau$, and $\mathbf{c}^k = [c_0^k]_{j=1}^{n+1-k}$ is a vector of appropriate length with all elements set to the first coefficient of the $k$-th derivative. This is summarized in \cref{alg:degree-elevation}, which is a simplified version of the degree elevation algorithm presented by \cite{lee2000degree}. \todo{forklar regular knot vector}
-
-% \begin{algorithm}
-%     \caption{Degree Elevation}\label{alg:degree-elevation}
-%     \begin{algorithmic}
-%         \State Let $\mathbf B_{p, \mathbf t}(x)$ be the B-spline basis with degree $p$ and regular knot vector $\mathbf t$, and $\mathbf B_{p+1, \boldsymbol \tau}(x)$ be the basis with $\boldsymbol \tau$ given by \cref{eq:degree-elevation-knots}.
-%         \For {$k = p$ to $0$}
-%             \State Compute $\mathbf{\tilde c}^k$ from \cref{eq:degree-elevation-coefficients}.
-%         \EndFor
-%     \end{algorithmic}
-% \end{algorithm}
-
-% \section{Addition and Subtraction}
-
-% Finding the sum or difference of two B-splines that share the same basis is a simple task as the coefficients can just be added together:
-% \begin{equation}
-%     f(x) \pm g(x) = \mathbf{c}_1^{\top} \mathbf{B}_{p, \mathbf{t}}(x) \pm \mathbf{c}_2^{\top} \mathbf{B}_{p, \mathbf{t}}(x) 
-%     =(\mathbf{c}_1 \pm \mathbf{c}_2)^{\top} \mathbf{B}_{p, \mathbf{t}}(x)
-% \end{equation}
-% However, if the B-splines are in different bases, they must be transformed to a common basis before the addition can be performed. More formalized the problem is as follows: For the spline functions $f(x) = \mathbf{c}_1^{\top} \mathbf{B}_{p, \mathbf{t}_1}(x)$ and $g(x) = \mathbf{c}_2^{\top} \mathbf{B}_{q, \mathbf{t}_2}(x)$, with degrees $p$ and $q$ and knot vectors $\mathbf t_1$ and $\mathbf t_2$, the goal is to find a common basis $\mathbf{B}_{r, \boldsymbol{\tau}}(x)$ with degree $r$ and knot vector $\boldsymbol{\tau}$ such that $h(x) = \mathbf d^{\top} \mathbf{B}_{r, \boldsymbol{\tau}}(x) = f(x) + g(x)$. To do this, the degree elevation and knot insertion algorithms presented in the previous sections can be used. The full algorithm is given in \cref{alg:addition}.
-
-% \begin{algorithm}
-%     \caption{Addition}\label{alg:addition}
-%     \begin{algorithmic}
-%         \State Find the degree $r = \max(p, q)$
-%         \State Elevate the degree of the B-splines to $r$ using \cref{alg:degree-elevation} to get $\mathbf c_1'^\top\mathbf B_{r, \mathbf t_1'}(x)$ and $\mathbf c_2'^\top\mathbf B_{r, \mathbf t_2'}(x)$.
-%         \State Find the common basis $\boldsymbol{\tau}$ as the union of $\mathbf t_1$ and $\mathbf t_2$, setting the multiplicity of each knot to the maximum of the two.
-%         \State Find the transformation matrices $\mathbf A_1$ from $\mathbf B_{r, \mathbf t_1'}(x)$ to $\mathbf B_{r, \boldsymbol{\tau}}(x)$ and $\mathbf A_2$ from $\mathbf B_{r, \mathbf t_2'}(x)$ to $\mathbf B_{r, \boldsymbol{\tau}}(x)$ using \cref{alg:oslo-knot-insertion}.
-%         \State The new basis is then $\mathbf B_{r, \boldsymbol{\tau}}(x)$ with coefficients $\mathbf{d} = \mathbf A_1 \mathbf c'_1 + \mathbf A_2 \mathbf c'_2$
-%     \end{algorithmic}
-% \end{algorithm}
-
 
 \section{Addition and Subtraction}
 Finding the sum of two B-splines that share the same basis is a simple task as their coefficients can just be added together:
@@ -593,7 +480,7 @@ Writing the equation for the product of the two B-splines gives
 
 where $\otimes$ denotes the Kronecker product. In \cref{eq:b-spline-product-3}, the mixed product property of the Kronecker product has been used, while \cref{eq:b-spline-product-4} is obtained using the fact that the transpose is distributive over the Kronecker product \citep{LOAN200085}. \Cref{eq:b-spline-product-4} resembles the structure in \cref{eq:transformation-matrix-equation}, and the transformation matrix $\mathbf T$ from $\mathbf c_1 \otimes \mathbf c_2$ to $\mathbf d$ can similarily be found by sampling \cref{eq:b-spline-product-4} at the Greville abscissae of $\mathbf B_{q, \boldsymbol{\tau}}^{\top}(x)$. This is summarized in \cref{alg:multiplication}.
 
-This algorithm can be made more efficient by exploiting the local support property of B-splines. The product of two B-splines is zero outside the union of the supports of the two B-splines, and the transformation matrix $\mathbf T$ will have many zero entries. So, instead of computing the Kronecker products $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and $(\mathbf c_1 \otimes \mathbf c_2)$, which are vectors of $p_1+p_2$ entries, one can instead create vectors where only the non-zero entries of $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and corresponding entries of $(\mathbf c_1 \otimes \mathbf c_2)$ are stored. 
+This algorithm can be made more efficient by exploiting the local support property of B-splines. The product of two B-splines is zero outside the union of the supports of the two B-splines, and the transformation matrix $\mathbf T$ will have many zero entries. So, instead of computing the Kronecker products $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and $(\mathbf c_1 \otimes \mathbf c_2)$, which are column vectors of $p_1\cdot p_2$ entries, one can instead create vectors where only the non-zero entries of $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and corresponding entries of $(\mathbf c_1 \otimes \mathbf c_2)$ are stored. 
 
 \begin{algorithm}
     \caption{Product}\label{alg:multiplication}
@@ -605,3 +492,69 @@ This algorithm can be made more efficient by exploiting the local support proper
         \State \textbf{Output:} $\mathbf B_{q, \boldsymbol{\tau}}(x), \quad\mathbf T (\mathbf c_1 \otimes \mathbf c_2)$
     \end{algorithmic}
 \end{algorithm}
+
+
+\begin{example}
+    \label{ex:linear-spline-multiplication}
+    Consider the two B-splines
+    \begin{equation*}
+        f(x) = \mathbf{B}_{p_1, \mathbf t_1}^\top(x) \mathbf{c}_1
+        \quad g(x) = \mathbf{B}_{p_2, \mathbf t_2}^\top(x) \mathbf{c}_2
+    \end{equation*}
+    with knot vectors $\mathbf t_1 = \left\{0, 0, \frac{1}{3}, \frac{2}{3}, 1, 1\right\}$,  $\mathbf t_2 = \left\{0, 0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1, 1\right\}$ and degrees  $p_1 = 1$, $p_2 = 2$. 
+    The common basis $\mathbf{B}_{q,\boldsymbol{\tau}}$ is then found using \cref{alg:common-basis}, to get:
+    \begin{equation*}
+        q = p_1 + p_2 = 3,
+        \quad
+        \boldsymbol{\tau} = \left\{0, 0, 0, 0, \frac{1}{4}, \frac{1}{4}, \frac{1}{3}, \frac{1}{3}, \frac{1}{3}, \frac{1}{2}, \frac{1}{2}, \frac{2}{3}, \frac{2}{3}, \frac{2}{3}, \frac{3}{4}, \frac{3}{4}, 1, 1, 1, 1\right\},
+    \end{equation*}
+    where the internal knots of $\mathbf t_1$ and $\mathbf t_2$ have been duplicated twice and once respectively to account for the degree elevation. 
+    The left hand side of \cref{eq:b-spline-product-4} is found as in \cref{eq:transformation-matrix}, sampling $\mathbf B_{q, \boldsymbol{\tau}}(x)$ at the Greville abscissae $\boldsymbol{\zeta_\tau}$.
+    For the right hand side, we can write out the product of the B-splines in matrix form using the Kronecker product:
+    \begin{equation*}
+        \begin{aligned}
+            (\mathbf B_{p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) \otimes \mathbf B_{p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}))^\top \mathbf{c}_1 \otimes \mathbf{c}_2 = \begin{bmatrix}
+                B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{0, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+                B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{1, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+                B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{2, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+                \vdots \\
+                B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{m, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+                B_{1, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{0, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+                \vdots \\
+                B_{n, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{m, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+            \end{bmatrix}^\top 
+            \begin{bmatrix}
+                c_{0, 1} c_{0, 2} \\
+                c_{0, 1} c_{1, 2} \\
+                c_{0, 1} c_{2, 2} \\
+                \vdots \\
+                c_{0, 1} c_{m, 2} \\
+                c_{1, 1} c_{0, 2} \\
+                \vdots \\
+                c_{n, 1} c_{m, 2}
+            \end{bmatrix}                
+        \end{aligned}
+    \end{equation*}
+    This is a matrix with $p_1 \cdot p_2$ rows and column number equal to the number of Greville abscissae in $\boldsymbol{\tau}$, which depend on the degrees of $\mathbf B_{p_1, \mathbf{t}_1}$ and $\mathbf B_{p_2, \mathbf{t}_2}$ and how many knots they share.
+    In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero entries, but as the knot vectors get denser, the number of zero entries will increase.
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{c|c||c|c|c|c|c|c}
+            \textbf{Basis} &  & $B_{0, p_2, \mathbf{t}_2}$ & $B_{1, p_2, \mathbf{t}_2}$ & $B_{2, p_2, \mathbf{t}_2}$ & $B_{3, p_2, \mathbf{t}_2}$ & $B_{4, p_2, \mathbf{t}_2}$ & $B_{5, p_2, \mathbf{t}_2}$ \\[5pt]
+            \hline
+            \rule{0pt}{2.5ex} & \textbf{Support} & $\left[0, \frac{1}{4}\right]$ & $\left[0, \frac{1}{2}\right]$ & $\left[0, \frac{3}{4}\right]$ & $\left[\frac{1}{4}, \frac{3}{4}\right]$ & $\left[\frac{1}{2}, 1\right]$ & $\left[\frac{3}{4}, 1\right]$ \\[5pt]
+            \hline\hline
+            \rule{0pt}{2.5ex}$B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{1}{3}\right]$ & 
+            1 & 1 & 1 & 1 & 0 & 0 \\[5pt]
+            $B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{2}{3}\right]$ &
+            1 & 1 & 1 & 1 & 1 & 0 \\[5pt]
+            $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{1}{3}, 1\right]$ &
+            0 & 1 & 1 & 1 & 1 & 1 \\[5pt]
+            $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{2}{3}, 1\right]$ & 
+            0 & 0 & 1 & 1 & 1 & 1 \\[5pt]
+        \end{tabular}
+        \caption{Overlapping supports of $B_{p_1, \mathbf{t}_1}$ and $B_{p_2, \mathbf{t}_2}$ in \cref{ex:linear-spline-multiplication}.}
+        \label{tab:ex-spline-supports}
+    \end{table}
+\end{example}

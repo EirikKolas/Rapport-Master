@@ -207,3 +207,131 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
 \end{figure}
 
 \section{Implementation}
+
+The B-spline MINMPC is done in python using mainly CasADi \citep{casadi} and numpy \citep{numpy} as the main libraries. The code is divided into two main parts: a B-spline implementation and a CasAdi wrapper. 
+The B-spline implementation closely follows the structure in \citet{mercy2016spline}, and takes inspiration from the CasAdi wrapper presented there, with the main modifications focusing on small optimizations, making the library more type safe, and making it easier to use with vector-valued spline functions. Support for CasADis MIP solvers was also added, which was not present in the original implementation. 
+The code is available in \todo{gh repo}.
+
+\begin{algorithm}
+\caption{B-spline basis class with datafields for degree and knots. The class evaluates the B-spline basis using the Cox-de Boor recursion formula (\cref{alg:cox-de-boor}).}
+\label{alg:b-spline-class}
+\begin{python}
+import numpy as np
+
+@dataclass(frozen=True)
+class BSplineBasis:
+    """
+    Class representing a B-spline basis.
+    """
+
+    degree: int
+    knots: np.ndarray
+
+    def __len__(self):
+        return len(self.knots) - self.degree - 1
+
+    def __call__(self, x: float) -> Array[Float]:
+        """
+        Evaluates the B-spline basis at a given point x.
+        """
+        return [
+            cox_de_boor(tuple(self.knots), self.degree, i, x)
+            for i in range(len(self))
+        ]
+
+\end{python}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{The algorithms for B-Spline basis transformation (\cref{alg:basis-transformation}) and combination (\cref{alg:common-basis}) implemented as methods of the B-spline basis class (\cref{alg:b-spline-class}).}
+\label{alg:b-spline-class-methods}
+\begin{python}
+class BSplineBasis:
+
+    ...
+
+    def transform(
+        self, other: Callable[[float], FloatArray]
+    ) -> FloatMatrix:
+        """
+        Get the transformation matrix P such that
+        P.T @ self = other.
+
+        :param other: The other basis or function to find the transformation matrix for.
+        """
+        points = self.greville_abscissae
+        A = self(points).T
+        b = np.concatenate([other(t).T for t in points], axis=0)
+        return np.linalg.solve(A, b)
+
+    def combine(
+        self, other: 'BSplineBasis', degree: int
+    ) -> 'BSplineBasis':
+        """
+        Find common basis of two bases with different degrees in the specified degree.
+
+        :param other: The other basis to combine with.
+        :param degree: The degree of the resulting basis.
+        :return: A new BSplineBasis object representing the combined basis.
+        """
+        def raise_degree(knots, degree):
+            if degree == 0:
+                return knots
+            return np.sort(np.concatenate([
+                np.repeat(np.unique(knots), degree), knots
+            ]))
+        # Raise the degree of the basis functions
+        self_knots = raise_degree(self.knots, degree - self.degree)
+        other_knots = raise_degree(other.knots, degree - other.degree)
+
+        # Find the max multiplicity of each knot
+        unique_knots = np.unique(np.concatenate([self_knots, other_knots]))
+        multiplicity = np.zeros_like(unique_knots, dtype=int)
+        for i, k in enumerate(unique_knots):
+            multiplicity[i] = max(
+                np.sum(self_knots == k),
+                np.sum(other_knots == k)
+            )
+        # Create new knots
+        knots = np.repeat(unique_knots, multiplicity)
+        return BSplineBasis(degree, knots)
+\end{python}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Cox-de Boor recursion formula for B-spline basis functions (\cref{eq:b-spline-recurrence}) implemented as a recursive function using memoization.}
+\label{alg:cox-de-boor}
+\begin{python}
+from functools import cache
+
+
+@cache
+def cox_de_boor(
+    t: Tuple[Float], k: int, i: int, x: float
+) -> float:
+    """
+    Evaluate the i-th B-spline basis function of degree k at x
+    using the Cox-de Boor recursion formula.
+
+    :param t: The knots for the basis.
+    :param k: The degree of the basis.
+    :param i: The i-th basis function to evaluate.
+    :param x: The parameter value to evaluate the basis function at.
+    :return: The value of the i-th basis function at x.
+    """
+    if k == 0:
+        return int(t[i] <= x < t[i+1])
+
+    b1 = t[i+k] - t[i]
+    if b1 != 0:
+        b1 = (x - t[i]) / b1
+        b1 *= cox_de_boor(t, k-1, i, x)
+
+    b2 = t[i+k+1] - t[i+1]
+    if b2 != 0:
+        b2 = (t[i+k+1] - x) / b2
+        b2 *= cox_de_boor(t, k-1, i+1, x)
+
+    return b1 + b2
+\end{python}
+\end{algorithm}

@@ -471,16 +471,18 @@ Writing the equation for the product of the two B-splines gives
 \begin{subequations}\label{eq:b-spline-product}
     \begin{align}
         h(x) &= f(x) g(x) \label{eq:b-spline-product-1} \\
-        &= \mathbf{B}_{p_1, \mathbf{t}_1}^{\top}(x) \mathbf{c}_1 \mathbf{B}_{p_2, \mathbf{t}_2}^{\top}(x) \mathbf{c}_2 \label{eq:b-spline-product-2} \\
-        &= (\mathbf{B}_{p_1, \mathbf{t}_1}^{\top}(x) \otimes \mathbf{B}_{p_2, \mathbf{t}_2}^{\top}(x)) (\mathbf{c}_1 \otimes \mathbf{c}_2) \label{eq:b-spline-product-3} \\
+        &= \left(\mathbf{B}_{p_1, \mathbf{t}_1}^{\top}(x) \mathbf{c}_1\right) 
+        \left(\mathbf{B}_{p_2, \mathbf{t}_2}^{\top}(x) \mathbf{c}_2\right) \label{eq:b-spline-product-2} \\
+        &= \left(\mathbf{B}_{p_1, \mathbf{t}_1}^{\top}(x) \otimes \mathbf{B}_{p_2, \mathbf{t}_2}^{\top}(x)\right) 
+        \left(\mathbf{c}_1 \otimes \mathbf{c}_2\right) \label{eq:b-spline-product-3} \\
         \mathbf{B}_{q, \boldsymbol{\tau}}^{\top}(x) \mathbf{d} 
-        &= (\mathbf{B}_{p_1, \mathbf{t}_1}(x) \otimes \mathbf{B}_{p_2, \mathbf{t}_2}(x))^{\top} (\mathbf{c}_1 \otimes \mathbf{c}_2), \label{eq:b-spline-product-4}
+        &= \left(\mathbf{B}_{p_1, \mathbf{t}_1}(x) \otimes \mathbf{B}_{p_2, \mathbf{t}_2}(x)\right)^{\top} \left(\mathbf{c}_1 \otimes \mathbf{c}_2\right), \label{eq:b-spline-product-4}
     \end{align}
 \end{subequations}
 
 where $\otimes$ denotes the Kronecker product. In \cref{eq:b-spline-product-3}, the mixed product property of the Kronecker product has been used, while \cref{eq:b-spline-product-4} is obtained using the fact that the transpose is distributive over the Kronecker product \citep{LOAN200085}. \Cref{eq:b-spline-product-4} resembles the structure in \cref{eq:transformation-matrix-equation}, and the transformation matrix $\mathbf T$ from $\mathbf c_1 \otimes \mathbf c_2$ to $\mathbf d$ can similarily be found by sampling \cref{eq:b-spline-product-4} at the Greville abscissae of $\mathbf B_{q, \boldsymbol{\tau}}^{\top}(x)$. This is summarized in \cref{alg:multiplication}.
 
-This algorithm can be made more efficient by exploiting the local support property of B-splines. The product of two B-splines is zero outside the union of the supports of the two B-splines, and the transformation matrix $\mathbf T$ will have many zero entries. So, instead of computing the Kronecker products $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and $(\mathbf c_1 \otimes \mathbf c_2)$, which are column vectors of $p_1\cdot p_2$ entries, one can instead create vectors where only the non-zero entries of $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and corresponding entries of $(\mathbf c_1 \otimes \mathbf c_2)$ are stored. 
+This algorithm can be made more efficient by exploiting the local support property of B-splines. The product of two B-splines is zero outside the union of the supports of the two B-splines, and the transformation matrix $\mathbf T$ will have many zero entries. So, instead of computing the Kronecker products $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and $\mathbf c_1 \otimes \mathbf c_2$, which are column vectors of $p_1\cdot p_2$ entries, one can instead create vectors where only the non-zero entries of $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and corresponding entries of $\mathbf c_1 \otimes \mathbf c_2$ are stored. 
 
 \begin{algorithm}
     \caption{Product}\label{alg:multiplication}
@@ -536,7 +538,7 @@ This algorithm can be made more efficient by exploiting the local support proper
         \end{aligned}
     \end{equation*}
     This is a matrix with $p_1 \cdot p_2$ rows and column number equal to the number of Greville abscissae in $\boldsymbol{\tau}$, which depend on the degrees of $\mathbf B_{p_1, \mathbf{t}_1}$ and $\mathbf B_{p_2, \mathbf{t}_2}$ and how many knots they share.
-    In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero entries, but as the knot vectors get denser, the number of zero entries will increase.
+    In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero-entries, but as the knot vectors get denser, this number will increase.
 
     \begin{table}[H]
         \centering
@@ -546,11 +548,11 @@ This algorithm can be made more efficient by exploiting the local support proper
             \rule{0pt}{2.5ex} & \textbf{Support} & $\left[0, \frac{1}{4}\right]$ & $\left[0, \frac{1}{2}\right]$ & $\left[0, \frac{3}{4}\right]$ & $\left[\frac{1}{4}, \frac{3}{4}\right]$ & $\left[\frac{1}{2}, 1\right]$ & $\left[\frac{3}{4}, 1\right]$ \\[5pt]
             \hline\hline
             \rule{0pt}{2.5ex}$B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{1}{3}\right]$ & 
-            1 & 1 & 1 & 1 & 0 & 0 \\[5pt]
+            1 & 1 & 1 & 1 & 0 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
             $B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{2}{3}\right]$ &
-            1 & 1 & 1 & 1 & 1 & 0 \\[5pt]
+            1 & 1 & 1 & 1 & 1 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
             $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{1}{3}, 1\right]$ &
-            0 & 1 & 1 & 1 & 1 & 1 \\[5pt]
+            0 & 1 & 1 & 1 & 1 & 1 \\[5pt]\hline\rule{0pt}{2.5ex}
             $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{2}{3}, 1\right]$ & 
             0 & 0 & 1 & 1 & 1 & 1 \\[5pt]
         \end{tabular}

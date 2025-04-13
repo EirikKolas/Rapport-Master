@@ -5,7 +5,66 @@
 
 \section{Dynamic Model}
 \subsection{Double Integrator}
-The double integrator model is a simple model
+The double integrator model is a simple model that ensures a continuous position, velocity, and acceleration for the ship. The model is described by the following equations:
+\begin{subequations}\label{eq:double-integrator}
+    \begin{align}
+        \dot{\mathbf{p}}(t) &= \mathbf{v}(t), \label{eq:double-integrator-x} \\
+        \dot{\mathbf{v}}(t) &= \mathbf{a}(t), \label{eq:double-integrator-v} \\
+        \|\mathbf{v}(t)\|_2 &\leq v_{\max}, \label{eq:double-integrator-vmax} \\
+        \|\mathbf{a}(t)\|_2 &\leq a_{\max}, \label{eq:double-integrator-a}
+    \end{align}
+\end{subequations}
+where $\mathbf{p} = [p_N, p_E]^\top$ denotes the position of the ship, $\mathbf{v} = [v_N, v_E]^\top$ is the velocity, and $\mathbf{a} = [a_N, a_E]^\top$ is the acceleration in North-East coordinates. The $\|\cdot\|_2$ notation denotes the Euclidean norm, and $v_{\max}$ and $a_{\max}$ are the maximum speed and acceleration of the ship, respectively.
+
+This continuous model can be relaxed to a B-spline model by letting $\mathbf{p}(x)$, $\mathbf{v}(x)$, and $\mathbf{a}(x)$ be spline functions on a chosen B-spline basis. It is desirable to let time be a variable in the optimization problem so that minimum time trajectories can be found. It is impractical to let the knot values of the B-spline representation of $\mathbf{p}(x)$ be optimization variables as an analysis of the Cox-de Boor recursion formula in \cref{eq:b-spline-recurrence} shows that the spline function is non-linear in these knot values. More specifically a degree $p$ B-spline with the parameter $x$ fixed, will be a polynomial of degree $p$ in the knot values. Instead, the time variable $t$ is introduced as a function of the parameter $x$, which is a common approach in these types of problems \citep{mercy2017spline,ShortestPathsConvexSets}. 
+
+With this approach, the velocity and acceleration can now be expressed as
+\begin{subequations}\label{eq:double-integrator-spline}
+    \begin{align}
+        \mathbf{v}(t) &= \frac{\partial \mathbf{p}}{\partial x} \frac{\partial x}{\partial t} = \frac{\mathbf{p}'}{t'},
+        \label{eq:double-integrator-v-spline} \\
+        \mathbf{a}(t) &= \frac{\partial \mathbf{v}}{\partial t} = \frac{\partial}{\partial t} \left(\frac{\mathbf{p}'}{t'}\right) = 
+        \frac{
+            t'\frac{\partial \mathbf{p}'}{\partial t} - \mathbf{p}'\frac{\partial t'}{\partial t}
+            }{(t')^2} = 
+        \frac{\mathbf{p}'' - \mathbf{p}'\frac{t''}{t'}}{(t')^2}.
+        \label{eq:double-integrator-a-spline}
+    \end{align}
+\end{subequations}
+Here $(\cdot)'$ and $(\cdot)''$ denotes the first and second derivative with respect to the parameter $x$, respectively. In \cref{eq:double-integrator-spline}, the inverse function theorem was used to flip the relation between $t$ and $x$. This is only possible if $t$ is a strictly increasing function of $x$, which is the case if the constraint 
+\begin{equation}\label{eq:constraint-t}
+    t'(x) > 0
+\end{equation}
+holds.  
+If we in addition require the time to be positive, the velocity constraint in \cref{eq:double-integrator-vmax} becomes
+\begin{equation}\label{eq:double-integrator-vmax-spline}
+    \begin{aligned}
+        &&\|\mathbf{v}(t)\|_2 = \left\|\frac{\mathbf{p}'}{t'}\right\|_2 &\leq v_{\max} \\
+        &\implies& \|\mathbf{p}'(x)\|_2 &\leq t'(x)v_{\max} \\
+        &\implies& \mathbf{p}'(x)\cdot\mathbf{p}'(x) &\leq (t'(x))^2v_{\max}^2.
+    \end{aligned}
+\end{equation}
+To simplify the model, yet another restriction is put on the time function $t(x)$ by requiring it to be a 1st degree B-spline function. This means that the time variable is a piecewise linear function of the parameter $x$, and the second derivative of $t$ is zero, giving the simplified acceleration constraint
+\begin{equation}\label{eq:double-integrator-a-spline-simplified}
+    \begin{aligned}
+        &&\|\mathbf{a}(t)\|_2 = \left\|\frac{\mathbf{p}''}{(t')^2}\right\|_2 &\leq a_{\max} \\
+        &\implies& \|\mathbf{p}''(x)\|_2 &\leq (t'(x))^2a_{\max} \\
+        &\implies& \mathbf{p}''(x)\cdot\mathbf{p}''(x) &\leq (t'(x))^4a_{\max}^2.
+    \end{aligned}
+\end{equation}
+
+Now the B-Spline relaxation is fully given by the following equations:
+\begin{subequations}\label{eq:double-integrator-spline-complete}
+    \begin{align}
+        \mathbf{p}(x) &= \sum_{i=0}^{n} \mathbf{p}_i B_{i,p,\mathbf{t}}(x), \label{eq:double-integrator-spline-complete-p} \\
+        t(x) &= \sum_{i=0}^{m} t_i B_{i,1,\boldsymbol{\tau}}(x), \label{eq:double-integrator-spline-complete-t} \\
+        \mathbf{p}'(x) \cdot \mathbf{p}'(x) &\leq (t'(x))^2v_{\max}^2, \label{eq:double-integrator-spline-complete-vmax} \\
+        \mathbf{p}''(x) \cdot \mathbf{p}''(x) &\leq (t'(x))^4a_{\max}^2, \label{eq:double-integrator-spline-complete-a} \\
+        t(x) &\geq 0, \label{eq:double-integrator-spline-complete-t-constraint} \\
+        t'(x) &> 0. \label{eq:double-integrator-spline-complete-t-derivative} \end{align}
+\end{subequations}
+The only optimization variables needed are the B-Spline coefficients $\mathbf{p}_i\in\mathbb{R}^2$ and $t_i\in\mathbb{R}^+$ from \cref{eq:double-integrator-spline-complete-p,eq:double-integrator-spline-complete-t}, which are subject to the constraints \cref{eq:double-integrator-spline-complete-vmax,eq:double-integrator-spline-complete-a,eq:double-integrator-spline-complete-t-constraint,eq:double-integrator-spline-complete-t-derivative}.
+
 
 \subsection{Dubins Model}
 The ship dynamics are represented using Dubins model (unicycle model), which escribes a vehicle moving in a plane where the velocity points in the direction of the heading:
@@ -66,7 +125,7 @@ Substituting \cref{eq:omega-r} into \cref{eq:rdot-omega} gives
 \begin{equation}\label{eq:rdot-omega-r}
     \left|\frac{2 \dot r}{1 + r^2}\right| \leq \omega_{\max},
 \end{equation}
-which can be split into the two constraints
+which can be split into the two polynomial constraints
 \begin{subequations}\label{eq:rdot-omega-r-constraints}
     \begin{align}
         2 \dot r &\leq \omega_{\max} (1 + r^2), \label{eq:rdot-omega-r-constraint1} \\
@@ -92,28 +151,59 @@ To implement the inequality constraint $f(t) \le g(t)$, for two spline functions
     \item mixed integer programming
 \end{itemize}
 
+\subsection{Hyperplane Separation Theorem}
 The standard way to enforce collision constraints between the OS and TS is to apply a minumum distance constraint between the two ships as
 \begin{equation}\label{eq:minimum-distance}
     (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \cdot (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \geq d_{\text{min}}^2,
 \end{equation}
 where $\mathbf p_{\text{OS}}$ and $\mathbf p_{\text{TS}}$ are the positions of the OS and TS, respectively, and $d_{\text{min}}$ is the minimum distance between the two ships. The $\cdot$ symbol denotes the dot product. 
 
-The hyperplane separation theorem states that for two disjoint convex sets $\mathcal A$ and $\mathcal B$, there exists a hyperplane $\{\mathbf x \mid \mathbf a^\top \mathbf x = b, \mathbf a\ne \mathbf 0\}$ that separates the two sets \citep{Boyd2004-ih}. In other words, there exists a function $a^\top x - b$ that is non-negative for all $x \in \mathcal A$ and non-positive for all $x \in \mathcal B$. 
+The hyperplane separation theorem states that for two disjoint convex sets $\mathcal A$ and $\mathcal B$, there exists $\mathbf n\in \mathbb R^n\backslash\{\mathbf0\}$ and $b\in\mathbb R$ such that the hyperplane $H=\{\mathbf x\in\mathbb R^n \mid \mathbf n^\top \mathbf x = b\}$ separates $\mathcal A$ and $\mathcal B$ \citep{Boyd2004-ih}. In other words, there exists a function $a^\top x - b$ that is non-negative for all $x \in \mathcal A$ and non-positive for all $x \in \mathcal B$. 
 
-Using this theorem the collision avoidance problem is essentially transformed into a classification problem, where the goal is to find a line that separates points $\mathbf p_i$ representing the edges of a polygonal OS from points $\mathbf q_j$ belonging to an obstacle.
+Using this theorem the collision avoidance problem can essentially be transformed into a classification problem. The objective is to find a line that separates points $\mathbf p_i$ representing the OS from points $\mathbf q_j$ belonging to the TS.
 \begin{subequations}\label{eq:minimum-distance-hyperplane}
     \begin{align}
-        \mathbf p_{i}(t) \cdot{\mathbf a}(t) &\ge b(t), \quad\forall i\in\mathbf P
+        \mathbf p_{i}(t) \cdot{\mathbf n}(t) &\ge b(t), \quad\forall \mathbf p_i\in\mathbf P_{OS}
         \label{eq:hyperplane-os} \\
-        \mathbf q_{j}(t) \cdot{\mathbf a}(t) &\le b(t) + d_{j}, \quad\forall j\in\mathbf Q
+        \mathbf q_{j}(t) \cdot{\mathbf n}(t) &\le b(t) + d_{j}, \quad\forall \mathbf q_j\in\mathbf P_{TS}
         \label{eq:hyperplane-ts} \\
-        \|{\mathbf a}(t)\|_\infty &\le 1.
+        \|{\mathbf n}(t)\|_\infty &\le 1.
         \label{eq:hyperplane-norm}
     \end{align}
 \end{subequations}
 The constraints in \cref{eq:hyperplane-os,eq:hyperplane-ts} are enforced by
-letting $\mathbf a(t)$ and $b(t)$ be optimization variables. \Cref{eq:hyperplane-norm} is a box constraint on $\mathbf a(t)$, ensuring that the hyperplane normal doesn't become too large. The minimum distance constraint in \cref{eq:minimum-distance} can be equivalently expressed using the hyperplane separation theorem by letting $\mathbf p_0 = \mathbf p_{\text{OS}}$, $\mathbf q_0 = \mathbf p_{\text{TS}}$ and $d_0 = d_{\text{min}}$ for $\mathbf P = \{0\}$ and $\mathbf Q = \{0\}$ in \cref{eq:minimum-distance-hyperplane}.
+letting $\mathbf n(t)$ and $b(t)$ be optimization variables. \Cref{eq:hyperplane-norm} is a box constraint on $\mathbf n(t)$, ensuring that the hyperplane normal doesn't become too large. The minimum distance constraint in \cref{eq:minimum-distance} can be equivalently expressed using the hyperplane separation theorem by letting $\mathbf P_{OS} = \{\mathbf p_{OS}\}$ and $\mathbf P_{TS} = \{\mathbf p_{TS}\}$ in \cref{eq:minimum-distance-hyperplane}.
 
-\section{COLREGS Constraints}
+\subsection{COLREGS Constraints}
 
-The COLREGS
+Finding a collision-free trajectory around an obstacle is in general a non-convex problem. Moreover, fixing the starting- and end-points of the trajectory it is not possible to continuously move the trajectory from one side of the obstacle to the other without passing through the obstacle. This is illustrated in \cref{fig:non-convex-obstacle} and is problematic from a numerical optimization perspective, as given an initial solution passing on one side of the obstacle, and the solvers incrementally stepping nature, there is no guarantee that the solver will find a solution on the other side of the obstacle as it has to pass through the obstacle to get there\todo{reformuler mer presist}. This is a simplified description of the problem, which only applies to convex problem solvers. The true behaviour is dependent on the type of solver used, and the constraint formulation.
+
+\begin{figure}
+    \centering
+    \includesvg[width=0.8\textwidth]{fig/b-spline/non-convex-obstacle.svg}
+    \caption{Red dots: Fixed start- and end-points of the trajectory. Black line: current trajectory. Dotted line: reference trajectory. Black circle: obstacle. A convex optimization solver will \emph{in general} not be able to find the optimal trajectory as it is not possible to continuously move the trajectory from one side of the obstacle to the other without violating the obstacle constraint.}
+    \label{fig:non-convex-obstacle}
+\end{figure}
+
+For designing a COLREGS-compliant trajectory, being able to decide which side of a given target ship to pass on is essential. So to address the aforementioned issue, which side to pass the obstacle on is made a decision variable in a mixed integer programming (MIP) problem as follows:
+
+The idea is that each target ship is represented by two obstacles, each obstacle having only one feasible side to be passed on. The passing side of the target ship is enforced by adding a point $\mathbf p_j$ to each obstacle on the opposide side of the passing side using the normal $\mathbf{\hat n}_{ref}$ of the reference trajectory $\mathbf p_{ref}$. The two obstacles are then moved into and out of the feasible region by introducing a binary variable $z_j\in\{0,1\}$ for each target ship $j$ which controls an offset $M \mathbf{\hat n}_{ref}$, where $M$ is a large positive number. More formally, the constraints are given by
+\begin{subequations}\label{eq:colregs-constraints}
+    \begin{align}
+        \mathbf p_{j}(t) \cdot{\mathbf n}(t) &\ge b(t) + z_j M, \quad\forall \mathbf p_j\in\mathbf P_{TS}^L, \label{eq:colregs-left} \\
+        \mathbf q_{j}(t) \cdot{\mathbf n}(t) &\le b(t) + d_{j} + (1 - z_j) M, \quad\forall \mathbf q_j\in\mathbf P_{TS}^R, \label{eq:colregs-right} \\
+        z_j &\in \{0,1\}, \label{eq:colregs-binary}
+    \end{align}
+\end{subequations}
+where $\mathbf P_{TS}^L$ and $\mathbf P_{TS}^R$ are the left and right target ship obstacles, respectively. The left and right target ship obstacles are defined as the two points on the opposite side of the passing side of the target ship, as shown in \cref{fig:non-convex-obstacle-mi}. The binary variable $z_j$ is used to control which side of the target ship to pass on. If $z_j = 0$, the left obstacle is moved into the feasible region, and if $z_j = 1$, the right obstacle is moved into the feasible region.
+
+In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a way to continuously move the trajectory from one side of the obstacle to the other without violating any constraints. To be clear, all of the obstacles and points are active at the same time, but with a large enough chosen constant $M$, the inactive obstacles are so far away from the trajectory that they do not affect the optimization problem. This strategy is commonly referred to as the \emph{big-M} method in the Mixed Integer Programming (MIP) literature.
+
+\begin{figure}
+    \centering
+    \includesvg[width=0.8\textwidth]{fig/b-spline/non-convex-obstacle-mi.svg}
+    \caption{Red dots: Fixed start- and end-points of the trajectory. Black line: current trajectory. Dotted line: reference trajectory. Magenta circle: target ship. The left and right target ship obstacles are shown in blue and orange, respectively. The left obstacle is moved into the feasible region if $z_j = 0$, and the right obstacle is moved into the feasible region if $z_j = 1$.}
+    \label{fig:non-convex-obstacle-mi}
+\end{figure}
+
+\section{Implementation}

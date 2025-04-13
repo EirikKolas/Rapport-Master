@@ -212,6 +212,8 @@ The B-spline MINMPC is done in python using mainly CasADi \citep{casadi} and num
 The B-spline implementation closely follows the structure in \citet{mercy2016spline}, and takes inspiration from the CasAdi wrapper presented there, with the main modifications focusing on small optimizations, making the library more type safe, and making it easier to use with vector-valued spline functions. Support for CasADis MIP solvers was also added, which was not present in the original implementation. 
 The code is available in \todo{gh repo}.
 
+In the end, all the B-spline transformations and handling is abstracted away, letting the user create B-spline variables and constraints on symbolic variables as if they were normal CasADi variables. 
+
 \begin{algorithm}
 \caption{B-spline basis class with datafields for degree and knots. The class evaluates the B-spline basis using the Cox-de Boor recursion formula (\cref{alg:cox-de-boor}).}
 \label{alg:b-spline-class}

@@ -50,7 +50,9 @@ These properties are well-documented in the literature and are summarized as fol
     $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1 \quad\forall x \in [t_i, t_{i+1})$.
 \end{property}
 
-So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by simply allowing the coefficients $c_j$ to be vectors. In this case the B-spline is a vector-valued function $f: \mathbb R \rightarrow \mathbb R^m$. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} still hold, as the basis functions themselves are still scalar-valued.
+So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by simply allowing the coefficients $c_j$ to be vectors. In this case the B-spline is a vector-valued function $f: \mathbb R \rightarrow \mathbb R^m$. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} still hold, as the basis functions themselves are still scalar-valued. 
+
+For vector-valued functions, the dot product is denoted by $\mathbf f(x) \cdot \mathbf g(x)$ and is defined as $\mathbf f(x)^\top \mathbf g(x)$, where $\mathbf f(x), \mathbf g(x) \in \mathbb{R}^m$.
 
 \begin{figure}
     \centering
@@ -560,3 +562,18 @@ This algorithm can be made more efficient by exploiting the local support proper
         \label{tab:ex-spline-supports}
     \end{table}
 \end{example}
+
+The dot product of two vector-valued B-splines is a scalar function that combines the components of the two vector-valued functions. This operation is useful in applications such as calculating projections, measuring similarity, or defining energy functions in optimization problems. The dot product for vector-valued functions is defined as:
+\begin{equation}
+    \label{eq:dot-product}
+    \langle\mathbf f(x), \mathbf g(x)\rangle = \sum_{i=1}^m f_i(x) g_i(x)
+\end{equation}
+where $\mathbf f, \mathbf g: \mathbb{R} \to \mathbb{R}^m$, $\mathbf f(x) = [f_1(x), \ldots, f_m(x)]^\top$ and $\mathbf g(x) = [g_1(x), \ldots, g_m(x)]^\top$ are vector-valued functions with $m$ components. When $\mathbf f$ and $\mathbf g$ are spline functions, the dot product can be expressed in terms of their B-spline representations as
+\begin{equation}
+    \label{eq:dot-product-spline}
+    \begin{aligned}
+        \langle\mathbf f(x), \mathbf g(x)\rangle &= \langle\mathbf B_{p_1, \mathbf t_1}^\top(x) \mathbf c_1, \mathbf B_{p_2, \mathbf t_2}^\top(x) \mathbf c_2\rangle \\
+        &= \sum_{i=1}^m \left(\mathbf B_{p_1, \mathbf t_1}^\top(x) \mathbf c_{1,i}\right) \left(\mathbf B_{p_2, \mathbf t_2}^\top(x) \mathbf c_{2,i}\right) \\
+        &= \sum_{i=1}^m \mathbf B_{p_1, \mathbf t_1}^\top(x) \mathbf c_{1,i} \otimes \mathbf B_{p_2, \mathbf t_2}^\top(x) \mathbf c_{2,i} \\
+    \end{aligned}
+\end{equation}

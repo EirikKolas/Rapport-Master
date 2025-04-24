@@ -202,17 +202,66 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
 \begin{figure}
     \centering
     \includesvg[width=0.8\textwidth]{fig/b-spline/non-convex-obstacle-mi.svg}
-    \caption{Red dots: Fixed start- and end-points of the trajectory. Black line: current trajectory. Dotted line: reference trajectory. Magenta circle: target ship. The left and right target ship obstacles are shown in blue and orange, respectively. The left obstacle is moved into the feasible region if $z_j = 0$, and the right obstacle is moved into the feasible region if $z_j = 1$.}
+    \caption{Red dots: Fixed start- and end-points of the trajectory. Black line: current trajectory. Dotted line: reference trajectory. The left and right target ship obstacles are shown in blue and orange, respectively. The left obstacle is moved into the feasible region if $z_j = 0$, and the right obstacle is moved into the feasible region if $z_j = 1$.}
     \label{fig:non-convex-obstacle-mi}
 \end{figure}
 
 \section{Implementation}
 
-The B-spline MINMPC is done in python using mainly CasADi \citep{casadi} and numpy \citep{numpy} as the main libraries. The code is divided into two main parts: a B-spline implementation and a CasAdi wrapper. 
-The B-spline implementation closely follows the structure in \citet{mercy2016spline}, and takes inspiration from the CasAdi wrapper presented there, with the main modifications focusing on small optimizations, making the library more type safe, and making it easier to use with vector-valued spline functions. Support for CasADis MIP solvers was also added, which was not present in the original implementation. 
+The B-spline MINMPC is implemented in python using CasADi \citep{casadi} and numpy \citep{numpy} as the main libraries. The code is divided into two main parts: a B-spline implementation and a CasAdi wrapper. 
+The B-spline implementation closely follows the structure in \citet{mercy2016spline}, and takes inspiration from the CasAdi wrapper presented there. The main modifications are focused around on small optimizations, making the library more type safe, and making it easier to use with vector-valued spline functions. Support for CasADi's MIP solvers was also added, which was not present in the original implementation. 
 The code is available in \todo{gh repo}.
 
 In the end, all the B-spline transformations and handling is abstracted away, letting the user create B-spline variables and constraints on symbolic variables as if they were normal CasADi variables. 
+
+
+\subsection{B-spline Basis Class}
+
+\begin{algorithm}
+    \caption{Cox-de Boor recursion formula for B-spline basis functions (\cref{eq:b-spline-recurrence}) implemented as a recursive function using memoization.}
+    \label{alg:cox-de-boor}
+    \begin{python}
+    from functools import cache
+    import numpy as np
+    
+    def cox_de_boor(
+        t: np.array[float], k: int, i: int, x: float
+    ) -> float:
+        """
+        Evaluate the i-th B-spline basis function of degree k at x
+        using the Cox-de Boor recursion formula.
+    
+        :param t: The knots for the basis.
+        :param k: The degree of the basis.
+        :param i: The i-th basis function to evaluate.
+        :param x: The parameter value to evaluate the basis function at.
+        :return: The value of the i-th basis function at x.
+        """
+    
+        @cache
+        def _internal(t: tuple[float], x: float) -> float:
+            if len(t) == 2:
+                return int(t[0] <= x < t[1])
+    
+            b1 = t[-2] - t[0]
+            if b1 != 0:
+                b1 = (x - t[0]) / b1
+                b1 *= _internal(t[:-1], x)
+    
+            b2 = t[-1] - t[1]
+            if b2 != 0:
+                b2 = (t[-1] - x) / b2
+                b2 *= _internal(t[1:], x)
+    
+            return b1 + b2
+    
+        return _internal(tuple(t[i:i+k+1]), x)    
+    
+    \end{python}
+    \end{algorithm}
+
+
+
 
 \begin{algorithm}
 \caption{B-spline basis class with datafields for degree and knots. The class evaluates the B-spline basis using the Cox-de Boor recursion formula (\cref{alg:cox-de-boor}).}
@@ -237,7 +286,7 @@ class BSplineBasis:
         Evaluates the B-spline basis at a given point x.
         """
         return [
-            cox_de_boor(tuple(self.knots), self.degree, i, x)
+            cox_de_boor(self.knots, self.degree, i, x)
             for i in range(len(self))
         ]
 
@@ -300,40 +349,61 @@ class BSplineBasis:
 \end{python}
 \end{algorithm}
 
+
+The B-spline basis class is implemented as a dataclass with the degree and knots as datafields. It has methods from \cref{chap:b-spline-theory}. Some of which are listed below:
+\begin{itemize}
+    \item 
+    The \texttt{\_\_call\_\_} method is implemented to evaluate the B-spline basis functions at a given point $x$ using the Cox-de Boor recursion formula. This lets the user call the B-spline basis object as a function, e.g. \texttt{basis(x)}. The B-spline basis functions are evaluated using the Cox-de Boor recursion formula from \cref{eq:b-spline-recurrence} as shown in \cref{alg:cox-de-boor}. The algorithm is implemented using memoization to avoid recomputing the same values multiple times. The memoiziation is done over the minimal set of knots needed to evaluate the B-spline basis function, which is the $k+1$ knots surrounding the knot $t_i$ where the basis function is evaluated. This minimizes the number of function evaluations needed to be stored in memory and maximizes cache hits. The memoization is implemented using the \texttt{@cache} decorator from the functools library.
+    \item
+    The \texttt{transform} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:basis-transformation} to find the transformation matrix $\mathbf T$ in \cref{eq:transformation-matrix-solution}.
+    \item
+    The \texttt{combine} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:common-basis} to find the common basis of two B-spline bases with different degrees. 
+\end{itemize}
+
+
+\FloatBarrier
+\subsection{B-spline Class}
+
+
+\subsection{Optimization Problem Class}
+This section will present the public interface of the Optimization Problem class. The class is designed to be used with CasADi and operates similarly to CasADi's own Opti framework. It differs from CasADi's Opti framework in that it supports B-spline variables and constraints, as well as binary and integer variables more seamlessly. The Optimization Problem class is also modular, in the sense that different objects can be used to represent e.g. the own ship, target ship and reference, before being combined into a single optimization problem. This will be clarified in the following example.
+
 \begin{algorithm}
-\caption{Cox-de Boor recursion formula for B-spline basis functions (\cref{eq:b-spline-recurrence}) implemented as a recursive function using memoization.}
-\label{alg:cox-de-boor}
+\caption{The public interface of the Optimization Problem class.}
+\label{alg:optimization-problem-class}
 \begin{python}
-from functools import cache
+from cs_mpc import OptiObject, OptiCollection, BSplineBasis
 
 
-@cache
-def cox_de_boor(
-    t: Tuple[Float], k: int, i: int, x: float
-) -> float:
-    """
-    Evaluate the i-th B-spline basis function of degree k at x
-    using the Cox-de Boor recursion formula.
+degree = 3
+n_control_points = 10
+basis = create_uniform_b_spline_basis(
+    degree, n_control_points, 0, 1
+)
 
-    :param t: The knots for the basis.
-    :param k: The degree of the basis.
-    :param i: The i-th basis function to evaluate.
-    :param x: The parameter value to evaluate the basis function at.
-    :return: The value of the i-th basis function at x.
-    """
-    if k == 0:
-        return int(t[i] <= x < t[i+1])
+own_ship = OptiObject('own_ship')
+os_pos = own_ship.declare_spline_variable('pos', n_dim=2, basis=basis)
+os_pos_0 = own_ship.declare_parameter('pos_0', n_dim=2)
+os_pos_f = own_ship.declare_parameter('pos_f', n_dim=2)
 
-    b1 = t[i+k] - t[i]
-    if b1 != 0:
-        b1 = (x - t[i]) / b1
-        b1 *= cox_de_boor(t, k-1, i, x)
+own_ship.declare_constraint(os_pos(0) - os_pos_0, lb=0, ub=0)
+own_ship.declare_constraint(os_pos(1) - os_pos_f, lb=0, ub=0)
 
-    b2 = t[i+k+1] - t[i+1]
-    if b2 != 0:
-        b2 = (t[i+k+1] - x) / b2
-        b2 *= cox_de_boor(t, k-1, i+1, x)
+end_err = os_pos - os_pos_f
+own_ship.declare_objective(end_err.dot(end_err).definite_integral(0,1))
 
-    return b1 + b2
+
+target_ship = OptiObject('target_ship')
+ts_pos = target_ship.declare_spline_parameter('pos', n_dim=2, basis=basis)
+ts_err = os_pos - ts_pos
+min_dist = target_ship.declare_parameter('min_dist', n_dim=1)
+target_ship.declare_constraint(ts_err.dot(ts_err) - min_dist**2, lb=0)
+
+
+opti = OptiCollection([own_ship, target_ship])
+# Set parameters
+# ...
+sol = opti.solve()
+
 \end{python}
 \end{algorithm}

@@ -574,6 +574,14 @@ where $\mathbf f, \mathbf g: \mathbb{R} \to \mathbb{R}^m$, $\mathbf f(x) = [f_1(
     \begin{aligned}
         \langle\mathbf f(x), \mathbf g(x)\rangle &= \langle\mathbf B_{p_1, \mathbf t_1}^\top(x) \mathbf c_1, \mathbf B_{p_2, \mathbf t_2}^\top(x) \mathbf c_2\rangle \\
         &= \sum_{i=1}^m \left(\mathbf B_{p_1, \mathbf t_1}^\top(x) \mathbf c_{1,i}\right) \left(\mathbf B_{p_2, \mathbf t_2}^\top(x) \mathbf c_{2,i}\right) \\
-        &= \sum_{i=1}^m \mathbf B_{p_1, \mathbf t_1}^\top(x) \mathbf c_{1,i} \otimes \mathbf B_{p_2, \mathbf t_2}^\top(x) \mathbf c_{2,i} \\
+        &= \sum_{i=1}^m \left(\mathbf B_{p_1, \mathbf t_1}^\top(x) \otimes \mathbf B_{p_2, \mathbf t_2}^\top(x)\right) \left(\mathbf c_{1,i} \otimes \mathbf c_{2,i}\right) \\
+        &= \left(\mathbf B_{p_1, \mathbf t_1}(x) \otimes \mathbf B_{p_2, \mathbf t_2}(x)\right)^{\top} \sum_{i=1}^m \mathbf c_{1,i} \otimes \mathbf c_{2,i},
     \end{aligned}
+\end{equation}
+where $\mathbf c_{1,i}$ and $\mathbf c_{2,i}$ are the coefficients of the $i$-th component of $\mathbf f$ and $\mathbf g$, respectively. Notice that the expression $\left(\mathbf B_{p_1, \mathbf t_1}(x) \otimes \mathbf B_{p_2, \mathbf t_2}(x)\right)^{\top}$ is found in both \cref{eq:b-spline-product-4} and \cref{eq:dot-product-spline}. This means that the transformation matrix $\mathbf T$ for the dot product can be computed in the same way as for the multiplication, using \cref{alg:multiplication}.
+This is due to the fact that per \cref{eq:transformation-matrix-solution}, the transformation matrix $\mathbf T$ is independent of the coefficients $\mathbf c_{1}$ and $\mathbf c_{2}$.
+
+So, to find the dot product $h(x) = \langle\mathbf f(x), \mathbf g(x)\rangle$, \cref{alg:multiplication} is used on the bases of $\mathbf f$ and $\mathbf g$, and the coefficients $\mathbf d$ of $h(x) = \mathbf B_{q, \boldsymbol{\tau}}^\top(x) \mathbf d$ are given by
+\begin{equation}
+    \mathbf d = \mathbf T \sum_{i=1}^m (\mathbf c_{1,i} \otimes \mathbf c_{2,i}).
 \end{equation}

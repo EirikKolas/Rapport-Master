@@ -2,3 +2,51 @@
 %===================================== CHAP 5 =================================
 
 \chapter{Simulation Results}\label{chap:simulation-results}
+
+- simulation setup
+- stationary target
+- head on situation
+- crossing situation
+- overtaking situation
+
+\section{Simulation Setup}\label{sec:simulation-setup}
+
+The B-spline MINMPC is implemented in Python using the library presented in \cref{sec:python-implementation}. The simulation is run on a laptop with an AMD Ryzen 7 5000 Series CPU and 16 GB of RAM. The simulation parameters are summarized in \cref{tab:simulation-parameters}. 
+
+Unless otherwise specified the OS is represented with a 3rd degree uniform B-spline of length 10 over the interval $[0, 1]$. The double integrator model is used to represent the OS, which has a maximum speed of 6 m/s. In the different simulation scenarios, the target ship heading will vary to force the situations described by the COLREGS rules 8 and 13-17.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|p{7cm}|}
+        \hline
+        Parameter & Value & Unit & Description \\
+        \hline
+        \rule{0pt}{2.5ex}$k$ & 3 & - & Degree of the B-spline basis \\
+        \hline
+        \rule{0pt}{2.5ex}$N$ & 10 & - & Number of basis functions in the B-spline basis \\
+        \hline
+        \rule{0pt}{2.5ex}$v_\text{max}$ & 6 & m/s & Own ship maximum speed \\
+        \hline
+        \rule{0pt}{2.5ex}$d_p$ & 50 & m & Minimum distance to target on the passing side \\
+        \hline
+        \rule{0pt}{2.5ex}$d_o$ & 100 & m & Minimum distance to target on the opposide side \\
+        \hline
+    \end{tabular}
+    \caption{Simulation parameters.}
+    \label{tab:simulation-parameters}
+\end{table}
+
+
+\section{Simulation Results}\label{sec:simulation-results}
+
+\todo[inline]{Diskuter hastighetsendring vs kursendring}
+
+\subsection{Simulation 1: Stationary Target}
+\label{sec:simulation-1-stationary-target}
+
+\subsection{Performance Evaluation}
+\label{sec:performance-evaluation}
+
+Conservativeness vs. performance
+
+Use a more spcialized solver. Bonmin was used. Could have used CPLEX, as the problem is quadratically constrainted with a quadratic objective, although it is not open source.

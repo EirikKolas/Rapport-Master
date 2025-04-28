@@ -206,7 +206,11 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
     \label{fig:non-convex-obstacle-mi}
 \end{figure}
 
-\section{Implementation}
+
+
+
+
+\section{Implementation}\label{sec:python-implementation}
 
 The B-spline MINMPC is implemented in python using CasADi \citep{casadi} and numpy \citep{numpy} as the main libraries. The code is divided into two main parts: a B-spline implementation and a CasAdi wrapper. 
 The B-spline implementation closely follows the structure in \citet{mercy2016spline}, and takes inspiration from the CasAdi wrapper presented there. The main modifications are focused around on small optimizations, making the library more type safe, and making it easier to use with vector-valued spline functions. Support for CasADi's MIP solvers was also added, which was not present in the original implementation. 
@@ -368,9 +372,7 @@ The B-spline basis class is implemented as a dataclass with the degree and knots
 \subsection{Optimization Problem Class}
 This section will present the public interface of the Optimization Problem class. The class is designed to be used with CasADi and operates similarly to CasADi's own Opti framework. It differs from CasADi's Opti framework in that it supports B-spline variables and constraints, as well as binary and integer variables more seamlessly. The Optimization Problem class is also modular, in the sense that different objects can be used to represent e.g. the own ship, target ship and reference, before being combined into a single optimization problem. This will be clarified in the following example.
 
-\begin{algorithm}
-\caption{The public interface of the Optimization Problem class.}
-\label{alg:optimization-problem-class}
+\begin{example}{Optimization Problem Setup}
 \begin{python}
 from cs_mpc import OptiObject, OptiCollection, BSplineBasis
 
@@ -401,9 +403,11 @@ target_ship.declare_constraint(ts_err.dot(ts_err) - min_dist**2, lb=0)
 
 
 opti = OptiCollection([own_ship, target_ship])
-# Set parameters
-# ...
+own_ship.set_value('pos_0', [0, 0])
+own_ship.set_value('pos_f', [1000, 0])
+target_ship.set_value('pos', ...)
+target_ship.set_value('min_dist', 10)
 sol = opti.solve()
 
 \end{python}
-\end{algorithm}
+\end{example}

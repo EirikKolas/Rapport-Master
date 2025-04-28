@@ -10,6 +10,10 @@
 \usepackage{amsmath}
 \usepackage{color}
 \usepackage{xargs}
+\usepackage{mdframed} % Removed [framemethod=tikz]
+\usepackage[most]{tcolorbox} % Add tcolorbox and breakable library
+\tcbuselibrary{breakable} % Explicitly load breakable library
+\usepackage{capt-of}
 \usepackage{subcaption}
 \usepackage[pdftex,dvipsnames]{xcolor}
 \usepackage{transparent}
@@ -41,9 +45,9 @@
 \usepackage[style=altsuper4col,acronym]{glossaries}
 % \usepackage[style=altsuper4colheader]{glossaries}
 \usepackage{float}
-\usepackage[section,below,above]{placeins} % Prevent floats from floating into the next section
+\usepackage{flafter} 
+\usepackage[section]{placeins} % Prevent floats from floating into the next section - Relaxed options
 %\floatstyle{boxed} 
-\restylefloat{figure}
 
 % ShareLaTeX does not support glossaries now. Sorry...
 %\usepackage[number=none]{glossary}
@@ -121,14 +125,27 @@ bordercolor=ForestGreen,#1]{#2}}
 \newtheorem{property}{Property}
 \crefname{property}{Property}{properties}
 
-% Add numbered example environment
+% Add numbered example environment with standout style and indented
+\theoremstyle{definition}
 \newtheorem{example}{Example}[chapter]
 \crefname{example}{Example}{examples}
 
+\newenvironment{indentedexample}[1][]
+    {\par\begin{example}[#1]
+        \begin{mdframed}[
+            linewidth=1pt,
+            linecolor=black,
+            bottomline=false,topline=false,rightline=false,
+            innerrightmargin=0pt,innertopmargin=0pt,innerbottommargin=0pt,
+            innerleftmargin=1em,% Distance between vertical rule & proof content
+            skipabove=1\baselineskip % Keep space above relative to title
+            % Removed skipbelow
+            ]}
+{\end{mdframed}\vspace{\baselineskip}\end{example}} % Add vspace after mdframed
+    
 % Add numbered math algorithm environment
 \newtheorem{mathalgo}{Algorithm}[chapter]
 \crefname{mathalgo}{Algorithm}{algorithms}
-
 
 % Def eq command
 \newcommand{\defeq}{\vcentcolon=}

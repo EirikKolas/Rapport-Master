@@ -95,7 +95,7 @@ the derivative of the B-spline can be computed by simply differencing its coeffi
 \begin{equation}\label{eq:b-spline-derivative}
     \frac{d}{dx} f(x) = (p-1) \sum_{j=1}^{n-1} \frac{c_j-c_{j-1}}{t_{j+p-1}-t_j} B_{j, p-1, \boldsymbol{\tau}}(x)
 \end{equation}
-where $\boldsymbol{\tau} = [t_j]_{j=1}^{n+p-1}$ is the same knot vector as $\mathbf{t}$, but with the first and last knot removed in order to maintain \todo{finn ord som passer}.
+where $\boldsymbol{\tau} = [t_j]_{j=1}^{n+p-1}$ is the same knot vector as $\mathbf{t}$, but with the first and last knot removed in order to maintain \todo[inlinepar]{finn ord som passer}.
 
 The new coefficients can be expressed using a transformation matrix $\mathbf T_D$ such that $\mathbf{c}_D = \mathbf T_D \mathbf{c}$, where $\mathbf{c}_D$ is the vector of coefficients of the derivative B-spline. The transformation matrix is then an $(n-1) \times n$ matrix with elements:
 
@@ -157,7 +157,7 @@ As integration and differentiation are inverse operations, it should come as no 
 
 
 \section{Transforming Between Bases}\label{sec:basis-transformation}
-In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$\todo{ikke helt sant} \citep{Grimstad2016}. Moreover, the coefficients in the new basis can be found by solving a linear system of equations. This is the core idea behind the basis transformation method presented in this section.
+In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$\todo[inlinepar]{ikke helt sant} \citep{Grimstad2016}. Moreover, the coefficients in the new basis can be found by solving a linear system of equations. This is the core idea behind the basis transformation method presented in this section.
 
 The goal is to find the transformation matrix $\mathbf T$ such that $\mathbf c_{q, \boldsymbol \tau} = \mathbf T \mathbf c_{p, \mathbf t}$, where $\mathbf c_{q, \boldsymbol \tau}$ and $\mathbf c_{p, \mathbf t}$ are the coefficients of the spline function $\mathbf S$ in the bases $\mathbf B_{q,\boldsymbol \tau}$ and $\mathbf B_{p,\mathbf t}$, respectively.
 
@@ -211,7 +211,7 @@ The matrix $\mathbf T$ is then simply
 \begin{equation}\label{eq:transformation-matrix-solution}
     \mathbf T = [\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \xi_{q,\boldsymbol \tau})^\top]^{-1} [\mathbf B_{p,\mathbf t}(\boldsymbol \xi_{q,\boldsymbol \tau})^{\top}].
 \end{equation}
-As the B-spline basis functions are linearly independent, and the Greville abscissae are chosen such that each basis function is sampled at a point near the ``center'' of its support, the matrix $[\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \xi_{q,\boldsymbol \tau})^\top]$ is always invertible\todo{Finn kilde}. This matrix is also known as the \emph{Collocation matrix} in the literature \todo{Finn kilde} and is used to interpolate an arbitrary function with a B-spline.
+As the B-spline basis functions are linearly independent, and the Greville abscissae are chosen such that each basis function is sampled at a point near the ``center'' of its support, the matrix $[\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \xi_{q,\boldsymbol \tau})^\top]$ is always invertible\todo[inlinepar]{Finn kilde}. This matrix is also known as the \emph{Collocation matrix} in the literature \todo[inlinepar]{Finn kilde} and is used to interpolate an arbitrary function with a B-spline.
 
 \begin{algorithm}
     \caption{B-spline Basis Transformation}\label{alg:basis-transformation}
@@ -266,7 +266,8 @@ $\mathbf u = \unique(t) = \{a, \eta_1, \dots, \eta_n, b\}$
     \end{algorithmic}
 \end{algorithm}
 
-\begin{example}[Degree Elevation]
+\todo[inline]{legg til plot av konstant spline og lineær spline}
+\begin{indentedexample}[Degree Elevation]
     We want to express the constant spline $f(x) =\mathbf B_{0, \mathbf t}^\top\mathbf c$ with knot vector $\mathbf t = \left[0, 1\right]$ as a linear spline $g(x) = \mathbf B_{1, \boldsymbol \tau}^\top \mathbf d$ with knot vector $\boldsymbol \tau = \left[0, 0, 1, 1\right]$. 
 
     The Greville abscissae for the linear spline are 
@@ -283,7 +284,7 @@ $\mathbf u = \unique(t) = \{a, \eta_1, \dots, \eta_n, b\}$
             \frac{1}{3} & \frac{2}{3}
         \end{bmatrix}.
     \end{equation*}
-    Evaluating $\mathbf B_{0, \mathbf t}$ and $\mathbf B_{1, \boldsymbol \tau}$  at the Greville abscissae gives\todo{legg til plot av konstant spline og lineær spline}
+    Evaluating $\mathbf B_{0, \mathbf t}$ and $\mathbf B_{1, \boldsymbol \tau}$  at the Greville abscissae gives
     \begin{equation*}
         \begin{aligned}
             \mathbf B_{0, \mathbf t}\begin{pmatrix}\frac{1}{3}\end{pmatrix} &= \begin{bmatrix} 1 \end{bmatrix}, 
@@ -339,10 +340,9 @@ $\mathbf u = \unique(t) = \{a, \eta_1, \dots, \eta_n, b\}$
             c_0
         \end{bmatrix}
     \end{equation*}
-\end{example}
+\end{indentedexample}
 
-
-\begin{example}[Knot Refinement]
+\begin{indentedexample}[Knot Refinement]
     Given a linear spline function $f(x) = \mathbf B_{1, \mathbf t}^\top \mathbf c$ with knot vector $\mathbf t = \left\{ 0, 0, \frac{1}{2}, 1, 1\right\}$, the goal is to express it with in the basis $\mathbf B_{1, \boldsymbol \tau}$ with the refined knot vector $\boldsymbol \tau = \left\{ 0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1\right\}$.
 
         The Greville abscissae for the refined basis are
@@ -404,8 +404,6 @@ $\mathbf u = \unique(t) = \{a, \eta_1, \dots, \eta_n, b\}$
             \mathbf c.
         \end{equation*}
 
-
-        \begin{table*}[h]
             \centering
             \begin{tabular}{c|c|c|c|c|c}
                 Knot Interval & $\mathbf B_{1, \boldsymbol\tau, 0}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 1}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 2}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 3}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 4}(x)$ \\[5pt]
@@ -418,11 +416,10 @@ $\mathbf u = \unique(t) = \{a, \eta_1, \dots, \eta_n, b\}$
                 \hline
                 \rule{0pt}{2.5ex} $\left[\frac{3}{4},1\right]$ & 0 & 0 & 0 & $4-4x$ & $-3+4x$
             \end{tabular}
-            \caption{The polynomials for each basis function in $\mathbf B_{1, \left[0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1\right]}$ in their respecive knot intervals}
+            \captionof{table}{The polynomials for each basis function in $\mathbf B_{1, \left[0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1\right]}$ in their respecive knot intervals}
             \label{tab:linear-spline-evaluation}
-        \end{table*}
-\end{example}
 
+\end{indentedexample}
 
 \section{Addition and Subtraction}
 Finding the sum of two B-splines that share the same basis is a simple task as their coefficients can just be added together:
@@ -465,7 +462,7 @@ To do this, the basis of the lowest degree is first elevated to the highest degr
 
 \section{Multiplication and Dot Product}
 
-For addition, the common basis had to have degree $q \geq \max(p_1, p_2)$, but for multiplication, the degree of the common basis must be $q = p_1 + p_2$\todo{forklar hvorfor}. Intuitively, this is because the product of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $p_1 + p_2$ while the sum of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $\max(p_1, p_2)$.
+For addition, the common basis had to have degree $q \geq \max(p_1, p_2)$, but for multiplication, the degree of the common basis must be $q = p_1 + p_2$\todo[inlinepar]{forklar hvorfor}. Intuitively, this is because the product of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $p_1 + p_2$ while the sum of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $\max(p_1, p_2)$.
 
 In order to find the product of two B-splines, an approach similar to \cref{sec:basis-transformation} can be used. Given two spline functions $f(x) = \mathbf{B}_{p_1, \mathbf{t}_1}^{\top}(x) \mathbf{c}_1$ and $g(x) = \mathbf{B}_{p_2, \mathbf{t}_2}^{\top}(x) \mathbf{c}_2$, the goal is to find a common basis $\mathbf{B}_{q, \boldsymbol{\tau}}^{\top}(x)$ with degree $q$ and knot vector $\boldsymbol{\tau}$ such that $h(x) = \mathbf{B}_{q, \boldsymbol{\tau}}^{\top}(x) \mathbf{d} = f(x)  g(x)$.
 
@@ -498,7 +495,7 @@ This algorithm can be made more efficient by exploiting the local support proper
 \end{algorithm}
 
 
-\begin{example}
+\begin{indentedexample}[B-Spline Product]
     \label{ex:linear-spline-multiplication}
     Consider the two B-splines
     \begin{equation*}
@@ -540,28 +537,28 @@ This algorithm can be made more efficient by exploiting the local support proper
         \end{aligned}
     \end{equation*}
     This is a matrix with $p_1 \cdot p_2$ rows and column number equal to the number of Greville abscissae in $\boldsymbol{\tau}$, which depend on the degrees of $\mathbf B_{p_1, \mathbf{t}_1}$ and $\mathbf B_{p_2, \mathbf{t}_2}$ and how many knots they share.
-    In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero-entries, but as the knot vectors get denser, this number will increase.
+    In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero-entries, but as the knot vectors get denser, this number will increase. $\square$
 
-    \begin{table}[H]
-        \centering
-        \begin{tabular}{c|c||c|c|c|c|c|c}
-            \textbf{Basis} &  & $B_{0, p_2, \mathbf{t}_2}$ & $B_{1, p_2, \mathbf{t}_2}$ & $B_{2, p_2, \mathbf{t}_2}$ & $B_{3, p_2, \mathbf{t}_2}$ & $B_{4, p_2, \mathbf{t}_2}$ & $B_{5, p_2, \mathbf{t}_2}$ \\[5pt]
-            \hline
-            \rule{0pt}{2.5ex} & \textbf{Support} & $\left[0, \frac{1}{4}\right]$ & $\left[0, \frac{1}{2}\right]$ & $\left[0, \frac{3}{4}\right]$ & $\left[\frac{1}{4}, \frac{3}{4}\right]$ & $\left[\frac{1}{2}, 1\right]$ & $\left[\frac{3}{4}, 1\right]$ \\[5pt]
-            \hline\hline
-            \rule{0pt}{2.5ex}$B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{1}{3}\right]$ & 
-            1 & 1 & 1 & 1 & 0 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
-            $B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{2}{3}\right]$ &
-            1 & 1 & 1 & 1 & 1 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
-            $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{1}{3}, 1\right]$ &
-            0 & 1 & 1 & 1 & 1 & 1 \\[5pt]\hline\rule{0pt}{2.5ex}
-            $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{2}{3}, 1\right]$ & 
-            0 & 0 & 1 & 1 & 1 & 1 \\[5pt]
-        \end{tabular}
-        \caption{Overlapping supports of $B_{p_1, \mathbf{t}_1}$ and $B_{p_2, \mathbf{t}_2}$ in \cref{ex:linear-spline-multiplication}.}
-        \label{tab:ex-spline-supports}
-    \end{table}
-\end{example}
+
+    \centering
+    \begin{tabular}{c|c||c|c|c|c|c|c}
+        \textbf{Basis} &  & $B_{0, p_2, \mathbf{t}_2}$ & $B_{1, p_2, \mathbf{t}_2}$ & $B_{2, p_2, \mathbf{t}_2}$ & $B_{3, p_2, \mathbf{t}_2}$ & $B_{4, p_2, \mathbf{t}_2}$ & $B_{5, p_2, \mathbf{t}_2}$ \\[5pt]
+        \hline
+        \rule{0pt}{2.5ex} & \textbf{Support} & $\left[0, \frac{1}{4}\right]$ & $\left[0, \frac{1}{2}\right]$ & $\left[0, \frac{3}{4}\right]$ & $\left[\frac{1}{4}, \frac{3}{4}\right]$ & $\left[\frac{1}{2}, 1\right]$ & $\left[\frac{3}{4}, 1\right]$ \\[5pt]
+        \hline\hline
+        \rule{0pt}{2.5ex}$B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{1}{3}\right]$ & 
+        1 & 1 & 1 & 1 & 0 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
+        $B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{2}{3}\right]$ &
+        1 & 1 & 1 & 1 & 1 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
+        $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{1}{3}, 1\right]$ &
+        0 & 1 & 1 & 1 & 1 & 1 \\[5pt]\hline\rule{0pt}{2.5ex}
+        $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{2}{3}, 1\right]$ & 
+        0 & 0 & 1 & 1 & 1 & 1 \\[5pt]
+    \end{tabular}
+    \captionof{table}{Overlapping supports of $B_{p_1, \mathbf{t}_1}$ and $B_{p_2, \mathbf{t}_2}$ in \cref{ex:linear-spline-multiplication}.}
+    \label{tab:ex-spline-supports}
+
+\end{indentedexample}
 
 The dot product of two vector-valued B-splines is a scalar function that combines the components of the two vector-valued functions. This operation is useful in applications such as calculating projections, measuring similarity, or defining energy functions in optimization problems. The dot product for vector-valued functions is defined as:
 \begin{equation}

@@ -41,12 +41,98 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
 
 \todo[inline]{Diskuter hastighetsendring vs kursendring}
 
-\subsection{Simulation 1: Stationary Target}
-\label{sec:simulation-1-stationary-target}
+\subsection{Case 1: Stationary Targets}
+\label{sec:case-1-stationary-targets}
+
+\begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        Case & $pos_{TS}$ & $w_{time}$ & $w_{traj}$ & $w_{acc}$ & Plot \\
+        \hline
+        1 & (20, 0), $\mathbf{(-20, 100)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-2} \\
+        \hline
+        2 & (20, 0), $\mathbf{(-10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-3} \\
+        \hline
+        3 & (20, 0), $\mathbf{(10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-4} \\
+        \hline
+        4 & (20, 0), (-10, 200) & $\mathbf{100}$ & 1 & $1/100^2$ & \cref{fig:stationary-target-5} \\
+        \hline
+        5 & (20, 0), (-10, 200) & 1 & $\mathbf{100}$ & $1/100^2$ & \cref{fig:stationary-target-6} \\
+        \hline
+        6 & (20, 0), (-10, 200) & 1 & 1 & $\mathbf{1/100}$ & \cref{fig:stationary-target-7} \\
+        \hline
+    \end{tabular}
+    \caption{Simulation cases for stationary targets. The first column indicates the case number, the second column indicates the position of the target ship, and the last three columns indicate the weights used in the optimization problem.}
+    \label{tab:stationary-targets}
+\end{table}
+
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/1_stationary_obstacle.svg}
+    \caption{Trajectory generation around a stationary target. }
+    \label{fig:stationary-target}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_above_both.svg}
+        \caption{Trajectory generation around two stationary targets (above both).}
+        \label{fig:stationary-target-2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_between.svg}
+        \caption{Trajectory generation around two stationary targets (between).}
+        \label{fig:stationary-target-3}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_below_both.svg}
+        \caption{Trajectory generation around two stationary targets (below both).}
+        \label{fig:stationary-target-4}
+    \end{subfigure}
+    \caption{Trajectory generation around two stationary targets in different configurations.}
+    \label{fig:stationary-targets-subfigures}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_high_time_ref_ratio.svg}
+        \caption{Trajectory generation around two stationary targets (high time reference ratio).}
+        \label{fig:stationary-target-5}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_low_time_ref_ratio.svg}
+        \caption{Trajectory generation around two stationary targets (low time reference ratio).}
+        \label{fig:stationary-target-6}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_high_acc.svg}
+        \caption{Trajectory generation around two stationary targets (high acceleration).}
+        \label{fig:stationary-target-7}
+    \end{subfigure}
+    \caption{Trajectory generation around two stationary targets in different configurations.}
+    \label{fig:stationary-targets-subfigures-2}
+\end{figure}
+
+
 
 \subsection{Performance Evaluation}
 \label{sec:performance-evaluation}
 
 Conservativeness vs. performance
 
-Use a more spcialized solver. Bonmin was used. Could have used CPLEX, as the problem is quadratically constrainted with a quadratic objective, although it is not open source.
+Use a more spcialized solver. Bonmin was used. Could have used CPLEX, as the problem is quadratically constrainted with a quadratic objective, although it is not open source. 

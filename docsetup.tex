@@ -3,26 +3,47 @@
 \usepackage{setspace}
 \usepackage[export]{adjustbox}
 \usepackage{graphicx}
+\usepackage[pdftex,dvipsnames]{xcolor}
 \usepackage{amssymb}
 \usepackage{mathrsfs}
 \usepackage{amsthm}
 \usepackage{mathtools}
 \usepackage{amsmath}
-\usepackage{color}
 \usepackage{xargs}
-\usepackage{mdframed} % Removed [framemethod=tikz]
-\usepackage[most]{tcolorbox} % Add tcolorbox and breakable library
-\tcbuselibrary{breakable} % Explicitly load breakable library
+\usepackage{mdframed}
 \usepackage{capt-of}
 \usepackage{subcaption}
-\usepackage[pdftex,dvipsnames]{xcolor}
-\usepackage{transparent}
 \usepackage{svg}
+\usepackage[most]{tcolorbox} % Add tcolorbox and breakable library
+\usepackage{transparent}
 \usepackage{pythonhighlight}
 \usepackage[colorinlistoftodos,prependcaption,textsize=small]{todonotes}
 \usepackage[Lenny]{fncychap}
+\usepackage[font=small,labelfont=bf]{caption}
+%\usepackage[intoc]{nomencl}
+%\renewcommand{\nomname}{List of Abbreviations}
+%\makenomenclature
+\usepackage{natbib}
+\usepackage[style=altsuper4col,acronym]{glossaries}
+% \usepackage[style=altsuper4colheader]{glossaries}
+\usepackage{float}
+\usepackage{flafter} 
+\usepackage[section]{placeins}
+
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc} % set input encoding
+\usepackage{varwidth}
+\usepackage{newfloat}
+\usepackage{algpseudocodex}
+% \usepackage{caption}
+% \usepackage{setspace}
+
+\usepackage{fancyhdr}
+\usepackage{times}
+
 \usepackage[pdftex,bookmarks=true]{hyperref}
-\usepackage[pdftex]{hyperref}
+% \usepackage[pdftex]{hyperref}
 \hypersetup{
     colorlinks,%
     citecolor=black,%
@@ -35,18 +56,6 @@
 \Crefname{equation}{Equation}{}
 \crefname{figure}{Figure}{figures}
 \crefname{section}{Section}{sections}
-\usepackage[font=small,labelfont=bf]{caption}
-\usepackage{fancyhdr}
-\usepackage{times}
-%\usepackage[intoc]{nomencl}
-%\renewcommand{\nomname}{List of Abbreviations}
-%\makenomenclature
-\usepackage{natbib}
-\usepackage[style=altsuper4col,acronym]{glossaries}
-% \usepackage[style=altsuper4colheader]{glossaries}
-\usepackage{float}
-\usepackage{flafter} 
-\usepackage[section]{placeins} % Prevent floats from floating into the next section - Relaxed options
 %\floatstyle{boxed} 
 
 % ShareLaTeX does not support glossaries now. Sorry...
@@ -92,17 +101,10 @@ bordercolor=ForestGreen,#1]{#2}}
 
 
 %% Algorithm
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc} % set input encoding
-\usepackage{varwidth}
 
-\usepackage{newfloat}
 \DeclareFloatingEnvironment[placement=htp]{algorithm}
-\usepackage{algpseudocodex}
 
-\usepackage{caption}
 \let\globalcaption=\caption
-\usepackage{setspace}
 
 % Change caption format
 \captionsetup[algorithm]{

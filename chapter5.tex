@@ -46,21 +46,21 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
 
 \begin{table}
     \centering
-    \begin{tabular}{|c|c|c|c|c|c|}
+    \begin{tabular}{|c|c|c|c|c|c|c|}
         \hline
-        Case & $pos_{TS}$ & $w_{time}$ & $w_{traj}$ & $w_{acc}$ & Plot \\
+        Case & \multicolumn{2}{c|}{TS position} & $w_{time}$ & $w_{traj}$ & $w_{acc}$ & Plot \\
         \hline
-        1 & (20, 0), $\mathbf{(-20, 100)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-2} \\
+        1 & (20, 0) & $\mathbf{(-20, 100)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-2} \\
         \hline
-        2 & (20, 0), $\mathbf{(-10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-3} \\
+        2 & (20, 0) & $\mathbf{(-10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-3} \\
         \hline
-        3 & (20, 0), $\mathbf{(10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-4} \\
+        3 & (20, 0) & $\mathbf{(10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-4} \\
         \hline
-        4 & (20, 0), (-10, 200) & $\mathbf{100}$ & 1 & $1/100^2$ & \cref{fig:stationary-target-5} \\
+        4 & (20, 0) & (-10, 200) & $\mathbf{100}$ & 1 & $1/100^2$ & \cref{fig:stationary-target-5} \\
         \hline
-        5 & (20, 0), (-10, 200) & 1 & $\mathbf{100}$ & $1/100^2$ & \cref{fig:stationary-target-6} \\
+        5 & (20, 0) & (-10, 200) & 1 & $\mathbf{100}$ & $1/100^2$ & \cref{fig:stationary-target-6} \\
         \hline
-        6 & (20, 0), (-10, 200) & 1 & 1 & $\mathbf{1/100}$ & \cref{fig:stationary-target-7} \\
+        6 & (20, 0) & (-10, 200) & 1 & 1 & $\mathbf{1/100}$ & \cref{fig:stationary-target-7} \\
         \hline
     \end{tabular}
     \caption{Simulation cases for stationary targets. The first column indicates the case number, the second column indicates the position of the target ship, and the last three columns indicate the weights used in the optimization problem.}
@@ -129,6 +129,10 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
 \end{figure}
 
 
+\subsection{Oscillations around the reference trajectory}
+\label{sec:oscillations}
+Using the definite integral over the squared reference error as a cost function, gives oscillations in the trajectory. This is due to the fact that the integral is less sensitive to high frequency oscillations than the sum of squared coefficients of the reference error spline. The integral puts more emphasis on the overall global shape of the trajectory, while the sum of squared coefficients puts more emphasis on the local shape. The oscillations can be damped by penalizing acceleration, but this is does not remove the oscillations completely. Further increasing the penalty on acceleration will lead to very slow convergence.
+The oscillations can be removed by using the sum of squared coefficients of the reference error as a cost function.
 
 \subsection{Performance Evaluation}
 \label{sec:performance-evaluation}

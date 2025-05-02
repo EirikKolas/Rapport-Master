@@ -537,7 +537,7 @@ This algorithm can be made more efficient by exploiting the local support proper
         \end{aligned}
     \end{equation*}
     This is a matrix with $p_1 \cdot p_2$ rows and column number equal to the number of Greville abscissae in $\boldsymbol{\tau}$, which depend on the degrees of $\mathbf B_{p_1, \mathbf{t}_1}$ and $\mathbf B_{p_2, \mathbf{t}_2}$ and how many knots they share.
-    In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero-entries, but as the knot vectors get denser, this number will increase. $\square$
+    In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero-entries, but as the knot vectors get denser, this number will increase.
 
 
     \centering
@@ -582,3 +582,11 @@ So, to find the dot product $h(x) = \langle\mathbf f(x), \mathbf g(x)\rangle$, \
 \begin{equation}
     \mathbf d = \mathbf T \sum_{i=1}^m (\mathbf c_{1,i} \otimes \mathbf c_{2,i}).
 \end{equation}
+
+As for the regular product, the dot product can be made more efficient by not computing the terms in the Kronecker product that correspond to non-overlapping supports of the basis functions. The most common case for applying the dot product is between two vector-valued B-splines of the same basis, in which case the number of non-zero entires is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline. This is linear in the number of basis functions, instead of quadratic as for when this optimization is not used. See explanation in \cref{fig:overlapping-bases}. Finding a general formula arbitrary bases is not as easily acheivable, as the number of non-zero entries depends on the placement of the knots in the knot vectors.
+
+\begin{figure}
+    \includesvg[width=\textwidth,pretex=\small]{fig/b-spline/overlapping-bases.svg}
+    \caption{The overlapping supports of the B-splines. Each rectangle represents the support of a basis function, so counting the number of basis functions withing each knot interval gives the number of multiplications for that interval. The total number of multiplications then the area of all the rectangles, which is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline.}
+    \label{fig:overlapping-bases}
+\end{figure}

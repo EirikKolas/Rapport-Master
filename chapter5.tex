@@ -129,12 +129,79 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
 \end{figure}
 
 
-\subsection{Oscillations around the reference trajectory}
+\section{Oscillations around the reference trajectory}
 \label{sec:oscillations}
 Using the definite integral over the squared reference error as a cost function, gives oscillations in the trajectory. This is due to the fact that the integral is less sensitive to high frequency oscillations than the sum of squared coefficients of the reference error spline. The integral puts more emphasis on the overall global shape of the trajectory, while the sum of squared coefficients puts more emphasis on the local shape. The oscillations can be damped by penalizing acceleration, but this is does not remove the oscillations completely. Further increasing the penalty on acceleration will lead to very slow convergence.
 The oscillations can be removed by using the sum of squared coefficients of the reference error as a cost function.
 
-\subsection{Performance Evaluation}
+\section{A Discussion on Conservativeness and Objectives}
+\label{sec:conservativeness}
+In \cref{sec:b-spline-relaxation} it was mentioned that the B-spline relaxation is conservative. This means that a solution to the relaxed problem is guaranteed to be feasible for the original problem, but not necessarily optimal. This section will discuss how this conservativeness affects the performance of the B-spline MINMPC algorithm.
+
+As a simple example, consider the problem of minimizing the distance between the OS and a reference trajectory, while ensuring that the OS does not exceed a maximum speed:
+\begin{equation}
+    \begin{aligned}
+        \min_{\mathbf c} \quad & \|\text{ctrl}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2 \\
+        \text{s.t.} \quad \mathbf p_\text{os}(0) &= \mathbf p_0, \\
+                     \mathbf p_\text{os} &= \mathbf B^\top(x) \mathbf c, \\
+                     \mathbf p_\text{ref} &= \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
+                     \langle p_\text{os}', p_\text{os}' \rangle &\le v_\text{max}^2,
+    \end{aligned}
+\end{equation}
+where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The $\text{ctrl}(\cdot)$ function extracts the control points of the B-spline function and $\|\cdot\|_\text{F}^2$ is the squared Frobenius norm, given by
+\begin{equation}
+    \|\mathbf A\|_\text{F}^2 = \sum_{i,j} a_{ij}^2,
+\end{equation}
+where $\mathbf A$ is a matrix and $a_{ij}$ is the element in the $i$-th row and $j$-th column of $\mathbf A$. 
+ 
+This optimization problem is then solved with a varying number of B-spline basis functions, $N$, and the results are shown in \cref{fig:conservativeness}. 
+
+\begin{table}[H] % Using [H] requires the float package
+    \centering
+    \caption{Relationship between Number of Basis Functions (N) and Degree (k)} 
+    \label{tab:conservativeness_data} 
+    \begin{tabular}{|c|cccc|} 
+        \hline
+        \textbf{N $\backslash$ k} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} \\ 
+        \hline
+        3  & 0.2000 &        &        &        \\
+        4  & 0.1000 & 0.1429 &        &        \\
+        5  & 0.0764 & 0.0822 & 0.1111 &        \\
+        6  & 0.0758 & 0.0801 & 0.0847 & 0.0909 \\
+        7  & 0.0730 & 0.0738 & 0.0765 & 0.0831 \\
+        8  & 0.0690 & 0.0669 & 0.0669 & 0.0707 \\
+        9  & 0.0647 & 0.0636 & 0.0656 & 0.0668 \\
+        10 & 0.0624 & 0.0640 & 0.0657 & 0.0667 \\
+        11 & 0.0622 & 0.0638 & 0.0646 & 0.0651 \\
+        12 & 0.0620 & 0.0630 & 0.0629 & 0.0633 \\
+        13 & 0.0616 & 0.0618 & 0.0622 & 0.0629 \\
+        14 & 0.0610 & 0.0612 & 0.0619 & 0.0627 \\
+        15 & 0.0608 & 0.0613 & 0.0619 & 0.0624 \\
+        16 & 0.0608 & 0.0612 & 0.0616 & 0.0618 \\
+        17 & 0.0607 & 0.0609 & 0.0611 & 0.0615 \\
+        18 & 0.0606 & 0.0605 & 0.0609 & 0.0614 \\
+        19 & 0.0604 & 0.0605 & 0.0609 & 0.0613 \\
+        20 & 0.0604 & 0.0605 & 0.0608 & 0.0610 \\
+        21 & 0.0604 & 0.0605 & 0.0606 & 0.0608 \\
+        22 & 0.0604 & 0.0604 & 0.0604 & 0.0607 \\
+        23 & 0.0604 & 0.0603 & 0.0605 & 0.0607 \\
+        24 & 0.0603 & 0.0603 & 0.0605 & 0.0606 \\
+        25 & 0.0603 & 0.0603 & 0.0604 & 0.0605 \\
+        26 & 0.0603 & 0.0603 & 0.0603 & 0.0604 \\
+        27 & 0.0603 & 0.0602 & 0.0603 & 0.0604 \\
+        28 & 0.0602 & 0.0602 & 0.0603 & 0.0604 \\
+        29 & 0.0602 & 0.0602 & 0.0603 & 0.0603 \\
+        30 & 0.0602 & 0.0602 & 0.0603 & 0.0603 \\
+        31 & 0.0602 & 0.0602 & 0.0602 & 0.0603 \\
+        32 & 0.0602 & 0.0602 & 0.0602 & 0.0603 \\
+        33 & 0.0602 & 0.0602 & 0.0602 & 0.0603 \\
+        34 & 0.0602 & 0.0602 & 0.0602 & 0.0602 \\
+        35 & 0.0602 & 0.0602 & 0.0602 & 0.0602 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{Performance Evaluation}
 \label{sec:performance-evaluation}
 
 Conservativeness vs. performance

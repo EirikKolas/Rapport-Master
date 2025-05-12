@@ -44,23 +44,27 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
 \subsection{Case 1: Stationary Targets}
 \label{sec:case-1-stationary-targets}
 
+To demonstrate the B-MINMPC's ability to find optimal trajectories in non-convex environments, a stationary target ship is placed at the position $(20, 0)$ in the simulation environment. The target ship is represented as a circle with a radius of 50 m. The OS is represented using the double integrator model in \cref{eq:double-integrator-spline-complete} with a maximum speed of 6 m/s. The OS is initialized at the position $(0, -500)$ and follows a reference trajectory from the initial position to $(0, 500)$. 
+
 \begin{table}
     \centering
     \begin{tabular}{|c|c|c|c|c|c|c|}
         \hline
         Case & \multicolumn{2}{c|}{TS position} & $w_{time}$ & $w_{traj}$ & $w_{acc}$ & Plot \\
         \hline
-        1 & (20, 0) & $\mathbf{(-20, 100)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-2} \\
+        1.0 & (20, 0) & $-$ & 1 & 1 & 0 & \cref{fig:stationary-target} \\
         \hline
-        2 & (20, 0) & $\mathbf{(-10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-3} \\
+        1.1 & (20, 0) & $\mathbf{(-20, 100)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-2} \\
         \hline
-        3 & (20, 0) & $\mathbf{(10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-4} \\
+        1.2 & (20, 0) & $\mathbf{(-10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-3} \\
         \hline
-        4 & (20, 0) & (-10, 200) & $\mathbf{100}$ & 1 & $1/100^2$ & \cref{fig:stationary-target-5} \\
+        1.3 & (20, 0) & $\mathbf{(10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-4} \\
         \hline
-        5 & (20, 0) & (-10, 200) & 1 & $\mathbf{100}$ & $1/100^2$ & \cref{fig:stationary-target-6} \\
+        1.4 & (20, 0) & (-10, 200) & $\mathbf{100}$ & 1 & $1/100^2$ & \cref{fig:stationary-target-5} \\
         \hline
-        6 & (20, 0) & (-10, 200) & 1 & 1 & $\mathbf{1/100}$ & \cref{fig:stationary-target-7} \\
+        1.5 & (20, 0) & (-10, 200) & 1 & $\mathbf{100}$ & $1/100^2$ & \cref{fig:stationary-target-6} \\
+        \hline
+        1.6 & (20, 0) & (-10, 200) & 1 & 1 & $\mathbf{1/100}$ & \cref{fig:stationary-target-7} \\
         \hline
     \end{tabular}
     \caption{Simulation cases for stationary targets. The first column indicates the case number, the second column indicates the position of the target ship, and the last three columns indicate the weights used in the optimization problem.}
@@ -71,7 +75,7 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
 \begin{figure}
     \centering
     \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/1_stationary_obstacle.svg}
-    \caption{Trajectory generation around a stationary target. }
+    \caption{\emph{Case 1.0}: Trajectory generation around a stationary target. }
     \label{fig:stationary-target}
 \end{figure}
 
@@ -80,14 +84,14 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_above_both.svg}
-        \caption{Trajectory generation around two stationary targets (above both).}
+        \caption{\emph{Case 1.1}: Trajectory generation around two stationary targets (above both).}
         \label{fig:stationary-target-2}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_between.svg}
-        \caption{Trajectory generation around two stationary targets (between).}
+        \caption{\emph{Case 1.2}: Trajectory generation around two stationary targets (between).}
         \label{fig:stationary-target-3}
     \end{subfigure}
     \hfill
@@ -97,7 +101,7 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
         \caption{Trajectory generation around two stationary targets (below both).}
         \label{fig:stationary-target-4}
     \end{subfigure}
-    \caption{Trajectory generation around two stationary targets in different configurations.}
+    \caption{\emph{Case 1.3}: Trajectory generation around two stationary targets in different configurations.}
     \label{fig:stationary-targets-subfigures}
 \end{figure}
 
@@ -107,21 +111,21 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_high_time_ref_ratio.svg}
-        \caption{Trajectory generation around two stationary targets (high time reference ratio).}
+        \caption{\emph{Case 1.4}: Trajectory generation around two stationary targets (high time reference ratio).}
         \label{fig:stationary-target-5}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_low_time_ref_ratio.svg}
-        \caption{Trajectory generation around two stationary targets (low time reference ratio).}
+        \caption{\emph{Case 1.5}: Trajectory generation around two stationary targets (low time reference ratio).}
         \label{fig:stationary-target-6}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_high_acc.svg}
-        \caption{Trajectory generation around two stationary targets (high acceleration).}
+        \caption{\emph{Case 1.6}: Trajectory generation around two stationary targets (high acceleration).}
         \label{fig:stationary-target-7}
     \end{subfigure}
     \caption{Trajectory generation around two stationary targets in different configurations.}
@@ -180,7 +184,9 @@ The oscillations can be removed by using the sum of squared coefficients of the 
         \caption{Trajectory using the definite integral over the squared reference error as a cost function.}
         \label{fig:conservativeness-traj-integral}
     \end{subfigure}
-    \caption{Comparison of the trajectory using the sum of squared coefficients of the reference error and the definite integral over the squared reference error as a cost function. The left plot shows the trajectory using the sum of squared coefficients, while the right plot shows the trajectory using the definite integral. The results are shown for a B-spline basis of degree 3.}
+    \caption{Comparison of optimal trajectory in \cref{eq:conservativeness-optimization} for a uniform B-spline of degree 3 for $N\in\{4,\ldots,20\}$.
+    % The top plot shows the trajectory using the sum of squared coefficients, while the bottom plot shows the trajectory using the definite integral.
+    }
     \label{fig:conservativeness-traj}
 \end{figure}
 
@@ -188,7 +194,7 @@ The oscillations can be removed by using the sum of squared coefficients of the 
 In \cref{sec:b-spline-relaxation} it was mentioned that the B-spline relaxation is conservative. This means that a solution to the relaxed problem is guaranteed to be feasible for the original problem, but not necessarily optimal. This section will discuss how this conservativeness affects the performance of the B-spline MINMPC algorithm.
 
 As a simple example, consider the problem of minimizing the distance between the OS and a reference trajectory, while ensuring that the OS does not exceed a maximum speed:
-\begin{equation}
+\begin{equation}\label{eq:conservativeness-optimization}
     \begin{aligned}
         \min_{\mathbf c} \quad & \|\text{ctrl}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2 \\
         \text{s.t.} \quad \mathbf p_\text{os}(0) &= \mathbf p_0, \\

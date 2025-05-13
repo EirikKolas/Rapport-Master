@@ -13,7 +13,10 @@
 
 The B-spline MINMPC is implemented in Python using the library presented in \cref{sec:python-implementation}. The simulation is run on a laptop with an AMD Ryzen 7 5000 Series CPU and 16 GB of RAM. The simulation parameters are summarized in \cref{tab:simulation-parameters}. 
 
-Unless otherwise specified the OS is represented with a 3rd degree uniform B-spline of length 10 over the interval $[0, 1]$. The double integrator model is used to represent the OS, which has a maximum speed of 6 m/s. In the different simulation scenarios, the target ship heading will vary to force the situations described by the COLREGS rules 8 and 13-17.
+Unless otherwise specified the OS is represented with a 3rd degree uniform B-spline of length 10 over the interval $[0, 1]$. The double integrator model in \cref{sec:double-integrator} is used to represent the OS, which has a maximum speed of 6 m/s. In the different simulation scenarios, the TS heading will vary to force the situations described by the COLREGS rules 8 and 13-17.
+
+For all cases going forward, the solver is initialized with the position spline of the OS equal to the reference trajectory, and the normal vectors of the starboard and port side of the TSs are initialized to the normal vectors of the reference trajectory. All other optimization variables are set to zero.
+
 
 \begin{table}[H]
     \centering
@@ -44,13 +47,24 @@ Unless otherwise specified the OS is represented with a 3rd degree uniform B-spl
 \subsection{Case 1: Stationary Targets}
 \label{sec:case-1-stationary-targets}
 
-To demonstrate the B-MINMPC's ability to find optimal trajectories in non-convex environments, a stationary target ship is placed at the position $(20, 0)$ in the simulation environment. The target ship is represented as a circle with a radius of 50 m. The OS is represented using the double integrator model in \cref{eq:double-integrator-spline-complete} with a maximum speed of 6 m/s. The OS is initialized at the position $(0, -500)$ and follows a reference trajectory from the initial position to $(0, 500)$. 
+To demonstrate the B-MINMPC's ability to find optimal trajectories in non-convex environments, a stationary TS is placed at the position $(20, 0)$ in the simulation environment. The TS is located at $(20, 0)$ with a minimum passing distance of 50 m. COLREGS are not considered in scenarios 1.x, as the TSs are stationary. 
+
+All varying parameters are summarized in \cref{tab:stationary-targets}. In \cref{fig:stationary-target} the trajectory is shown to pass the TS on the south side. This is expected, as the center of the TS is located above the North=0 axis. The following scenarios in Case 1 are variations of the first scenario, where 1.1-1.3 show the effect of changing the position of the TS, and 1.4-1.6 show the effect of changing the weights in the optimization problem. The cost function is given by
+\begin{equation}
+    \begin{aligned}
+        \min_{\mathbf c} \quad & w_\text{time} T \\
+        + & w_\text{traj}\|\text{coeffs}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2 \\
+        + & w_\text{acc}\|\text{coeffs}((\mathbf p_\text{os} - \mathbf{p}_\text{ref})')\|_\text{F}^2
+    \end{aligned}
+\end{equation}
+
+
 
 \begin{table}
     \centering
     \begin{tabular}{|c|c|c|c|c|c|c|}
         \hline
-        Case & \multicolumn{2}{c|}{TS position} & $w_{time}$ & $w_{traj}$ & $w_{acc}$ & Plot \\
+        Case & \multicolumn{2}{c|}{TS position} & $w_\text{time}$ & $w_\text{traj}$ & $w_\text{acc}$ & Plot \\
         \hline
         1.0 & (20, 0) & $-$ & 1 & 1 & 0 & \cref{fig:stationary-target} \\
         \hline
@@ -67,7 +81,7 @@ To demonstrate the B-MINMPC's ability to find optimal trajectories in non-convex
         1.6 & (20, 0) & (-10, 200) & 1 & 1 & $\mathbf{1/100}$ & \cref{fig:stationary-target-7} \\
         \hline
     \end{tabular}
-    \caption{Simulation cases for stationary targets. The first column indicates the case number, the second column indicates the position of the target ship, and the last three columns indicate the weights used in the optimization problem.}
+    \caption{Simulation cases for stationary targets. The first column indicates the case number, the second column indicates the position of the TS, and the last three columns indicate the weights used in the optimization problem.}
     \label{tab:stationary-targets}
 \end{table}
 
@@ -159,83 +173,6 @@ To demonstrate the B-MINMPC's ability to find optimal trajectories in non-convex
     \includesvg[width=\textwidth,pretex=\small]{fig/scenarios/Overtaking scenario.svg}
     \caption{Trajectory generation in an overtaking situation.}
     \label{fig:overtaking}
-\end{figure}
-
-\section{A Discussion on Conservativeness in Objectives}
-
-\subsection{Oscillations around the reference trajectory}
-\label{sec:oscillations}
-Using the definite integral over the squared reference error as a cost function, gives oscillations in the trajectory. This is due to the fact that the integral is less sensitive to high frequency oscillations than the sum of squared coefficients of the reference error spline. The integral puts more emphasis on the overall global shape of the trajectory, while the sum of squared coefficients puts more emphasis on the local shape. The oscillations can be damped by penalizing acceleration, but this is does not remove the oscillations completely. Further increasing the penalty on acceleration will lead to very slow convergence.
-The oscillations can be removed by using the sum of squared coefficients of the reference error as a cost function.
-
-
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_coeffs_degree_3.svg}
-        \caption{Trajectory using the sum of squared coefficients of the reference error as a cost function.}
-        \label{fig:conservativeness-traj-coeffs}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_integral_degree_3.svg}
-        \caption{Trajectory using the definite integral over the squared reference error as a cost function.}
-        \label{fig:conservativeness-traj-integral}
-    \end{subfigure}
-    \caption{Comparison of optimal trajectory in \cref{eq:conservativeness-optimization} for a uniform B-spline of degree 3 for $N\in\{4,\ldots,20\}$.
-    % The top plot shows the trajectory using the sum of squared coefficients, while the bottom plot shows the trajectory using the definite integral.
-    }
-    \label{fig:conservativeness-traj}
-\end{figure}
-
-\label{sec:conservativeness}
-In \cref{sec:b-spline-relaxation} it was mentioned that the B-spline relaxation is conservative. This means that a solution to the relaxed problem is guaranteed to be feasible for the original problem, but not necessarily optimal. This section will discuss how this conservativeness affects the performance of the B-spline MINMPC algorithm.
-
-As a simple example, consider the problem of minimizing the distance between the OS and a reference trajectory, while ensuring that the OS does not exceed a maximum speed:
-\begin{equation}\label{eq:conservativeness-optimization}
-    \begin{aligned}
-        \min_{\mathbf c} \quad & \|\text{ctrl}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2 \\
-        \text{s.t.} \quad \mathbf p_\text{os}(0) &= \mathbf p_0, \\
-                     \mathbf p_\text{os} &= \mathbf B^\top(x) \mathbf c, \\
-                     \mathbf p_\text{ref} &= \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
-                     \langle p_\text{os}', p_\text{os}' \rangle &\le v_\text{max}^2,
-    \end{aligned}
-\end{equation}
-where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The $\text{ctrl}(\cdot)$ function extracts the control points of the B-spline function and $\|\cdot\|_\text{F}^2$ is the squared Frobenius norm, given by
-\begin{equation}
-    \|\mathbf A\|_\text{F}^2 = \sum_{i,j} a_{ij}^2,
-\end{equation}
-where $\mathbf A$ is a matrix and $a_{ij}$ is the element in the $i$-th row and $j$-th column of $\mathbf A$. 
- 
-This optimization problem is then solved with a varying number of B-spline basis functions, $N$, and the results are shown in \cref{fig:conservativeness}. 
-
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_3.svg}
-        \caption{Linear plot}
-        \label{fig:sq-err-deg-3-linear}
-    \end{subfigure}
-    \begin{subfigure}[b]{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_3_log.svg}
-        \caption{Logarithmic plot}
-        \label{fig:sq-err-deg-3-log}
-    \end{subfigure}
-    \caption{Comparison of the performance using the sum of squared coefficients of the reference error and the definite integral over the squared reference error as a cost function. The left plot shows the performance using a linear scale, while the right plot shows the performance using a logarithmic scale. The results are shown for a B-spline basis of degree 3.}
-    \label{fig:conservativeness}
-\end{figure}
-\section{Performance Evaluation}
-\label{sec:performance-evaluation}
-
-\begin{figure}
-    \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_coeffs_all_degrees.svg}
-    \caption{Logaritmic plot of the Integral of the square error using the sum of squared coefficients as the cost function. The conservativeness is in general worse for larger degrees of the B-spline basis. The lowest obbserved value is subtracted from all values in the plot. This is why some values for $p=4$ appear to go towards negative infinity.}
-    \label{fig:conservativeness-coeffs}
 \end{figure}
 
 Conservativeness vs. performance

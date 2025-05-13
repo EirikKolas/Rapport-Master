@@ -34,3 +34,156 @@ By inverting the transformation matrix $\mathbf{\tilde T}_I$, we can express the
 \end{equation}
 
 Proof:
+
+
+\chapter{B-Spline Basis Python Implementation}\label{app:b-spline-python-implementation}
+
+
+\subsection{B-spline Basis Class}
+
+\begin{algorithm}
+    \caption{Cox-de Boor recursion formula for B-spline basis functions (\cref{eq:b-spline-recurrence}) implemented as a recursive function using memoization.}
+    \label{alg:cox-de-boor}
+    \begin{python}
+    from functools import cache
+    import numpy as np
+    
+    def cox_de_boor(
+        t: np.array[float], k: int, i: int, x: float
+    ) -> float:
+        """
+        Evaluate the i-th B-spline basis function of degree k at x
+        using the Cox-de Boor recursion formula.
+    
+        :param t: The knots for the basis.
+        :param k: The degree of the basis.
+        :param i: The i-th basis function to evaluate.
+        :param x: The parameter value to evaluate the basis function at.
+        :return: The value of the i-th basis function at x.
+        """
+    
+        @cache
+        def _internal(t: tuple[float], x: float) -> float:
+            if len(t) == 2:
+                return int(t[0] <= x < t[1])
+    
+            b1 = t[-2] - t[0]
+            if b1 != 0:
+                b1 = (x - t[0]) / b1
+                b1 *= _internal(t[:-1], x)
+    
+            b2 = t[-1] - t[1]
+            if b2 != 0:
+                b2 = (t[-1] - x) / b2
+                b2 *= _internal(t[1:], x)
+    
+            return b1 + b2
+    
+        return _internal(tuple(t[i:i+k+1]), x)    
+    
+    \end{python}
+    \end{algorithm}
+
+
+
+
+\begin{algorithm}
+\caption{B-spline basis class with datafields for degree and knots. The class evaluates the B-spline basis using the Cox-de Boor recursion formula (\cref{alg:cox-de-boor}).}
+\label{alg:b-spline-class}
+\begin{python}
+import numpy as np
+
+@dataclass(frozen=True)
+class BSplineBasis:
+    """
+    Class representing a B-spline basis.
+    """
+
+    degree: int
+    knots: np.ndarray
+
+    def __len__(self):
+        return len(self.knots) - self.degree - 1
+
+    def __call__(self, x: float) -> Array[Float]:
+        """
+        Evaluates the B-spline basis at a given point x.
+        """
+        return [
+            cox_de_boor(self.knots, self.degree, i, x)
+            for i in range(len(self))
+        ]
+
+\end{python}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{The algorithms for B-Spline basis transformation (\cref{alg:basis-transformation}) and combination (\cref{alg:common-basis}) implemented as methods of the B-spline basis class (\cref{alg:b-spline-class}).}
+\label{alg:b-spline-class-methods}
+\begin{python}
+class BSplineBasis:
+
+    ...
+
+    def transform(
+        self, other: Callable[[float], FloatArray]
+    ) -> FloatMatrix:
+        """
+        Get the transformation matrix P such that
+        P.T @ self = other.
+
+        :param other: The other basis or function to find the transformation matrix for.
+        """
+        points = self.greville_abscissae
+        A = self(points).T
+        b = np.concatenate([other(t).T for t in points], axis=0)
+        return np.linalg.solve(A, b)
+
+    def combine(
+        self, other: 'BSplineBasis', degree: int
+    ) -> 'BSplineBasis':
+        """
+        Find common basis of two bases with different degrees in the specified degree.
+
+        :param other: The other basis to combine with.
+        :param degree: The degree of the resulting basis.
+        :return: A new BSplineBasis object representing the combined basis.
+        """
+        def raise_degree(knots, degree):
+            if degree == 0:
+                return knots
+            return np.sort(np.concatenate([
+                np.repeat(np.unique(knots), degree), knots
+            ]))
+        # Raise the degree of the basis functions
+        self_knots = raise_degree(self.knots, degree - self.degree)
+        other_knots = raise_degree(other.knots, degree - other.degree)
+
+        # Find the max multiplicity of each knot
+        unique_knots = np.unique(np.concatenate([self_knots, other_knots]))
+        multiplicity = np.zeros_like(unique_knots, dtype=int)
+        for i, k in enumerate(unique_knots):
+            multiplicity[i] = max(
+                np.sum(self_knots == k),
+                np.sum(other_knots == k)
+            )
+        # Create new knots
+        knots = np.repeat(unique_knots, multiplicity)
+        return BSplineBasis(degree, knots)
+\end{python}
+\end{algorithm}
+
+
+The B-spline basis class is implemented as a dataclass with the degree and knots as datafields. It has methods from \cref{chap:b-spline-theory}. Some of which are listed below:
+\begin{itemize}
+    \item 
+    The \texttt{\_\_call\_\_} method is implemented to evaluate the B-spline basis functions at a given point $x$ using the Cox-de Boor recursion formula. This lets the user call the B-spline basis object as a function, e.g. \texttt{basis(x)}. The B-spline basis functions are evaluated using the Cox-de Boor recursion formula from \cref{eq:b-spline-recurrence} as shown in \cref{alg:cox-de-boor}. The algorithm is implemented using memoization to avoid recomputing the same values multiple times. The memoiziation is done over the minimal set of knots needed to evaluate the B-spline basis function, which is the $k+1$ knots surrounding the knot $t_i$ where the basis function is evaluated. This minimizes the number of function evaluations needed to be stored in memory and maximizes cache hits. The memoization is implemented using the \texttt{@cache} decorator from the functools library.
+    \item
+    The \texttt{transform} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:basis-transformation} to find the transformation matrix $\mathbf T$ in \cref{eq:transformation-matrix-solution}.
+    \item
+    The \texttt{combine} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:common-basis} to find the common basis of two B-spline bases with different degrees. 
+\end{itemize}
+
+
+\FloatBarrier
+\subsection{B-spline Class}

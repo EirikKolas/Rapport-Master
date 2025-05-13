@@ -4,7 +4,7 @@
 \chapter{B-spline MINMPC}\label{chap:b-spline-minmpc}
 
 \section{Dynamic Model}
-\subsection{Double Integrator}
+\subsection{Double Integrator}\label{sec:double-integrator}
 The double integrator model is a simple model that ensures a continuous position, velocity, and acceleration for the ship. The model is described by the following equations:
 \begin{subequations}\label{eq:double-integrator}
     \begin{align}
@@ -208,6 +208,98 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
 
 
 
+\section{The Objective Function}
+The goals of the objective function should be 1) to find a safe, COLREGS-compliant trajectory, and 2) to follow a reference trajectory. These objectives are conflicting as rule 8b) of the COLREGS (see \cref{sec:colregs}) states that any alteration of course should be large enough to be readily apparent to another vessel. Following a reference trajectory on the other hand often involves the squared error between the vessel and the reference trajectory, which inherently penalizes sudden deviations in course. 
+Thus a careful choice of the objective function is important to ensure robust and predictable behaviour. 
+The following section will examine the behavior of the B-spline method when applied to a basic reference-following task. The subsequent section will then address COLREGS considerations.
+
+
+\subsection{Reference Following}
+\label{sec:oscillations}
+Finding a reference-following trajectory using B-splines can be viewed as a penalized regression problem where the reference trajectory is the data to be fitted and the B-spline is the model used to fit data. In the literature, there are two common ways of fitting a B-Spline to data: 1) O'Sullivan splines \citep{OSullivan1986} or smoothing splines, which balances smoothness and fidelity to the data by penalizing the second derivative of the spline\footnote{More specifically the integral over the square of the second derivative.}, and 2) the P-Spline \citep{Eilers1996}, which penalizes the difference of coefficients directly. The second approach achieves more flexibility, as the penalty function is independent of the degree of the B-spline \citep{Eilers2021}. This section applies these two approaches to a constrained optimal control problem, comparing using the discrete and continuous squared reference error as the cost function. 
+
+% Using the definite integral over the squared reference error as a cost function, gives oscillations in the trajectory. This is due to the fact that the integral is less sensitive to high frequency oscillations than the sum of squared coefficients of the reference error spline. The integral puts more emphasis on the overall global shape of the trajectory, while the sum of squared coefficients puts more emphasis on the local shape. The oscillations can be damped by penalizing acceleration, but this is does not remove the oscillations completely. Further increasing the penalty on acceleration will lead to very slow convergence.
+% The oscillations can be removed by using the sum of squared coefficients of the reference error as a cost function.
+
+More concretely, consider the problem of following a reference trajectory, while ensuring that the OS does not exceed a maximum speed:
+\begin{equation}\label{eq:conservativeness-optimization}
+    \begin{aligned}
+        \min_{\mathbf c} \quad & \mathcal{O} \\
+        \text{s.t.} \quad \mathbf p_\text{os}(0) &= \mathbf p_0, \\
+                     \mathbf p_\text{os} &= \mathbf B^\top(x) \mathbf c, \\
+                     \mathbf p_\text{ref} &= \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
+                     \langle p_\text{os}', p_\text{os}' \rangle &\le v_\text{max}^2,
+    \end{aligned}
+\end{equation}
+where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The objective function $\mathcal{O}$ to be considered has two different formulations, one based on the sum of squared coefficients of the reference error and one based on the definite integral over the squared reference error. The two formulations are given by
+\begin{equation}\label{eq:conservativeness-objective}
+    \mathcal{O} = \begin{cases}
+        \|\text{coeffs}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2, & \text{discrete cost} \\
+        \int_0^1 \left(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)\right)^\top \left(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)\right) dx, & \text{continuous cost}
+    \end{cases}
+\end{equation}
+
+
+The $\text{coeffs}(\cdot)$ function extracts the control points $\mathbf c$ of the B-spline function $f(x)=\mathbf B(x)^\top\mathbf c$ and $\|\cdot\|_\text{F}^2$ is the squared Frobenius norm, given by
+\begin{equation}
+    \|\mathbf A\|_\text{F}^2 = \sum_{i,j} a_{ij}^2,
+\end{equation}
+where $\mathbf A$ is a matrix and $a_{ij}$ is the element in the $i$-th row and $j$-th column of $\mathbf A$. All other operations on the B-spline functions are done using the algorithms in \cref{chap:b-spline-theory}. 
+ 
+This optimization problem is then solved with a varying number $N$ of uniform B-spline basis functions $\mathbf B$, and the resulting trajectories are shown in \cref{fig:conservativeness} with the parameters for the optimization problem set to
+\begin{equation}
+    \begin{aligned}
+        \mathbf p_0 &= \begin{bmatrix} 1 & 0 \end{bmatrix}
+        \mathbf B_\text{ref} &= \mathbf B_{p=1,\mathbf t =\{0, 0, 1, 1\}} \\
+        \mathbf c_\text{ref} &= \begin{bmatrix}
+            0 & 0 \\
+            0 & 3
+        \end{bmatrix} \\
+        v_\text{max} &= 6, \\
+    \end{aligned}
+\end{equation}
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_coeffs_degree_3.svg}
+        \caption{Trajectory using the sum of squared coefficients of the reference error as a cost function.}
+        \label{fig:conservativeness-traj-coeffs}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_integral_degree_3.svg}
+        \caption{Trajectory using the definite integral over the squared reference error as a cost function.}
+        \label{fig:conservativeness-traj-integral}
+    \end{subfigure}
+    \caption{Comparison of optimal trajectory in \cref{eq:conservativeness-optimization} for a uniform cubic B-spline for $N\in\{4,\ldots,20\}$.
+    % The top plot shows the trajectory using the sum of squared coefficients, while the bottom plot shows the trajectory using the definite integral.
+    }
+    \label{fig:conservativeness-traj}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_3.svg}
+    \caption{Comparison of the performance using the sum of squared coefficients of the reference error and the definite integral over the squared reference error as a cost function. The results are shown for a uniform cubic B-spline against a varying number of B-spline basis functions, $N$.}
+    \label{fig:conservativeness}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_coeffs_all_degrees.svg}
+    \caption{Logaritmic plot of the Integral of the square error using the sum of squared coefficients as the cost function. The conservativeness is in general worse for larger degrees of the B-spline basis. The lowest obbserved value is subtracted from all values in the plot. This is why some values for $p=4$ appear to go towards negative infinity.}
+    \label{fig:conservativeness-coeffs}
+\end{figure}
+
+\subsection{COLREGS Objectives}
+
+
+\subsection{The Final Objective Function}
 
 
 \section{Implementation}\label{sec:python-implementation}
@@ -217,157 +309,6 @@ The B-spline implementation closely follows the structure in \citet{mercy2016spl
 The code is available in \todo{gh repo}.
 
 In the end, all the B-spline transformations and handling is abstracted away, letting the user create B-spline variables and constraints on symbolic variables as if they were normal CasADi variables. 
-
-
-\subsection{B-spline Basis Class}
-
-\begin{algorithm}
-    \caption{Cox-de Boor recursion formula for B-spline basis functions (\cref{eq:b-spline-recurrence}) implemented as a recursive function using memoization.}
-    \label{alg:cox-de-boor}
-    \begin{python}
-    from functools import cache
-    import numpy as np
-    
-    def cox_de_boor(
-        t: np.array[float], k: int, i: int, x: float
-    ) -> float:
-        """
-        Evaluate the i-th B-spline basis function of degree k at x
-        using the Cox-de Boor recursion formula.
-    
-        :param t: The knots for the basis.
-        :param k: The degree of the basis.
-        :param i: The i-th basis function to evaluate.
-        :param x: The parameter value to evaluate the basis function at.
-        :return: The value of the i-th basis function at x.
-        """
-    
-        @cache
-        def _internal(t: tuple[float], x: float) -> float:
-            if len(t) == 2:
-                return int(t[0] <= x < t[1])
-    
-            b1 = t[-2] - t[0]
-            if b1 != 0:
-                b1 = (x - t[0]) / b1
-                b1 *= _internal(t[:-1], x)
-    
-            b2 = t[-1] - t[1]
-            if b2 != 0:
-                b2 = (t[-1] - x) / b2
-                b2 *= _internal(t[1:], x)
-    
-            return b1 + b2
-    
-        return _internal(tuple(t[i:i+k+1]), x)    
-    
-    \end{python}
-    \end{algorithm}
-
-
-
-
-\begin{algorithm}
-\caption{B-spline basis class with datafields for degree and knots. The class evaluates the B-spline basis using the Cox-de Boor recursion formula (\cref{alg:cox-de-boor}).}
-\label{alg:b-spline-class}
-\begin{python}
-import numpy as np
-
-@dataclass(frozen=True)
-class BSplineBasis:
-    """
-    Class representing a B-spline basis.
-    """
-
-    degree: int
-    knots: np.ndarray
-
-    def __len__(self):
-        return len(self.knots) - self.degree - 1
-
-    def __call__(self, x: float) -> Array[Float]:
-        """
-        Evaluates the B-spline basis at a given point x.
-        """
-        return [
-            cox_de_boor(self.knots, self.degree, i, x)
-            for i in range(len(self))
-        ]
-
-\end{python}
-\end{algorithm}
-
-\begin{algorithm}
-\caption{The algorithms for B-Spline basis transformation (\cref{alg:basis-transformation}) and combination (\cref{alg:common-basis}) implemented as methods of the B-spline basis class (\cref{alg:b-spline-class}).}
-\label{alg:b-spline-class-methods}
-\begin{python}
-class BSplineBasis:
-
-    ...
-
-    def transform(
-        self, other: Callable[[float], FloatArray]
-    ) -> FloatMatrix:
-        """
-        Get the transformation matrix P such that
-        P.T @ self = other.
-
-        :param other: The other basis or function to find the transformation matrix for.
-        """
-        points = self.greville_abscissae
-        A = self(points).T
-        b = np.concatenate([other(t).T for t in points], axis=0)
-        return np.linalg.solve(A, b)
-
-    def combine(
-        self, other: 'BSplineBasis', degree: int
-    ) -> 'BSplineBasis':
-        """
-        Find common basis of two bases with different degrees in the specified degree.
-
-        :param other: The other basis to combine with.
-        :param degree: The degree of the resulting basis.
-        :return: A new BSplineBasis object representing the combined basis.
-        """
-        def raise_degree(knots, degree):
-            if degree == 0:
-                return knots
-            return np.sort(np.concatenate([
-                np.repeat(np.unique(knots), degree), knots
-            ]))
-        # Raise the degree of the basis functions
-        self_knots = raise_degree(self.knots, degree - self.degree)
-        other_knots = raise_degree(other.knots, degree - other.degree)
-
-        # Find the max multiplicity of each knot
-        unique_knots = np.unique(np.concatenate([self_knots, other_knots]))
-        multiplicity = np.zeros_like(unique_knots, dtype=int)
-        for i, k in enumerate(unique_knots):
-            multiplicity[i] = max(
-                np.sum(self_knots == k),
-                np.sum(other_knots == k)
-            )
-        # Create new knots
-        knots = np.repeat(unique_knots, multiplicity)
-        return BSplineBasis(degree, knots)
-\end{python}
-\end{algorithm}
-
-
-The B-spline basis class is implemented as a dataclass with the degree and knots as datafields. It has methods from \cref{chap:b-spline-theory}. Some of which are listed below:
-\begin{itemize}
-    \item 
-    The \texttt{\_\_call\_\_} method is implemented to evaluate the B-spline basis functions at a given point $x$ using the Cox-de Boor recursion formula. This lets the user call the B-spline basis object as a function, e.g. \texttt{basis(x)}. The B-spline basis functions are evaluated using the Cox-de Boor recursion formula from \cref{eq:b-spline-recurrence} as shown in \cref{alg:cox-de-boor}. The algorithm is implemented using memoization to avoid recomputing the same values multiple times. The memoiziation is done over the minimal set of knots needed to evaluate the B-spline basis function, which is the $k+1$ knots surrounding the knot $t_i$ where the basis function is evaluated. This minimizes the number of function evaluations needed to be stored in memory and maximizes cache hits. The memoization is implemented using the \texttt{@cache} decorator from the functools library.
-    \item
-    The \texttt{transform} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:basis-transformation} to find the transformation matrix $\mathbf T$ in \cref{eq:transformation-matrix-solution}.
-    \item
-    The \texttt{combine} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:common-basis} to find the common basis of two B-spline bases with different degrees. 
-\end{itemize}
-
-
-\FloatBarrier
-\subsection{B-spline Class}
-
 
 \subsection{Optimization Problem Class}
 This section will present the public interface of the Optimization Problem class. The class is designed to be used with CasADi and operates similarly to CasADi's own Opti framework. It differs from CasADi's Opti framework in that it supports B-spline variables and constraints, as well as binary and integer variables more seamlessly. The Optimization Problem class is also modular, in the sense that different objects can be used to represent e.g. the own ship, target ship and reference, before being combined into a single optimization problem. This will be clarified in the following example.

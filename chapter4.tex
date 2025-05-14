@@ -48,8 +48,8 @@ To simplify the model, yet another restriction is put on the time function $t(x)
 \begin{equation}\label{eq:double-integrator-a-spline-simplified}
     \begin{aligned}
         &&\|\mathbf{a}(t)\|_2 = \left\|\frac{\mathbf{p}''}{(t')^2}\right\|_2 &\leq a_{\max} \\
-        &\implies& \|\mathbf{p}''(x)\|_2 &\leq (t'(x))^2a_{\max} \\
-        &\implies& \mathbf{p}''(x)\cdot\mathbf{p}''(x) &\leq (t'(x))^4a_{\max}^2.
+        &\implies& \|\mathbf{p}''(x)\|_2 &\leq t'(x)^2a_{\max} \\
+        &\implies& \mathbf{p}''(x)\cdot\mathbf{p}''(x) &\leq t'(x)^4a_{\max}^2.
     \end{aligned}
 \end{equation}
 
@@ -58,8 +58,8 @@ Now the B-Spline relaxation is fully given by the following equations:
     \begin{align}
         \mathbf{p}(x) &= \sum_{i=0}^{n} \mathbf{p}_i B_{i,p,\mathbf{t}}(x), \label{eq:double-integrator-spline-complete-p} \\
         t(x) &= \sum_{i=0}^{m} t_i B_{i,1,\boldsymbol{\tau}}(x), \label{eq:double-integrator-spline-complete-t} \\
-        \mathbf{p}'(x) \cdot \mathbf{p}'(x) &\leq (t'(x))^2v_{\max}^2, \label{eq:double-integrator-spline-complete-vmax} \\
-        \mathbf{p}''(x) \cdot \mathbf{p}''(x) &\leq (t'(x))^4a_{\max}^2, \label{eq:double-integrator-spline-complete-a} \\
+        \mathbf{p}'(x) \cdot \mathbf{p}'(x) &\leq t'(x)^2v_{\max}^2, \label{eq:double-integrator-spline-complete-vmax} \\
+        \mathbf{p}''(x) \cdot \mathbf{p}''(x) &\leq t'(x)^4a_{\max}^2, \label{eq:double-integrator-spline-complete-a} \\
         t(x) &\geq 0, \label{eq:double-integrator-spline-complete-t-constraint} \\
         t'(x) &> 0. \label{eq:double-integrator-spline-complete-t-derivative} \end{align}
 \end{subequations}
@@ -208,7 +208,7 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
 
 
 
-\section{The Objective Function}
+\section{Objective Function}
 The goals of the objective function should be 1) to find a safe, COLREGS-compliant trajectory, and 2) to follow a reference trajectory. These objectives are conflicting as rule 8b) of the COLREGS (see \cref{sec:colregs}) states that any alteration of course should be large enough to be readily apparent to another vessel. Following a reference trajectory on the other hand often involves the squared error between the vessel and the reference trajectory, which inherently penalizes sudden deviations in course. 
 Thus a careful choice of the objective function is important to ensure robust and predictable behaviour. 
 The following section will examine the behavior of the B-spline method when applied to a basic reference-following task. The subsequent section will then address COLREGS considerations.
@@ -234,26 +234,29 @@ More concretely, consider the problem of following a reference trajectory, while
 where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The objective function $\mathcal{O}$ to be considered has two different formulations, one based on the sum of squared coefficients of the reference error and one based on the definite integral over the squared reference error. The two formulations are given by
 \begin{equation}\label{eq:conservativeness-objective}
     \mathcal{O} = \begin{cases}
-        \|\text{coeffs}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2, & \text{discrete cost} \\
+        \|\text{ctrlPts}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2, & \text{discrete cost} \\
         \int_0^1 \left(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)\right)^\top \left(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)\right) dx, & \text{continuous cost}
     \end{cases}
 \end{equation}
 
 
-The $\text{coeffs}(\cdot)$ function extracts the control points $\mathbf c$ of the B-spline function $f(x)=\mathbf B(x)^\top\mathbf c$ and $\|\cdot\|_\text{F}^2$ is the squared Frobenius norm, given by
+where the $\text{ctrlPts}(\cdot)$ function extracts the control points $\mathbf c$ of the B-spline function $f(x)=\mathbf B(x)^\top\mathbf c$ and $\|\cdot\|_\text{F}^2$ is the squared Frobenius norm, given by
 \begin{equation}
     \|\mathbf A\|_\text{F}^2 = \sum_{i,j} a_{ij}^2,
 \end{equation}
 where $\mathbf A$ is a matrix and $a_{ij}$ is the element in the $i$-th row and $j$-th column of $\mathbf A$. All other operations on the B-spline functions are done using the algorithms in \cref{chap:b-spline-theory}. 
- 
-This optimization problem is then solved with a varying number $N$ of uniform B-spline basis functions $\mathbf B$, and the resulting trajectories are shown in \cref{fig:conservativeness} with the parameters for the optimization problem set to
-\begin{equation}
+This optimization problem is then analyzied for different choices of degree $p$ and number $N$ of uniform B-spline basis functions $\mathbf B$. The resulting trajectories are shown in \cref{fig:conservativeness} with the parameters for the optimization problem set to
+\begin{equation}\label{eq:conservativeness-parameters}
     \begin{aligned}
-        \mathbf p_0 &= \begin{bmatrix} 1 & 0 \end{bmatrix}
-        \mathbf B_\text{ref} &= \mathbf B_{p=1,\mathbf t =\{0, 0, 1, 1\}} \\
+        \mathbf p_0 &= \begin{bmatrix} 1 & 0 \end{bmatrix} \\
+        \mathbf B &= \mathbf B_{p,
+            \{
+                \{0\}^{(p)}, \{i/N\}_{i=0}^{N}, \{1\}^{(p)}
+            \}} \\
+        \mathbf B_\text{ref} &= \mathbf B_{1,\{0, 0, 1, 1\}} \\
         \mathbf c_\text{ref} &= \begin{bmatrix}
-            0 & 0 \\
-            0 & 3
+            [0 & 0] \\
+            [0 & 3]
         \end{bmatrix} \\
         v_\text{max} &= 6, \\
     \end{aligned}
@@ -275,16 +278,44 @@ This optimization problem is then solved with a varying number $N$ of uniform B-
         \caption{Trajectory using the definite integral over the squared reference error as a cost function.}
         \label{fig:conservativeness-traj-integral}
     \end{subfigure}
-    \caption{Comparison of optimal trajectory in \cref{eq:conservativeness-optimization} for a uniform cubic B-spline for $N\in\{4,\ldots,20\}$.
-    % The top plot shows the trajectory using the sum of squared coefficients, while the bottom plot shows the trajectory using the definite integral.
-    }
+    \caption{Comparison of optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $N\in\{4,\ldots,20\}$.}
     \label{fig:conservativeness-traj}
 \end{figure}
+
+
+From \cref{fig:conservativeness-traj} two things are immediately clear: 1) 
+the continuous cost function gives oscillations in the trajectory, 
+and 2) 
+for a low $N$, the trajectory using the discrete cost function is much more conservative than the trajectory using the continuous cost function. The first observation will now be analyzed in more detail. 
+
+There are multiple ways to interpret the oscillations in the continuous cost function case. Qualitatively, the oscillations are a result of the fact that the integral is less sensitive to high frequency oscillations than the sum of squared coefficients of the reference error spline. The integral over the dot product puts more emphasis on the overall global shape of the trajectory, while the sum of squared coefficients puts more emphasis on the local shape. The oscillations can also be attributed to the definition of the B-spline dot product, which naturaly introduces cross-terms between the B-spline coefficients through the Kronecker product in \cref{alg:multiplication}. This is opposed to the purely square terms in the sum of squared coefficients objective.
+
+The oscillations can be damped by penalizing acceleration, but this is does not remove the oscillations completely, as can be seen in \cref{fig:conservativeness-oscillation-damping}. Here the continuous cost function is used with a penalty $P$ on the second order difference of the optimization coefficients $\mathbf c$ of the B-spline function. The penalty is given by
+\begin{equation}\label{eq:conservativeness-oscillation-damping}
+    \begin{aligned}
+        \mathbf c &= [\mathbf c_i]_{i=0}^{N-1} =
+        \text{ctrlPts}\left(\mathbf{p}_\text{os}\right), \\
+        \Delta \mathbf c &= [\Delta\mathbf c_i]_{i=0}^{N-2} =
+        [\mathbf c_i - \mathbf c_{i-1}]_{i=1}^{N-1}, \\
+        \Delta^2 \mathbf c &= [\Delta \mathbf c_i - \Delta \mathbf c_{i-1}]_{i=1}^{N-2}, \\
+        P &= \lambda \|\Delta^2 \mathbf c\|_\text{F}^2,
+    \end{aligned}
+\end{equation}
+where $\lambda$ is a parameter that controls the strength of the penalty. This is analogous to the P-spline construction \citep{Eilers1996} as the penalty is applied directly to the coefficients of the B-spline function. For small penalties e.g. $\lambda=0.01$, the trajectory approaches that of \cref{fig:conservativeness-traj-integral}. Increasing the penalty to $\lambda=100$ gives a trajectory that only reaches about half the distance to the end of the reference. For no $\lambda$ in between does the trajectory not overshoot the North = 0m axis. As neither oscillations nor overshooting is desirable behaviour, using the integral over the squared reference error as a cost function is not a good choice. Adding the penalty term still leads to overshooting the reference. These two methods are therefore not suitible for the final implementation. The discrete cost function on the other hand, has none of these issues and will be further analyzed in the remainder of this section. 
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/p_spline_degree_3_n_10.svg}
+    \caption{Continuous cost with $N=10$, $p=3$ and a penalty on the second order difference of the optimization coefficients. The trajectory approaches that of \cref{fig:conservativeness-traj-integral} as $\lambda$ is decreased.}\label{fig:conservativeness-oscillation-damping}
+\end{figure}
+
+
+Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the discrete cost function is much more conservative than the continuous cost function for low $N$. As $N$ increases, the trajectory using the discrete cost function approaches that of the continuous cost function. This can be seen more clearly in \cref{fig:conservativeness}, where the integral of the square error is plotted against the number $N$ of B-spline basis functions up to $N=40$ for both cost functions. This convergence to the same value is expected, as increasing the number of basis functions will make the optimization problem less conservative, as discussed in \cref{sec:b-spline-relaxation}. 
 
 \begin{figure}
     \centering
     \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_3.svg}
-    \caption{Comparison of the performance using the sum of squared coefficients of the reference error and the definite integral over the squared reference error as a cost function. The results are shown for a uniform cubic B-spline against a varying number of B-spline basis functions, $N$.}
+    \caption{Comparison of the performance using the discrete and continuous cost functions. The integral of the square error is plotted against the number $N$ of B-spline basis functions for $p=3$.}
     \label{fig:conservativeness}
 \end{figure}
 
@@ -292,7 +323,7 @@ This optimization problem is then solved with a varying number $N$ of uniform B-
 \begin{figure}
     \centering
     \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_coeffs_all_degrees.svg}
-    \caption{Logaritmic plot of the Integral of the square error using the sum of squared coefficients as the cost function. The conservativeness is in general worse for larger degrees of the B-spline basis. The lowest obbserved value is subtracted from all values in the plot. This is why some values for $p=4$ appear to go towards negative infinity.}
+    \caption{Logaritmic plot of the Integral of the square error using the discrete cost function. The value of the cost at $N=50$ is subtracted from all values in this plot to highlight the convergence.}
     \label{fig:conservativeness-coeffs}
 \end{figure}
 

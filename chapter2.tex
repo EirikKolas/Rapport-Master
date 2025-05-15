@@ -658,18 +658,16 @@ while the arc-length $s(x)$ is given by
 \end{equation*}
 
 
-Add sources for uses of NURBS where applicable
-
 \section{Non-Uniform Rational B-splines (NURBS)}
 In the previous section, rational functions of B-splines were mentioned in the context of Pythagorean-Hodograph curves. \Cref{eq:curvature,eq:turn-rate} are examples of such rational functions. This section formalizes the concept of Non-uniform rational B-splines (NURBS), for which a good reference is \cite{Piegl1997}. 
 
 NURBS are defined by the rational basis functions
 \begin{equation}\label{eq:nurbs-basis}
-R_{i,p,\mathbf t}(x)  = \frac{w_i,B_{i,p,\mathbf t}(x)}{\sum_{j=0}^{n-1}w_j,B_{j,p,\mathbf t}(x)},
+R_{i,p,\mathbf t, \mathbf w}(x)  = \frac{w_i,B_{i,p,\mathbf t}(x)}{\sum_{j=0}^{n-1}w_j,B_{j,p,\mathbf t}(x)},
 \end{equation}
-and a NURBS curve is given by
+for which a NURBS curve is given by
 \begin{equation}\label{eq:nurbs-curve}
-\mathbf r(x)  = \sum_{i=0}^{n-1}R_{i,p,\mathbf t}(x)\,c_i.
+\mathbf r(x)  = \sum_{i=0}^{n-1}R_{i,p,\mathbf t, \mathbf w}(x)\,c_i.
 \end{equation}
 
 NURBS inherit local support, and non-negativity from B-splines. When all weights $w_i$ are equal, the NURBS reduces exactly to a B-spline curve. The partition of unity property is also preserved as long as all the weights are non-negative. \citep{Piegl1997}
@@ -680,7 +678,7 @@ To convert a general rational B-spline
 $$
     f(x) = \frac{N(x)}{D(x)},
 $$
-where $N(x)=\mathbf B_{p_N,\mathbf t_N}^\top\mathbf n$ and $D(x)=\mathbf B_{p_D,\mathbf t_D}^\top\mathbf d$ are each in separate B-spline bases, into standard NURBS form, one applies degree elevation and knot insertion \citep{Piegl1997} to obtain a common basis ${B_{q,i}(x)}$:
+where $N(x)=\mathbf B_{p_N,\mathbf t_N}^\top\mathbf n$ and $D(x)=\mathbf B_{p_D,\mathbf t_D}^\top\mathbf d$ are each in separate B-spline bases, into the standard NURBS form, one applies degree elevation and knot insertion \citep{Piegl1997} to obtain a common basis ${B_{q,i}(x)}$:
 \begin{enumerate}
     \item Elevate both $N$ and $D$ to degree $q\ge\max{p_N,p_D}$ using \cref{alg:degree-elevation}.
     \item Refine knot vectors so that both share the same sequence using \cref{alg:knot-refinement}.
@@ -691,12 +689,11 @@ $$
 $$
 from which the NURBS weights and control values follow:
 $$
-    w_i = \tilde d_i,
-    \quad
-    \mathbf c_i = \frac{\tilde n_i}{\tilde d_i}.
+    w_i = \tilde d_i, \quad
+    c_i = \frac{\tilde n_i}{\tilde d_i}.
 $$
 The resulting representation,
 $$
     f(x) = \frac{\sum_i w_i\,c_i\,N_{q,i}(x)}{\sum_i w_i\,N_{q,i}(x)},
 $$
-is a degree-$q$ NURBS.
+is a degree-$q$ NURBS with weights $w_i$, knot vector $\boldsymbol{\tau}$ and control points $c_i$. 

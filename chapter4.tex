@@ -67,7 +67,7 @@ The only optimization variables needed are the B-Spline coefficients $\mathbf{p}
 
 
 \subsection{Dubins Model}\label{sec:dubins-model}
-\todo[inline]{Legg til tid på samme måte som i dobbeltintegratormodellen}
+\todo{Legg til tid på samme måte som i dobbeltintegratormodellen}
 
 The double integrator model is a simple model that ensures a continuous position, velocity, and acceleration for the ship. However, it does not take into account the ship's heading and turning radius. Dubins model (also referred to as the unicycle model) is a more realistic model for ship dynamics, as it describes a vehicle moving in a plane where the velocity points in the direction of the heading. In the motion control literature, there exists a variety of parameterizations for this kind of model. Notably \citet{mercy2017spline}, which uses the tangent half-angle substitution to represent the heading angle in a B-spline framework and \citet{Wang2020}, which uses a convex relaxation technique with sequential convex programming to exchange nonlinear equality constraints with convex inequalities. 
 
@@ -113,11 +113,7 @@ yeilding the polynomial constraints
 \end{subequations}
 
 \section{Target Ships}
-\begin{itemize}
-    \item hyperplane separation theorem
-    \item COLREGS constraints
-    \item mixed integer programming
-\end{itemize}
+\todo{skriv introduksjon til dette avsnittet}
 
 \subsection{Hyperplane Separation Theorem}
 The standard way to enforce collision constraints between the OS and TS is to apply a minumum distance constraint between the two ships as
@@ -144,7 +140,7 @@ letting $\mathbf n(t)$ and $b(t)$ be optimization variables. \Cref{eq:hyperplane
 
 \subsection{COLREGS Constraints}
 
-Finding a collision-free trajectory around an obstacle is in general a non-convex problem. Moreover, fixing the starting- and end-points of the trajectory it is not possible to continuously move the trajectory from one side of the obstacle to the other without passing through the obstacle. This is illustrated in \cref{fig:non-convex-obstacle} and is problematic from a numerical optimization perspective, as given an initial solution passing on one side of the obstacle, and the solvers incrementally stepping nature, there is no guarantee that the solver will find a solution on the other side of the obstacle as it has to pass through the obstacle to get there\todo{reformuler mer presist}. This is a simplified description of the problem, which only applies to convex problem solvers. The true behaviour is dependent on the type of solver used, and the constraint formulation.
+Finding a collision-free trajectory around an obstacle is in general a non-convex problem. Moreover, fixing the starting- and end-points of the trajectory it is not possible to continuously move the trajectory from one side of the obstacle to the other without passing through the obstacle. This is illustrated in \cref{fig:non-convex-obstacle} and is problematic from a numerical optimization perspective, as given an initial solution passing on one side of the obstacle, and the solvers incrementally stepping nature, there is no guarantee that the solver will find a solution on the other side of the obstacle as it has to pass through the obstacle to get there\todo{omformuler mer presist}. This is a simplified description of the problem, which only applies to convex problem solvers. The true behaviour is dependent on the type of solver used, and the constraint formulation.
 
 \begin{figure}
     \centering
@@ -165,7 +161,7 @@ The idea is that each target ship is represented by two obstacles, each obstacle
 \end{subequations}
 where $\mathbf P_{TS}^L$ and $\mathbf P_{TS}^R$ are the left and right target ship obstacles, respectively. The left and right target ship obstacles are defined as the two points on the opposite side of the passing side of the target ship, as shown in \cref{fig:non-convex-obstacle-mi}. The binary variable $z_j$ is used to control which side of the target ship to pass on. If $z_j = 0$, the left obstacle is moved into the feasible region, and if $z_j = 1$, the right obstacle is moved into the feasible region.
 
-In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a way to continuously move the trajectory from one side of the obstacle to the other without violating any constraints. To be clear, all of the obstacles and points are active at the same time, but with a large enough chosen constant $M$, the inactive obstacles are so far away from the trajectory that they do not affect the optimization problem. This strategy is commonly referred to as the \emph{big-M} method in the Mixed Integer Programming (MIP) literature.
+In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a way to continuously move the trajectory from one side of the obstacle to the other without violating any constraints. To be clear, all of the obstacles and points are active at the same time, but with a large enough chosen constant $M$, the inactive obstacles are so far away from the trajectory that they do not affect the optimization problem. This strategy is commonly referred to as the big-M method in Mixed Integer Programming (MIP) literature \citep{gan2012adaptive}. There are other methods, such as the convex hull reformulation \citep{sherali1994hierarchy}, which yields tighter relaxations in the solver framework, but this is not considered in this work due to the increased complexity of the implementation and nonlinear nature of the problem.
 
 \begin{figure}
     \centering
@@ -207,7 +203,6 @@ where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$
     \end{cases}
 \end{equation}
 
-
 where the $\text{ctrlPts}(\cdot)$ function extracts the control points $\mathbf c$ of the B-spline function $f(x)=\mathbf B(x)^\top\mathbf c$ and $\|\cdot\|_\text{F}^2$ is the squared Frobenius norm, given by
 \begin{equation}
     \|\mathbf A\|_\text{F}^2 = \sum_{i,j} a_{ij}^2,
@@ -226,10 +221,20 @@ This optimization problem is then analyzied for different choices of degree $p$ 
             [0 & 0] \\
             [0 & 3]
         \end{bmatrix} \\
-        v_\text{max} &= 6, \\
+        v_\text{max} &= 6. \\
     \end{aligned}
 \end{equation}
 
+\begin{figure}
+    \centering
+    \includesvg[width=0.8\textwidth]{fig/illustrations/cross-track- and along-track- error.svg}
+    \caption{Cross-track error, along-track error and total track error for a vessel trying to follow a reference trajectory.}
+    \label{fig:cross-track-along-track-error}
+\end{figure}
+\todo{ref prosjektoppgave}
+
+Both of these objectives consider the total track error (TTE), which is defined as the distance between the OS and the expected position on the time-varying reference trajectory. The TTE is a combination of the cross-track error (XTE) and the along-track error (ATE) \citep{Fossen2011-Handbook}, as shown in \cref{fig:cross-track-along-track-error}. The XTE is the distance between the OS and the reference trajectory, while the ATE is the distance between the OS and the expected position along the path tangent. Defining a cost function that penalizes the XTE is a common approach if the goal is path following rather than trajectory following. It has advantages over the TTE, in that when the OS lags behind the reference trajectory around a corner, the cost in the TTE will make the OS try to cut the corner, which is not necessarily desired behaviour. The XTE cost on the other hand will not penalize this behaviour, as it only considers the closest distance to the reference trajectory. 
+With the B-spline framework, however, finding the XTE is not straightforward, and generally involves a search algorithm to find a numerical rather than an algebraic solution \citep{johnson2005distance,hu2005second,chen2009computing}. The TTE is therefore used as the cost function in this work, as it is the more straightforward approach. The rest of this section serves to analyze the cost functions in \cref{eq:conservativeness-objective}.
 
 \begin{figure}
     \centering
@@ -296,12 +301,12 @@ Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the 
 \end{figure}
 
 \FloatBarrier
-To summarize, the discrete cost function is the best choice for the final implementation. The continuous cost function gives oscillations in the trajectory and is not able to follow the reference trajectory, even with a penalty on the second order difference of the optimization coefficients. The discrete cost function on the other hand, is able to follow the reference trajectory and does not give oscillations in the trajectory. As a drawback, the discrete cost function is more conservative than the continuous cost function for low $N$, but for this application, $N=10$ is sufficient to get a fast enough convergence.
+To summarize, the discrete cost function is the best choice for the final implementation. The continuous cost function gives oscillations in the trajectory and is not able to follow the reference trajectory, even with a penalty on the second order difference of the optimization coefficients. The discrete cost function on the other hand, is able to follow the reference trajectory and does not give oscillations in the trajectory. As a drawback, the discrete cost function is more conservative than the continuous cost function for low $N$, but at least for this scenario, $N=10$ is sufficient to get close to the non-conservative optimal trajectory. 
 
 
 \subsection{COLREGS Objectives}
 
-With the 
+Using the discrete cost from \cref{eq:conservativeness-objective} to get oscillation-free trajectories, the next step is to add a COLREGS-compliant cost function. 
 
 \subsection{The Final Objective Function}
 

@@ -42,7 +42,7 @@ Proof:
 \subsection{B-spline Basis Class}
 
 \begin{algorithm}
-    \caption{Cox-de Boor recursion formula for B-spline basis functions (\cref{eq:b-spline-recurrence}) implemented as a recursive function using memoization.}
+    \caption{Cox-de Boor recursion formula for B-spline basis functions (see \cref{eq:b-spline-recurrence}) implemented as a recursive function using memoization.}
     \label{alg:cox-de-boor}
     \begin{python}
     from functools import cache
@@ -187,3 +187,85 @@ The B-spline basis class is implemented as a dataclass with the degree and knots
 
 \FloatBarrier
 \subsection{B-spline Class}
+
+
+
+\chapter{Dubins Model via Tangent Half-angle Substitution}\label{app:tangent-half-angle}
+
+This appendix contains the derivation of Dubins model using the work in \citet{mercy2017spline} as a starting point. 
+Dubins model was introduced in \cref{sec:dubins-model} but is repeated here for convenience:
+\begin{subequations}\label{eq:app-dubins-model}
+    \begin{align}
+        \dot x &= V \cos(\chi),       \label{eq:app-dubins-x} \\
+        \dot y &= V \sin(\chi),       \label{eq:app-dubins-y} \\
+        \dot \chi &= \omega,          \label{eq:app-dubins-chi} \\
+        |\omega| &\leq \omega_{\max}, \label{eq:app-dubins-omega} \\
+        0 \leq V &\leq V_{\max},      \label{eq:app-dubins-V} 
+    \end{align}
+\end{subequations}
+where $x$ and $y$ are the position coordinates, and $\chi$ is the heading angle. The control input is the speed $V$ and turn rate $\omega$.
+
+In order to perform a B-spline relaxation on this model, all symbols in \cref{eq:app-dubins-model} need to be polynomial functions of each other. One way to  achieve this, is to use the tangent half-angle substitution
+\begin{equation}\label{eq:tangent-half-angle}
+    r \defeq \tan\left(\frac{\chi}{2}\right).
+\end{equation}
+In this section, the $\defeq$ symbol denotes a change of variables, to avoid confusion with the $=$ symbol used for equality in constraints. 
+
+Now $\cos(\chi)$ and $\sin(\chi)$ can be expressed in terms of $r$ as
+\begin{subequations}\label{eq:cos-sin-r}
+    \begin{align}
+        \cos(\chi) &\defeq \frac{1 - r^2}{1 + r^2}, \label{eq:cos-r} \\
+        \sin(\chi) &\defeq \frac{2r}{1 + r^2}.      \label{eq:sin-r}
+    \end{align}
+\end{subequations}
+To find polynomial expressions for $\dot x$ and $\dot y$, the variable $\tilde v$ is intruduced to satisfy the equation
+\begin{equation}\label{eq:constraint-V}
+    V = \tilde v (1 + r^2).
+\end{equation}
+Now, \cref{eq:app-dubins-x,eq:app-dubins-y} can be written as
+\begin{subequations}\label{eq:app-dubins-xy}
+    \begin{align}
+        \dot x &= \tilde v (1 - r^2), \label{eq:app-dubins-x-r} \\
+        \dot y &= 2\tilde v r.        \label{eq:app-dubins-y-r}
+    \end{align}
+\end{subequations}
+
+Up to this point, the derivation in this section has been based on the work of \citet{mercy2017spline}, which used the bicycle model. The next step is to find a polynomial expression for \cref{eq:app-dubins-chi} in terms of $r$ and $\omega$. This is done by first differentiating \cref{eq:tangent-half-angle} with respect to time
+\begin{equation}\label{eq:rdot}
+    \begin{aligned}
+        &&\atan(r) &= \frac{\chi}{2}, \\
+        &\implies& \frac{1}{1 + r^2} \dot r &= \frac{1}{2} \dot \chi, \\
+        &\implies& \dot r &= \frac{1}{2} \dot \chi (1 + r^2),
+    \end{aligned}
+\end{equation}
+before substituting \cref{eq:app-dubins-chi} into \cref{eq:rdot} to get
+\begin{equation}\label{eq:rdot-omega}
+    \dot r = \frac{1}{2} \omega (1 + r^2),
+\end{equation}
+where the dot notation denotes differentiation with respect to time.
+To fulfill the constraint on $\omega$ in \cref{eq:app-dubins-omega}, \cref{eq:rdot-omega} is solved for $\omega$ to get
+\begin{equation}\label{eq:omega-r}
+    \omega \defeq \frac{2 \dot r}{1 + r^2}.
+\end{equation}
+Substituting \cref{eq:omega-r} into \cref{eq:rdot-omega} gives
+\begin{equation}\label{eq:rdot-omega-r}
+    \left|\frac{2 \dot r}{1 + r^2}\right| \leq \omega_{\max},
+\end{equation}
+which can be split into the two polynomial constraints
+\begin{subequations}\label{eq:rdot-omega-r-constraints}
+    \begin{align}
+        2 \dot r &\leq \omega_{\max} (1 + r^2), \label{eq:rdot-omega-r-constraint1} \\
+        2 \dot r &\geq -\omega_{\max} (1 + r^2). \label{eq:rdot-omega-r-constraint2}
+    \end{align}
+\end{subequations}
+The speed constraint in \cref{eq:app-dubins-V} can similarly be expressed in terms of $r$ and $\tilde v$ as
+\begin{subequations}\label{eq:V-r}
+    \begin{align}
+        \tilde v &\ge 0, \\
+        \tilde v (1 + r^2) &\leq V_{\max}.
+    \end{align}
+\end{subequations}
+
+The full model is implemented by letting $r(t)$ and $\tilde v(t)$ be spline functions on a chosen B-spline basis under the constraints in \cref{eq:rdot-omega-r-constraints,eq:V-r}, using the expressions in \cref{eq:app-dubins-xy} to calculate $\dot x$ and $\dot y$ using the algorithms in \cref{chap:b-spline-theory}. Notice that $V$, $\chi$, and $\omega$ are now entirely removed from the model, which is fully described by $r$ and $\tilde v$. The coefficients of the B-spline representation of $\dot r$ are simply linear combinations of the coefficients of $r$, as explained in \cref{sec:derivative} and the position can be found by integrating the expressions in \cref{eq:app-dubins-xy}.
+
+To implement the inequality constraint $f(t) \le g(t)$, for two spline functions $f(t)$ and $g(t)$, the constraint is enforced by ensuring the coefficients of the B-spline representation of $f(t) - g(t)$ are non-positive, exploiting the convex hull property of B-splines. 

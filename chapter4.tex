@@ -66,83 +66,51 @@ Now the B-Spline relaxation is fully given by the following equations:
 The only optimization variables needed are the B-Spline coefficients $\mathbf{p}_i\in\mathbb{R}^2$ and $t_i\in\mathbb{R}^+$ from \cref{eq:double-integrator-spline-complete-p,eq:double-integrator-spline-complete-t}, which are subject to the constraints \cref{eq:double-integrator-spline-complete-vmax,eq:double-integrator-spline-complete-a,eq:double-integrator-spline-complete-t-constraint,eq:double-integrator-spline-complete-t-derivative}.
 
 
-\subsection{Dubins Model}
-The ship dynamics are represented using Dubins model (unicycle model), which escribes a vehicle moving in a plane where the velocity points in the direction of the heading:
+\subsection{Dubins Model}\label{sec:dubins-model}
+\todo[inline]{Legg til tid på samme måte som i dobbeltintegratormodellen}
+
+The double integrator model is a simple model that ensures a continuous position, velocity, and acceleration for the ship. However, it does not take into account the ship's heading and turning radius. Dubins model (also referred to as the unicycle model) is a more realistic model for ship dynamics, as it describes a vehicle moving in a plane where the velocity points in the direction of the heading. In the motion control literature, there exists a variety of parameterizations for this kind of model. Notably \citet{mercy2017spline}, which uses the tangent half-angle substitution to represent the heading angle in a B-spline framework and \citet{Wang2020}, which uses a convex relaxation technique with sequential convex programming to exchange nonlinear equality constraints with convex inequalities. 
+
+The model in \cite{Wang2020} technique was discarded as the assumtions for the relaxation technique are not valid under a reference following scenario. \cite{mercy2017spline} used the tangent half-angle to parameterize the bicycle model, which also includes the steering angle as a control input. In this work, the simplified Dubins model was tested, but ultimately discarded as the Pythogerean-hodograph (PH) B-spline model has the same properties as the tangent half-angle model, but has in addition all the nice properties described in \cref{sec:pythogerean-hodograph}. See \cref{app:tangent-half-angle} for a more detailed description of the Dubins model and the tangent half-angle substitution.
+
+Dubins model can be described by the following equations:
 \begin{subequations}\label{eq:dubins-model}
     \begin{align}
-        \dot x &= V \cos(\chi),       \label{eq:dubins-x} \\
-        \dot y &= V \sin(\chi),       \label{eq:dubins-y} \\
+        \dot p_N &= V \cos(\chi),       \label{eq:dubins-x} \\
+        \dot p_E &= V \sin(\chi),       \label{eq:dubins-y} \\
         \dot \chi &= \omega,          \label{eq:dubins-chi} \\
         |\omega| &\leq \omega_{\max}, \label{eq:dubins-omega} \\
         0 \leq V &\leq V_{\max},      \label{eq:dubins-V} 
     \end{align}
 \end{subequations}
-where $x$ and $y$ are the position coordinates, $V$ is the speed, and $\chi$ is the heading angle. The control input is the turn rate $\omega$.
-
-In order to perform a B-spline relaxation on this model, all symbols in \cref{eq:dubins-model} need to be polynomial functions of each other. One way to  achieve this, is to use the tangent half-angle substitution
-\begin{equation}\label{eq:tangent-half-angle}
-    r \defeq \tan\left(\frac{\chi}{2}\right).
-\end{equation}
-In this section, the $\defeq$ symbol denotes a change of variables, to avoid confusion with the $=$ symbol used for equality in constraints. 
-
-Now $\cos(\chi)$ and $\sin(\chi)$ can be expressed in terms of $r$ as
-\begin{subequations}\label{eq:cos-sin-r}
+where $p_N$ and $p_E$ are the North and East position coordinates of the ship, and $\chi$ is the heading angle. The control input is the speed $V$ and turn rate $\omega$. Using the PH B-spline model from \cref{sec:pythogerean-hodograph}, the Dubins model can be expressed as
+\begin{subequations}\label{eq:dubins-model-ph}
     \begin{align}
-        \cos(\chi) &\defeq \frac{1 - r^2}{1 + r^2}, \label{eq:cos-r} \\
-        \sin(\chi) &\defeq \frac{2r}{1 + r^2}.      \label{eq:sin-r}
+        \dot p_N(x) &= u(x)^2 - v(x)^2, \label{eq:dubins-ph-x} \\
+        \dot p_E(x) &= 2u(x)v(x),       \label{eq:dubins-ph-y} \\
+        \dot \chi(x) &= \omega(x) = \frac{2\big(u(x)v'(x) - u'(x)v(x)\big)}{u(x)^2 + v(x)^2},  \label{eq:dubins-ph-chi} \\
+        |\omega(x)| &\leq \omega_{\max},  \\
+        V(x) &= u(x)^2 + v(x)^2 \\
+        0 \leq V(x) &\leq V_{\max}, 
     \end{align}
 \end{subequations}
-To find polynomial expressions for $\dot x$ and $\dot y$, the variable $\tilde v$ is intruduced to satisfy the equation
-\begin{equation}\label{eq:constraint-V}
-    V = \tilde v (1 + r^2).
-\end{equation}
-Now, \cref{eq:dubins-x,eq:dubins-y} can be written as
-\begin{subequations}\label{eq:dubins-xy}
-    \begin{align}
-        \dot x &= \tilde v (1 - r^2), \label{eq:dubins-x-r} \\
-        \dot y &= 2\tilde v r.        \label{eq:dubins-y-r}
-    \end{align}
-\end{subequations}
+where \cref{eq:dubins-ph-x,eq:dubins-ph-y} correspond to \cref{eq:hodograph-derivatives-a,eq:hodograph-derivatives-b} and \cref{eq:dubins-ph-chi} follows from \cref{eq:turn-rate}.
 
-Up to this point, the derivation in this section has been based on the work of \citet{mercy2017spline}, which used the bicycle model. The next step is to find a polynomial expression for \cref{eq:dubins-chi} in terms of $r$ and $\omega$. This is done by first differentiating \cref{eq:tangent-half-angle} with respect to time
-\begin{equation}\label{eq:rdot}
+To implement this model in an optimization framework, $u(x)$ and $v(x)$ are represented as B-spline functions, and the turn-rate constraints are derived as follows
+\begin{equation*}
     \begin{aligned}
-        &&\atan(r) &= \frac{\chi}{2}, \\
-        &\implies& \frac{1}{1 + r^2} \dot r &= \frac{1}{2} \dot \chi, \\
-        &\implies& \dot r &= \frac{1}{2} \dot \chi (1 + r^2),
+        |\omega(x)| &\le \omega_{\max} \\
+        \implies \left|\frac{2\big(u(x)v'(x) - u'(x)v(x)\big)}{u(x)^2 + v(x)^2}\right| &\le \omega_{\max} \\
+        \implies \left|u(x)v'(x) - u'(x)v(x)\right| &\le \frac{\omega_{\max}}{2}\left(u(x)^2 + v(x)^2\right),
     \end{aligned}
-\end{equation}
-before substituting \cref{eq:dubins-chi} into \cref{eq:rdot} to get
-\begin{equation}\label{eq:rdot-omega}
-    \dot r = \frac{1}{2} \omega (1 + r^2),
-\end{equation}
-where the dot notation denotes differentiation with respect to time.
-To fulfill the constraint on $\omega$ in \cref{eq:dubins-omega}, \cref{eq:rdot-omega} is solved for $\omega$ to get
-\begin{equation}\label{eq:omega-r}
-    \omega \defeq \frac{2 \dot r}{1 + r^2}.
-\end{equation}
-Substituting \cref{eq:omega-r} into \cref{eq:rdot-omega} gives
-\begin{equation}\label{eq:rdot-omega-r}
-    \left|\frac{2 \dot r}{1 + r^2}\right| \leq \omega_{\max},
-\end{equation}
-which can be split into the two polynomial constraints
-\begin{subequations}\label{eq:rdot-omega-r-constraints}
+\end{equation*}
+yeilding the polynomial constraints
+\begin{subequations}\label{eq:dubins-ph-turn-rate}
     \begin{align}
-        2 \dot r &\leq \omega_{\max} (1 + r^2), \label{eq:rdot-omega-r-constraint1} \\
-        2 \dot r &\geq -\omega_{\max} (1 + r^2). \label{eq:rdot-omega-r-constraint2}
+        u(x)v'(x) - u'(x)v(x) &\le \frac{\omega_{\max}}{2}\left(u(x)^2 + v(x)^2\right), \\
+        u(x)v'(x) - u'(x)v(x) &\ge -\frac{\omega_{\max}}{2}\left(u(x)^2 + v(x)^2\right).
     \end{align}
 \end{subequations}
-The speed constraint in \cref{eq:dubins-V} can similarly be expressed in terms of $r$ and $\tilde v$ as
-\begin{subequations}\label{eq:V-r}
-    \begin{align}
-        \tilde v &\ge 0, \\
-        \tilde v (1 + r^2) &\leq V_{\max}.
-    \end{align}
-\end{subequations}
-
-The full model is implemented by letting $r(t)$ and $\tilde v(t)$ be spline functions on a chosen B-spline basis under the constraints in \cref{eq:rdot-omega-r-constraints,eq:V-r}, using the expressions in \cref{eq:dubins-xy} to calculate $\dot x$ and $\dot y$ using the algorithms in \cref{chap:b-spline-theory}. Notice that $V$, $\chi$, and $\omega$ are now entirely removed from the model, which is fully described by $r$ and $\tilde v$. The coefficients of the B-spline representation of $\dot r$ are simply linear combinations of the coefficients of $r$, as explained in \cref{sec:derivative} and the position can be found by integrating the expressions in \cref{eq:dubins-xy}.
-
-To implement the inequality constraint $f(t) \le g(t)$, for two spline functions $f(t)$ and $g(t)$, the constraint is enforced by ensuring the coefficients of the B-spline representation of $f(t) - g(t)$ are non-positive, exploiting the convex hull property of B-splines. 
 
 \section{Target Ships}
 \begin{itemize}
@@ -231,7 +199,7 @@ More concretely, consider the problem of following a reference trajectory, while
                      \langle p_\text{os}', p_\text{os}' \rangle &\le v_\text{max}^2,
     \end{aligned}
 \end{equation}
-where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The objective function $\mathcal{O}$ to be considered has two different formulations, one based on the sum of squared coefficients of the reference error and one based on the definite integral over the squared reference error. The two formulations are given by
+where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The objective function $\mathcal{O}$ to be considered has two different formulations, one based on the sum of the squared control points of the reference error and one based on the definite integral over the squared reference error. The two formulations are given by
 \begin{equation}\label{eq:conservativeness-objective}
     \mathcal{O} = \begin{cases}
         \|\text{ctrlPts}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2, & \text{discrete cost} \\
@@ -268,14 +236,14 @@ This optimization problem is then analyzied for different choices of degree $p$ 
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_coeffs_degree_3.svg}
-        \caption{Trajectory using the sum of squared coefficients of the reference error as a cost function.}
+        \caption{Discrete cost: Trajectory using the sum of squared coefficients of the reference error as a cost function.}
         \label{fig:conservativeness-traj-coeffs}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_integral_degree_3.svg}
-        \caption{Trajectory using the definite integral over the squared reference error as a cost function.}
+        \caption{Continuous cost: Trajectory using the definite integral over the squared reference error as a cost function.}
         \label{fig:conservativeness-traj-integral}
     \end{subfigure}
     \caption{Comparison of optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $N\in\{4,\ldots,20\}$.}
@@ -310,7 +278,7 @@ where $\lambda$ is a parameter that controls the strength of the penalty. This i
 \end{figure}
 
 
-Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the discrete cost function is much more conservative than the continuous cost function for low $N$. As $N$ increases, the trajectory using the discrete cost function approaches that of the continuous cost function. This can be seen more clearly in \cref{fig:conservativeness}, where the integral of the square error is plotted against the number $N$ of B-spline basis functions up to $N=40$ for both cost functions. This convergence to the same value is expected, as increasing the number of basis functions will make the optimization problem less conservative, as discussed in \cref{sec:b-spline-relaxation}. 
+Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the discrete cost function is much more conservative than the continuous cost function for low $N$. As $N$ increases, the trajectory using the discrete cost function approaches that of the continuous cost function. This can be seen more clearly in \cref{fig:conservativeness}, where the integral of the square error is plotted against the number $N$ of B-spline basis functions up to $N=40$ for both cost functions. This convergence to the same value is expected, as increasing the number of basis functions will make the optimization problem less conservative, as discussed in \cref{sec:b-spline-relaxation}. \Cref{fig:conservativeness-coeffs} shows a logaritmic plot of the difference between the integral of the square error for $N\in\{3,\ldots,40\}$ and $N=50$ for the discrete cost function. For these values of $N$, the plot shows an exponential convergence to the same value, with the degree of the B-spline basis functions $p$ having a small effect on the convergence.
 
 \begin{figure}
     \centering
@@ -327,8 +295,13 @@ Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the 
     \label{fig:conservativeness-coeffs}
 \end{figure}
 
+\FloatBarrier
+To summarize, the discrete cost function is the best choice for the final implementation. The continuous cost function gives oscillations in the trajectory and is not able to follow the reference trajectory, even with a penalty on the second order difference of the optimization coefficients. The discrete cost function on the other hand, is able to follow the reference trajectory and does not give oscillations in the trajectory. As a drawback, the discrete cost function is more conservative than the continuous cost function for low $N$, but for this application, $N=10$ is sufficient to get a fast enough convergence.
+
+
 \subsection{COLREGS Objectives}
 
+With the 
 
 \subsection{The Final Objective Function}
 
@@ -383,3 +356,5 @@ sol = opti.solve()
 
 \end{python}
 \end{example}
+```
+

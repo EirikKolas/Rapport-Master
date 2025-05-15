@@ -228,7 +228,7 @@ As the B-spline basis functions are linearly independent, and the Greville absci
     \end{algorithmic}
 \end{algorithm}
 
-\section{Knot Refinement and Degree Elevation}
+\section{Knot Refinement and Degree Elevation}\label{sec:knot-refinement-degree-elevation}
 The method in \cref{sec:basis-transformation} can be utilized for the two most commonly used techniques for manipulating B-splines: knot refinement and degree elevation. Knot refinement is simply the process of adding new knots to the knot vector, keeping the degree of the B-spline constant. 
 
 Degree elevation, on the other hand, is the process of increasing the degree of the B-spline. There is a subtle caveat here, as the continuity of the B-spline at a knot is equal to the degree of the B-spline minus the multiplicity of the knot. This means that if a spline is to be represented in a higher degree basis, the knot multiplicity must be increased to maintain the same continuity at the knots. So, if a spline function in the basis $\mathbf B_{p,\mathbf t}$ is to be represented in the basis $\mathbf B_{p+1,\boldsymbol \tau}$, the knot vector $\boldsymbol \tau$ must contain the original knots $\mathbf t$ with multiplicity $p+1$.
@@ -236,7 +236,7 @@ Degree elevation, on the other hand, is the process of increasing the degree of 
 In both knot refinement and degree elevation, the transformation matrix $\mathbf T$ from \cref{eq:transformation-matrix-solution} can be used to find the coefficients in the new basis. The following examples illustrate how to perform knot refinement and degree elevation on a B-spline.
 
 $t = \{\underbrace{a, \dots, a}_{p+1}, \underbrace{\eta_1, \dots, \eta_1}_{m_1}, \dots, \underbrace{\eta_{n}, \dots, \eta_{n}}_{m_n}, \underbrace{b, \dots, b}_{p+1}\}$
-$\mathbf u = \unique(t) = \{a, \eta_1, \dots, \eta_n, b\}$
+$\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
 
 \begin{algorithm}
     \caption{Degree Elevation}\label{alg:degree-elevation}
@@ -253,9 +253,8 @@ $\mathbf u = \unique(t) = \{a, \eta_1, \dots, \eta_n, b\}$
 \end{algorithm}
 
 \begin{algorithm}
-    \caption{Knot Refinement}
+    \caption{Knot Refinement}\label{alg:knot-refinement}
     \begin{algorithmic}[1]
-        \label{alg:knot-refinement}
         \State \textbf{Input:} Knot vector $\mathbf t = \{\eta_0^{(m_0)}, \eta_1^{(m_1)}, \dots, \eta_r^{(m_r)}\}$, degree $p$
         \State \textbf{Input:} New knots to insert $\boldsymbol \xi = \{\xi_1, \xi_2, \dots, \xi_k\}$
         \Ensure $\xi_i \in (\eta_0, \eta_r)$
@@ -590,3 +589,114 @@ As for the regular product, the dot product can be made more efficient by not co
     \caption{The overlapping supports of the B-splines. Each rectangle represents the support of a basis function, so counting the number of basis functions withing each knot interval gives the number of multiplications for that interval. The total number of multiplications then the area of all the rectangles, which is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline.}
     \label{fig:overlapping-bases}
 \end{figure}
+
+
+\section{Pythogerean-Hodograph B-splines}\label{sec:pythogerean-hodograph}
+The Pythogerean-Hodograph (PH) B-spline is utilized to leverage exact geometric quantities in CAD/CAM. Pythagorean‐Hodograph (PH) B‐splines \cite{Albrecht2016}, a natural extension of PH Bézier curves \cite{Farouki1990}, are employed. In this framework, the hodograph (derivative) of a planar B‐spline
+
+\begin{equation*}
+\mathbf r(x) = [a(x), b(x)],
+\qquad
+\mathbf r'(x) = [a'(x), b'(x)]
+\end{equation*}
+
+satisfies the Pythagorean condition
+\begin{equation}\label{eq:pythagorean-condition}
+a'(x)^2 + b'(x)^2 = \sigma(x)^2,
+\end{equation}
+where $\sigma(x)$ is itself a B‐spline function. Enforcing \cref{eq:pythagorean-condition} guarantees that magnitude, curvature, turn‐rate, and arc‐length admit closed‐form rational expressions without numerical approximation. The following derivation is based on \cite{Albrecht2016}.
+
+Introducing the complex pre‐image
+\begin{equation*}
+    z(x) = u(x) + i\,v(x),
+\end{equation*}
+the hodograph is defined via the square relation
+\begin{equation}\label{eq:hodograph-square}
+    \mathbf r'(x) = z(x)^2.
+\end{equation}
+Expanding the complex square yields
+\begin{equation*}
+    (u + i v)^2 = u^2 + 2iuv - v^2 = (u^2 - v^2) + i(2uv),
+\end{equation*}
+and equating real and imaginary parts gives
+\begin{subequations}\label{eq:hodograph-derivatives}
+    \begin{align}
+        a'(x) &= \Re\bigl(z(x)^2\bigr) = u(x)^2 - v(x)^2, \label{eq:hodograph-derivatives-a}\\
+        b'(x) &= \Im\bigl(z(x)^2\bigr) = 2\,u(x)\,v(x), \label{eq:hodograph-derivatives-b}
+    \end{align}
+\end{subequations}
+while the magnitude of the hodograph follows as
+\begin{equation*}
+    \sigma(x) = \|\mathbf r'(x)\| = |z(x)|^2 = u(x)^2 + v(x)^2.
+\end{equation*}
+Finally, integrating recovers the curve coordinates:
+\begin{equation*}
+    \begin{aligned}
+        a(x) &= a_0 + \int_{x_0}^{x}\bigl(u(\tau)^2 - v(\tau)^2\bigr)\,d\tau,\\
+        b(x) &= b_0 + \int_{x_0}^{x}2\,u(\tau)\,v(\tau)\,d\tau,
+    \end{aligned}
+\end{equation*}
+
+where $(a_0,b_0)=\mathbf r(x_0)$.
+
+The curvature $\kappa(x)$ of the curve $\mathbf r(x)$ is defined as
+\begin{equation*}
+    \kappa(x) = \frac{a'(x)b''(x) - b'(x)a''(x)}{\|\mathbf r'(x)\|^3},
+\end{equation*}
+where $a'(x)$ and $b'(x)$ are the first derivatives of the curve, and $a''(x)$ and $b''(x)$ are the second derivatives. Using \cref{eq:hodograph-derivatives} gives
+which in terms of $u(x)$ and $v(x)$ simplifies to
+\begin{equation}\label{eq:curvature}
+    \kappa(x) = \frac{2(uv'-vu')}{(u^2+v^2)^2}.
+\end{equation}
+The turn-rate $\dot\theta(x)$ is then simply
+\begin{equation}\label{eq:turn-rate}
+    \dot\theta(x) = \kappa(x) \sigma(x) = \frac{2(uv'-vu')}{u^2+v^2},
+\end{equation}
+while the arc-length $s(x)$ is given by
+\begin{equation*}
+    s(x) = \int_{x_0}^{x}\sigma(\tau)\,d\tau.
+\end{equation*}
+
+
+Add sources for uses of NURBS where applicable
+
+\section{Non-Uniform Rational B-splines (NURBS)}
+In the previous section, rational functions of B-splines were mentioned in the context of Pythagorean-Hodograph curves. \Cref{eq:curvature,eq:turn-rate} are examples of such rational functions. This section formalizes the concept of Non-uniform rational B-splines (NURBS), for which a good reference is \cite{Piegl1997}. 
+
+NURBS are defined by the rational basis functions
+\begin{equation}\label{eq:nurbs-basis}
+R_{i,p,\mathbf t}(x)  = \frac{w_i,B_{i,p,\mathbf t}(x)}{\sum_{j=0}^{n-1}w_j,B_{j,p,\mathbf t}(x)},
+\end{equation}
+and a NURBS curve is given by
+\begin{equation}\label{eq:nurbs-curve}
+\mathbf r(x)  = \sum_{i=0}^{n-1}R_{i,p,\mathbf t}(x)\,c_i.
+\end{equation}
+
+NURBS inherit local support, and non-negativity from B-splines. When all weights $w_i$ are equal, the NURBS reduces exactly to a B-spline curve. The partition of unity property is also preserved as long as all the weights are non-negative. \citep{Piegl1997}
+
+A principal advantage of NURBS is their ability to represent conic sections — such as circles, ellipses, and parabolas exactly using quadratic or cubic segments \citep{Piegl1997}. For example, a circle can be constructed by appropriate choice of four rational quadratic segments, each representing a quarter arc \citep{DenbighStarkeyNURBS}. Many CAD systems likewise rely on NURBS for the exactness of the conic-surface representation as well as the ability to create flexible free-form shapes \citep{Farin1991,PieglTillerSIGGRAPH,cottrell2009isogeometric}.
+
+To convert a general rational B-spline
+$$
+    f(x) = \frac{N(x)}{D(x)},
+$$
+where $N(x)=\mathbf B_{p_N,\mathbf t_N}^\top\mathbf n$ and $D(x)=\mathbf B_{p_D,\mathbf t_D}^\top\mathbf d$ are each in separate B-spline bases, into standard NURBS form, one applies degree elevation and knot insertion \citep{Piegl1997} to obtain a common basis ${B_{q,i}(x)}$:
+\begin{enumerate}
+    \item Elevate both $N$ and $D$ to degree $q\ge\max{p_N,p_D}$ using \cref{alg:degree-elevation}.
+    \item Refine knot vectors so that both share the same sequence using \cref{alg:knot-refinement}.
+\end{enumerate}
+This yields
+$$
+    \widetilde N(x) = \sum_{i=0}^M \tilde n_i\,N_{q,i}(x),\quad \widetilde D(x) = \sum_{i=0}^M \tilde d_i\,N_{q,i}(x),
+$$
+from which the NURBS weights and control values follow:
+$$
+    w_i = \tilde d_i,
+    \quad
+    \mathbf c_i = \frac{\tilde n_i}{\tilde d_i}.
+$$
+The resulting representation,
+$$
+    f(x) = \frac{\sum_i w_i\,c_i\,N_{q,i}(x)}{\sum_i w_i\,N_{q,i}(x)},
+$$
+is a degree-$q$ NURBS.

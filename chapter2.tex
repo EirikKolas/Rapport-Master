@@ -52,7 +52,7 @@ These properties are well-documented in the literature and are summarized as fol
 
 So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by simply allowing the coefficients $c_j$ to be vectors. In this case the B-spline is a vector-valued function $f: \mathbb R \rightarrow \mathbb R^m$. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} still hold, as the basis functions themselves are still scalar-valued. 
 
-For vector-valued functions, the dot product is denoted by $\mathbf f(x) \cdot \mathbf g(x)$ and is defined as $\mathbf f(x)^\top \mathbf g(x)$, where $\mathbf f(x), \mathbf g(x) \in \mathbb{R}^m$.
+
 
 \begin{figure}
     \centering
@@ -76,7 +76,7 @@ The convex hull $\text{conv}(\mathbf{c})$ of a set of points $\mathbf{c} = \{c_1
 
 In the context of optimization, this property is useful for formulating constraints, as a constraint on a B-spline function can be enforced by imposing them on the control points \citep{mercy2017spline}. 
 \begin{equation}
-    a \leq c_i \leq b \quad \forall i\in\{1,2,\ldots,n\} \implies a \leq f(x) \leq b \quad \forall x
+    a \leq c_i \leq b \quad \forall i\in\{1,2,\ldots,n\} \implies a \leq f(x) \leq b \quad \forall x.
 \end{equation}
 Here $a$ and $b$ are constants of appropriate dimensions and the $\leq$ operator is applied element-wise.
 
@@ -435,7 +435,7 @@ To do this, the basis of the lowest degree is first elevated to the highest degr
 
 \begin{algorithm}
     \caption{Common Basis}\label{alg:common-basis}
-    \begin{algorithmic}
+    \begin{algorithmic}[1]
         \State \textbf{Input:} B-Spline basis functions $\mathbf{B}_{p_1, \mathbf{t}_1}^{\top}(x)$ and $\mathbf{B}_{p_2, \mathbf{t}_2}^{\top}(x)$
         \State \textbf{Input:} Desired degree $q$
         \Ensure $q \geq \max(p_1, p_2)$
@@ -459,7 +459,9 @@ To do this, the basis of the lowest degree is first elevated to the highest degr
     \end{algorithmic}
 \end{algorithm}
 
-\section{Multiplication and Dot Product}
+Scalar addition in the form of $f(x) + a$ can be performed by simply adding the scalar to all the coefficients of the B-spline. This is clear from the fact thats a scalar can be represented as a B-spline with degree $0$ (constant spline), and then performing the addition as described above. 
+
+\section{Multiplication and Inner Product}
 
 For addition, the common basis had to have degree $q \geq \max(p_1, p_2)$, but for multiplication, the degree of the common basis must be $q = p_1 + p_2$\todo[inlinepar]{forklar hvorfor}. Intuitively, this is because the product of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $p_1 + p_2$ while the sum of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $\max(p_1, p_2)$.
 
@@ -559,12 +561,18 @@ This algorithm can be made more efficient by exploiting the local support proper
 
 \end{indentedexample}
 
-The dot product of two vector-valued B-splines is a scalar function that combines the components of the two vector-valued functions. This operation is useful in applications such as calculating projections, measuring similarity, or defining energy functions in optimization problems. The dot product for vector-valued functions is defined as:
+The inner product of two (vector-valued) functions is a scalar that measures the similarity between the functions. combines the components of the two vector-valued functions. This operation is useful in applications such as calculating projections, or defining cost functions in optimization problems. The $\mathcal L_2$ inner product (henceforth referred to as the inner product)for vector-valued functions is defined as:
 \begin{equation}
     \label{eq:dot-product}
-    \langle\mathbf f(x), \mathbf g(x)\rangle = \sum_{i=1}^m f_i(x) g_i(x)
+    \langle\mathbf f(x), \mathbf g(x)\rangle = \int_{-\infty}^\infty\sum_{i=1}^m f_i(x) g_i(x)
 \end{equation}
-where $\mathbf f, \mathbf g: \mathbb{R} \to \mathbb{R}^m$, $\mathbf f(x) = [f_1(x), \ldots, f_m(x)]^\top$ and $\mathbf g(x) = [g_1(x), \ldots, g_m(x)]^\top$ are vector-valued functions with $m$ components. When $\mathbf f$ and $\mathbf g$ are spline functions, the dot product can be expressed in terms of their B-spline representations as
+where $\mathbf f, \mathbf g: \mathbb{R} \to \mathbb{R}^m$, $\mathbf f(x) = [f_1(x), \ldots, f_m(x)]^\top$ and $\mathbf g(x) = [g_1(x), \ldots, g_m(x)]^\top$ are vector-valued functions with $m$ components. The expression inside the integral also carries useful information, and one may refer to it as the pointwise (PW) inner product which is defined as
+\begin{equation}
+    \label{eq:dot-product-pointwise}
+    \mathbf f(x) \cdot \mathbf g(x) = \sum_{i=1}^m f_i(x) g_i(x).
+\end{equation}
+
+When $\mathbf f$ and $\mathbf g$ are spline functions, the PW inner product can be expressed in terms of their B-spline representations as
 \begin{equation}
     \label{eq:dot-product-spline}
     \begin{aligned}
@@ -574,15 +582,15 @@ where $\mathbf f, \mathbf g: \mathbb{R} \to \mathbb{R}^m$, $\mathbf f(x) = [f_1(
         &= \left(\mathbf B_{p_1, \mathbf t_1}(x) \otimes \mathbf B_{p_2, \mathbf t_2}(x)\right)^{\top} \sum_{i=1}^m \mathbf c_{1,i} \otimes \mathbf c_{2,i},
     \end{aligned}
 \end{equation}
-where $\mathbf c_{1,i}$ and $\mathbf c_{2,i}$ are the coefficients of the $i$-th component of $\mathbf f$ and $\mathbf g$, respectively. Notice that the expression $\left(\mathbf B_{p_1, \mathbf t_1}(x) \otimes \mathbf B_{p_2, \mathbf t_2}(x)\right)^{\top}$ is found in both \cref{eq:b-spline-product-4} and \cref{eq:dot-product-spline}. This means that the transformation matrix $\mathbf T$ for the dot product can be computed in the same way as for the multiplication, using \cref{alg:multiplication}.
+where $\mathbf c_{1,i}$ and $\mathbf c_{2,i}$ are the coefficients of the $i$-th component of $\mathbf f$ and $\mathbf g$, respectively. Notice that the expression $\left(\mathbf B_{p_1, \mathbf t_1}(x) \otimes \mathbf B_{p_2, \mathbf t_2}(x)\right)^{\top}$ is found in both \cref{eq:b-spline-product-4} and \cref{eq:dot-product-spline}. This means that the transformation matrix $\mathbf T$ for the inner product can be computed in the same way as for the multiplication, using \cref{alg:multiplication}.
 This is due to the fact that per \cref{eq:transformation-matrix-solution}, the transformation matrix $\mathbf T$ is independent of the coefficients $\mathbf c_{1}$ and $\mathbf c_{2}$.
 
-So, to find the dot product $h(x) = \langle\mathbf f(x), \mathbf g(x)\rangle$, \cref{alg:multiplication} is used on the bases of $\mathbf f$ and $\mathbf g$, and the coefficients $\mathbf d$ of $h(x) = \mathbf B_{q, \boldsymbol{\tau}}^\top(x) \mathbf d$ are given by
+So, to find the PW inner product $h(x) = \mathbf f(x) \cdot \mathbf g(x)$, \cref{alg:multiplication} is used on the bases of $\mathbf f$ and $\mathbf g$, and the coefficients $\mathbf d$ of $h(x) = \mathbf B_{q, \boldsymbol{\tau}}^\top(x) \mathbf d$ are given by
 \begin{equation}
     \mathbf d = \mathbf T \sum_{i=1}^m (\mathbf c_{1,i} \otimes \mathbf c_{2,i}).
 \end{equation}
 
-As for the regular product, the dot product can be made more efficient by not computing the terms in the Kronecker product that correspond to non-overlapping supports of the basis functions. The most common case for applying the dot product is between two vector-valued B-splines of the same basis, in which case the number of non-zero entires is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline. This is linear in the number of basis functions, instead of quadratic as for when this optimization is not used. See explanation in \cref{fig:overlapping-bases}. Finding a general formula arbitrary bases is not as easily acheivable, as the number of non-zero entries depends on the placement of the knots in the knot vectors.
+As for the regular product, the PW inner product can be made more efficient by not computing the terms in the Kronecker product that correspond to non-overlapping supports of the basis functions. The most common case for applying the PW inner product is between two vector-valued B-splines of the same basis, in which case the number of non-zero entires is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline. This is linear in the number of basis functions, instead of quadratic as for when this optimization is not used. See explanation in \cref{fig:overlapping-bases}. Finding a general formula arbitrary bases is not as easily acheivable, as the number of non-zero entries depends on the placement of the knots in the knot vectors.
 
 \begin{figure}
     \includesvg[width=\textwidth,pretex=\small]{fig/b-spline/overlapping-bases.svg}
@@ -648,7 +656,7 @@ which in terms of $u(x)$ and $v(x)$ simplifies to
 \begin{equation}\label{eq:curvature}
     \kappa(x) = \frac{2(uv'-vu')}{(u^2+v^2)^2}.
 \end{equation}
-The turn-rate $\dot\theta(x)$ is then simply
+The turn-rate $\dot\theta(x)$ is then
 \begin{equation}\label{eq:turn-rate}
     \dot\theta(x) = \kappa(x) \sigma(x) = \frac{2(uv'-vu')}{u^2+v^2},
 \end{equation}
@@ -696,4 +704,120 @@ The resulting representation,
 $$
     f(x) = \frac{\sum_i w_i\,c_i\,N_{q,i}(x)}{\sum_i w_i\,N_{q,i}(x)},
 $$
-is a degree-$q$ NURBS with weights $w_i$, knot vector $\boldsymbol{\tau}$ and control points $c_i$. 
+is a degree-$q$ NURBS with weights $w_i$, knot vector $\boldsymbol{\tau}$ and control points $c_i$. This is summarized in \cref{alg:nurbs-conversion}.
+
+\begin{algorithm}
+    \caption{Convert rational B-spline to NURBS}\label{alg:nurbs-conversion}
+    \begin{algorithmic}[1]
+        \State \textbf{Input:} B-splines $N(x)$ and $D(x)$ with correspondingknot vectors $\mathbf t_N$ and $\mathbf t_D$, and degrees $p_N$ and $p_D$
+        \State $q \gets \max(p_N, p_D)$
+        \State $\mathbf B_{q,\boldsymbol{\tau}}(x) \gets $ result from \cref{alg:common-basis} with bases $\mathbf B_{p_N,\mathbf t_N}(x)$ and $\mathbf B_{p_D,\mathbf t_D}(x)$ and desired degree $q$
+        \State $\mathbf T_N \gets $ result from \cref{alg:basis-transformation} with transformation from $\mathbf B_{p_N,\mathbf t_N}(x)$ to $\mathbf B_{q,\boldsymbol{\tau}}(x)$
+        \State $\mathbf T_D \gets $ result from \cref{alg:basis-transformation} with transformation from $\mathbf B_{p_D,\mathbf t_D}(x)$ to $\mathbf B_{q,\boldsymbol{\tau}}(x)$
+        \State $\mathbf{\tilde n} \gets \mathbf T_N \mathbf n$
+        \State $\mathbf{\tilde d} \gets \mathbf T_D \mathbf d$
+        \State $\mathbf w \gets \mathbf{\tilde d}$
+        \State $\mathbf c \gets \mathbf{\tilde n} \oslash \mathbf{\tilde d}$ \Comment{element-wise division}
+        \State \textbf{Output:} Degree $q$ NURBS curve $\displaystyle r(x) = \frac{N(x)}{D(x)}$ with weights $w_i$, knot vector $\boldsymbol{\tau}$ and control points $c_i$
+    \end{algorithmic}
+\end{algorithm}
+
+
+\section{Summary}
+
+This chapter has introduced the concept of B-splines, their properties, and how they can be used to represent curves and surfaces. B-splines are piecewise polynomial functions defined over a knot vector, and they have several important properties, including local support, non-negativity, and the ability to represent complex shapes. The chapter also discussed the operations of addition, multiplication, and inner product for B-splines, as well as their generalization to Non-Uniform Rational B-splines (NURBS).
+
+Table of operations for B-splines and NURBS is given in \cref{tab:operations}, 
+
+
+\renewcommand{\arraystretch}{1.5}
+\begin{table}
+    \centering
+    \caption{Summary of B-spline operations and their properties. The symbols $f$ and $g$ denote B-spline functions, while $a$ denotes a scalar. Their corresponding bold-faced symbols denote vector-valued functions and vectors in $\mathbf R^n$ space respectively. The ``Coefficients'' column indicates the transformation type of the operation on the coefficients. The ``Space'' column indicates the space of the resulting B-spline. The knot vectors for these spaces are ommited for brevity as they should be clear from the context.}
+    \label{tab:operations}
+    \begin{tabular}{|l|l|l|l|c|}
+    \hline
+    \textbf{Operation} 
+      & \textbf{Expression} 
+        & \textbf{Space} 
+          & \textbf{Coefficients} 
+            & \textbf{Reference} \\
+    \hline
+    \hline
+    Evaluation   
+      & $\mathbf f(x)$ 
+        & $\mathbb S^n_{p}\to\mathbb{R}^n$ 
+          & Linear 
+            & \cref{eq:b-spline-recurrence} \\
+    \hline
+    Derivative   
+      & $\mathbf f'$  
+        & $\mathbb S^n_{p}\to\mathbb S^n_{p-1}$ 
+          & Linear 
+            & \cref{eq:b-spline-derivative} \\
+    \hline
+    Integral     
+      & \rule{0pt}{4ex}$\displaystyle\int \mathbf f(x)\,dx$ 
+        & $\mathbb S^n_{p}\to\mathbb S^n_{p+1}$ 
+          & Linear 
+            & \cref{eq:b-spline-integral} \\[1.5ex]
+    \hline
+    Degree elevation  
+      & $\mathbf f$  
+        & $\mathbb S^n_{p}\to\mathbb S^n_{p+1}$ 
+          & Linear 
+            & \Cref{alg:degree-elevation} \\      
+    \hline
+    Knot insertion    
+      & $\mathbf f$  
+        & $\mathbb S^n_{p}\to\mathbb S^n_{p}$ 
+          & Linear 
+            & \Cref{alg:knot-refinement} \\
+    \hline
+    \hline
+    Vector Addition  
+      & $\mathbf a + \mathbf f$  
+        & $\mathbb R \times\mathbb S^n_{p}\to\mathbb S^n_{p}$ 
+          & Linear 
+            & \Cref{alg:addition} \\
+    \hline
+    Scalar multiplication  
+      & $a\,\mathbf f$  
+        & $\mathbb R\times\mathbb S^n_{p}\to\mathbb S^n_{p}$ 
+          & Linear 
+            & $-$ \\
+    \hline
+    Addition     
+      & $\mathbf f +\mathbf g$  
+        & $\mathbb S^n_{p_1}\times\mathbb S^n_{p_2}\to\mathbb S^n_{\max(p_1,p_2)}$ 
+          & Linear 
+            & \Cref{alg:addition} \\[.5ex]
+    \hline
+    Multiplication   
+      & $\mathbf f\,g$  
+        & $\mathbb S^n_{p_1}\times\mathbb S_{p_2}\to\mathbb S^n_{p_1+p_2}$ 
+          & Bilinear 
+            & \Cref{alg:multiplication} \\
+    \hline
+    PW inner product  
+      & $\mathbf f \cdot \mathbf g$  
+        & $\mathbb S^n_{p_1}\times\mathbb S^n_{p_2}\to\mathbb S_{p_1+p_2}$
+          & Bilinear 
+            & \cref{eq:dot-product-pointwise} \\
+    \hline
+    Inner product    
+      & $\langle \mathbf f, \mathbf g \rangle$  
+        & $\mathbb S^n_{p_1}\times\mathbb S^n_{p_2}\to\mathbb R$ 
+          & Bilinear 
+            & \cref{eq:dot-product} \\
+    \hline
+    Division  
+      & \rule{0pt}{4ex}$\displaystyle\frac{\mathbf f}{g}$  
+        & $\mathbb S^n_{p_1}\times\mathbb S_{p_2}\to\mathbb B^n_{\max(p_1,p_2)}$
+          & Rational 
+            & \Cref{alg:nurbs-conversion} \\[1.5ex]
+    \hline
+    \end{tabular}
+\end{table}
+\renewcommand{\arraystretch}{1}
+    

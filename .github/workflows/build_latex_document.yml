@@ -1,5 +1,8 @@
 name: Build LaTeX document
 
+permissions:
+  contents: write
+
 on:
   push:
     # Run on pushes to the main branch…
@@ -41,7 +44,6 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          # this tag will always point at the tip of main
           tag_name: latest
           name: Latest
           files: main.pdf

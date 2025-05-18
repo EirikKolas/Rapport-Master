@@ -7,7 +7,7 @@ This chapter will introduce B-splines, a type of spline function that is widely 
 
 Important properties and operations on B-splines are presented, providing discussion and intuition around results and theorems without going into the full mathematical details. The goal is to provide the reader with the necessary background to understand the subsequent chapters in addition to being able to implement B-splines in a numerical optimization context from scratch.
 
-\section{Definition and Properties}
+\section{Definition and Properties}\label{sec:b-spline-definition}
 The following definition is from \cite{Grimstad2016}:
 A B-spline $f: \mathbb R \rightarrow \mathbb R$ is given by $n$ \emph{B-spline coefficients} $\mathbf c = [c_j]_{j=0}^{n-1}$ and $n+p+1$ non-decreasing knots $\mathbf t = [t_j]_{j=0}^{n+p}$ as follows:
 
@@ -79,6 +79,8 @@ In the context of optimization, this property is useful for formulating constrai
     a \leq c_i \leq b \quad \forall i\in\{1,2,\ldots,n\} \implies a \leq f(x) \leq b \quad \forall x.
 \end{equation}
 Here $a$ and $b$ are constants of appropriate dimensions and the $\leq$ operator is applied element-wise.
+
+The basis functions span a linear vector space (or spline space) denoted by $\mathcal{S}_{p, \mathbf{t}}$. This space contains all piecewise polynomials of degree $\le p$ on a given knot vector $\mathbf t$ \citep{Grimstad2016}. 
 
 \section{Operations on B-splines}
 From the recursive relation in \cref{eq:b-spline-recurrence} it follows that the B-spline basis functions are piecewise polynomial functions in $x$ of degree $p$. This property makes it clear that all polynomial operations on B-splines will result in a new B-spline.
@@ -675,12 +677,16 @@ R_{i,p,\mathbf t, \mathbf w}(x)  = \frac{w_i,B_{i,p,\mathbf t}(x)}{\sum_{j=0}^{n
 \end{equation}
 for which a NURBS curve is given by
 \begin{equation}\label{eq:nurbs-curve}
-\mathbf r(x)  = \sum_{i=0}^{n-1}R_{i,p,\mathbf t, \mathbf w}(x)\,c_i.
+\mathbf r(x; \mathbf c, p, \mathbf t, \mathbf w)  = \sum_{i=0}^{n-1}R_{i,p,\mathbf t, \mathbf w}(x)\,c_i
+= \mathbf R_{p,\mathbf t, \mathbf w}(x)^\top \mathbf c.
 \end{equation}
 
-NURBS inherit local support, and non-negativity from B-splines. When all weights $w_i$ are equal, the NURBS reduces exactly to a B-spline curve. The partition of unity property is also preserved as long as all the weights are non-negative. \citep{Piegl1997}
+NURBS inherit the local support and non-negativity properties from B-splines. When all weights $w_i$ are equal, the NURBS reduces exactly to a B-spline curve. The partition of unity property is also preserved as long as all the weights are non-negative. \citep{Piegl1997}
 
 A principal advantage of NURBS is their ability to represent conic sections — such as circles, ellipses, and parabolas exactly using quadratic or cubic segments \citep{Piegl1997}. For example, a circle can be constructed by appropriate choice of four rational quadratic segments, each representing a quarter arc \citep{DenbighStarkeyNURBS}. Many CAD systems likewise rely on NURBS for the exactness of the conic-surface representation as well as the ability to create flexible free-form shapes \citep{Farin1991,PieglTillerSIGGRAPH,cottrell2009isogeometric}.
+
+In \cref{sec:b-spline-definition} it is mentioned that a B-spline function $f(x; p, \mathbf t)$ is part of the linear vector space $\mathbb S_{p, \mathbf t}$.
+, a NURBS function $f(x; p, \mathbf t, \mathbf w)$ is part of the rational spline space $\mathbb B_{p, \mathbf t, \mathbf w}$. This space contains all piecewise rational polynomials on the knot vector $\mathbf t$ with degree $p$ and weights $\mathbf w$. 
 
 To convert a general rational B-spline
 $$
@@ -777,7 +783,7 @@ Table of operations for B-splines and NURBS is given in \cref{tab:operations},
     \hline
     Vector Addition  
       & $\mathbf a + \mathbf f$  
-        & $\mathbb R \times\mathbb S^n_{p}\to\mathbb S^n_{p}$ 
+        & $\mathbb R^n \times\mathbb S^n_{p}\to\mathbb S^n_{p}$ 
           & Linear 
             & \Cref{alg:addition} \\
     \hline

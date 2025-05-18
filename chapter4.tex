@@ -31,7 +31,7 @@ With this approach, the velocity and acceleration can now be expressed as
         \label{eq:double-integrator-a-spline}
     \end{align}
 \end{subequations}
-Here $(\cdot)'$ and $(\cdot)''$ denotes the first and second derivative with respect to the parameter $x$, respectively. In \cref{eq:double-integrator-spline}, the inverse function theorem was used to flip the relation between $t$ and $x$. This is only possible if $t$ is a strictly increasing function of $x$, which is the case if the constraint 
+Here $(\cdot)'$ and $(\cdot)''$ denotes the first and second derivative with respect to the spline parameter $x$, respectively. In \cref{eq:double-integrator-spline}, the inverse function theorem was used to flip the relation between $t$ and $x$. This is only possible if $t$ is a strictly increasing function of $x$, which is the case if the constraint 
 \begin{equation}\label{eq:constraint-t}
     t'(x) > 0
 \end{equation}
@@ -112,6 +112,9 @@ yeilding the polynomial constraints
     \end{align}
 \end{subequations}
 
+The constraint in \cref{eq:dubins-ph-chi} is a rational B-spline function and could in theory be implemented as a NURBS directly in an optimization framework. However, this is not done as unlike the bilinear terms in \cref{eq:dubins-ph-turn-rate}, the rational term in \cref{eq:dubins-ph-chi} has a singularity when $u(x)$ and $v(x)$ are both zero.
+
+
 \section{Target Ships}
 \todo{skriv introduksjon til dette avsnittet}
 
@@ -188,16 +191,16 @@ Finding a reference-following trajectory using B-splines can be viewed as a pena
 More concretely, consider the problem of following a reference trajectory, while ensuring that the OS does not exceed a maximum speed:
 \begin{equation}\label{eq:conservativeness-optimization}
     \begin{aligned}
-        \min_{\mathbf c} \quad & \mathcal{O} \\
+        \min_{\mathbf c} \quad & O_\text{ref} \\
         \text{s.t.} \quad \mathbf p_\text{os}(0) &= \mathbf p_0, \\
                      \mathbf p_\text{os} &= \mathbf B^\top(x) \mathbf c, \\
                      \mathbf p_\text{ref} &= \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
                      \langle p_\text{os}', p_\text{os}' \rangle &\le v_\text{max}^2,
     \end{aligned}
 \end{equation}
-where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The objective function $\mathcal{O}$ to be considered has two different formulations, one based on the sum of the squared control points of the reference error and one based on the definite integral over the squared reference error. The two formulations are given by
+where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The objective function $O_\text{ref}$ to be considered has two different formulations, one based on the sum of the squared control points of the reference error and one based on the definite integral over the squared reference error. The two formulations are given by
 \begin{equation}\label{eq:conservativeness-objective}
-    \mathcal{O} = \begin{cases}
+    O_\text{ref} = \begin{cases}
         \|\text{ctrlPts}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2, & \text{discrete cost} \\
         \int_0^1 \left(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)\right)^\top \left(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)\right) dx, & \text{continuous cost}
     \end{cases}
@@ -301,14 +304,45 @@ Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the 
 \end{figure}
 
 \FloatBarrier
-To summarize, the discrete cost function is the best choice for the final implementation. The continuous cost function gives oscillations in the trajectory and is not able to follow the reference trajectory, even with a penalty on the second order difference of the optimization coefficients. The discrete cost function on the other hand, is able to follow the reference trajectory and does not give oscillations in the trajectory. As a drawback, the discrete cost function is more conservative than the continuous cost function for low $N$, but at least for this scenario, $N=10$ is sufficient to get close to the non-conservative optimal trajectory. 
+To summarize, the discrete cost function is the best choice for the final implementation. The continuous cost function gives oscillations in the trajectory and is not able to follow the reference trajectory, even with a penalty on the second order difference of the optimization coefficients. The discrete cost function on the other hand, is able to follow the reference trajectory and does not give oscillations in the trajectory. As a drawback, the discrete cost function is more conservative than the continuous cost function for low $N$. Higher $N$, yeild diminishing returns in closing the optimality gap as the knot insertion becomes increasingly local as more knots are added.
+For a more in depth analysis of the conservativeness of B-splines, see \citet{Grimstad2016}.
 
 
 \subsection{COLREGS Objectives}
+Rule 8b) of the COLREGS states that any alteration of course should be large enough to be readily apparent to another vessel. This is impractical in an optimization context as penalizing low turn rates while keeping the cost on high and no turn rates low leads to a non-convex cost. See \cref{fig:turn-rate-cost} for an illustration of the problem. 
 
-Using the discrete cost from \cref{eq:conservativeness-objective} to get oscillation-free trajectories, the next step is to add a COLREGS-compliant cost function. 
+\begin{figure}
+    \centering
+    \includesvg[width=0.6\textwidth]{fig/illustrations/Turn rate cost.svg}
+    \caption{Imagined Turn rate cost for a vessel following Rule 8b) of the COLREGS.}
+    \label{fig:turn-rate-cost}
+\end{figure}
 
-\subsection{The Final Objective Function}
+\cite{Thyri2022-MPC} proposes a solution to improve the compliance of rule 8 by introducing a time window where the cost for altering course is lowered. The goal of this is to control when the OS should alter course, and with manipulation of the length and position of the time window, the cost function can facilitate a more COLREGS compliant trajectory. This idea is adapted to the B-spline MINMPC framework as follows:
+An encounter window $W_\text e$ is defined, during which the OS should ensure safe passage. Within $W_\text e$, the cost for reference trajectory following is reduced, while the cost for altering course remains high, except at the start and end of $W_\text e$, denoted as maneuver windows $W_\text m$. 
+The reason for the second maneuver window as opposed to the singular one in \cite{Thyri2022-MPC} is to facilitate a clear maneuver back to the reference trajectory after the encounter window.
+
+\begin{figure}
+    \centering
+    \includesvg[width=0.8\textwidth]{fig/illustrations/Maneuver window.svg}
+    \caption{Weights for turn rate and TTE plotted against time.}
+    \label{fig:maneuver-window}
+\end{figure}
+
+The encounter window and maneuver windows enter the cost function as weights $w_\text e(x)$ and $w_\text m(x)$, respectively on the reference trajectory following cost and the cost for altering course. The weights enter the cost function $O$ as
+\begin{equation}\label{eq:cost-maneuver-window}
+    \begin{aligned}
+        O_\text{m} &= \|\text{ctrlPts}\big(w_\text m(x)(\mathbf p'_\text{os}(x) - \mathbf p'_\text{ref}(x))\big)\|_\text{F}^2, \\
+        O_\text{ref} &= \|\text{ctrlPts}\big(w_\text e(x)(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x))\big)\|_\text{F}^2, \\
+        O &= O_\text{ref} + O_\text{m}, \\
+    \end{aligned}
+\end{equation}
+where $O_\text{m}$ is the cost for altering course, $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text m(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. Notice that $O_\text{m}$ is defined using the Frobenius norm over the control points of the B-spline function as opposed to the definite integral over the squared reference error for the same reason as in \cref{sec:oscillations}.
+
+The advantage of the B-spline framework in this case is that the weights can be defined as B-spline functions themselves. This allows for great flexibility in shaping the desired encounter trajectory. The function shape shown in \cref{fig:maneuver-window}, can be represented using a zero-degree B-spline. If smoother transitions are desired, higher degree B-splines can be used.
+If the weights are fixed as a function of time before the optimization problem is solved, then the costs are constant with respect to the optimization variables and the optimization problem is convex as opposed to that of \cref{fig:turn-rate-cost}.
+
+Estimating when the encounter window should start and end is a non-trivial problem. As is determining how long the maneuver windows should be. \cite{Thyri2022-MPC} proposes to use the time of closest point of approach (TCPA) to the TS along the desired trajectory. The desired trajectory can for example be estimated using Line-of-Sight (LOS) guidance \cite{Fossen2011-Handbook} or by considering the optimzation problem without the TS. Estimation of the encounter window time is implemented according to \cite{Thyri2022-MPC}, and won't be discussed further here.
 
 
 \section{Implementation}\label{sec:python-implementation}
@@ -361,5 +395,5 @@ sol = opti.solve()
 
 \end{python}
 \end{example}
-```
+
 

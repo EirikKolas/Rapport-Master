@@ -1,0 +1,26 @@
+name: Create Latest Release
+
+on:
+  push:
+
+jobs:
+  create_latest_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Github repository
+        uses: actions/checkout@v4
+
+      - name: Download PDF file
+        uses: actions/download-artifact@v4
+        with:
+          name: PDF
+          path: .
+
+      - name: Create Latest Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest
+          draft: false
+          prerelease: false
+          files: main.pdf

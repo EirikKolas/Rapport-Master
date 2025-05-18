@@ -4,17 +4,26 @@ on:
   push:
 
 jobs:
-  create_latest_release:
+  build_latex_and_release:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Github repository
         uses: actions/checkout@v4
+      
+      - name: Compile LaTex Document 
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: |
+            main.tex
+          latexmk_shell_escape: true
+          extra_system_packages: |
+            inkscape
 
-      - name: Download PDF file
-        uses: actions/download-artifact@v4
+      - name: Upload PDF file
+        uses: actions/upload-artifact@v4
         with:
           name: PDF
-          path: .
+          path: main.pdf
 
       - name: Create Latest Release
         uses: softprops/action-gh-release@v2

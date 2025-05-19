@@ -155,6 +155,52 @@ Finding a collision-free trajectory around an obstacle is in general a non-conve
 For designing a COLREGS-compliant trajectory, being able to decide which side of a given target ship to pass on is essential. So to address the aforementioned issue, which side to pass the obstacle on is made a decision variable in a mixed integer programming (MIP) problem as follows:
 
 The idea is that each target ship is represented by two obstacles, each obstacle having only one feasible side to be passed on. The passing side of the target ship is enforced by adding a point $\mathbf p_j$ to each obstacle on the opposide side of the passing side using the normal $\mathbf{\hat n}_{ref}$ of the reference trajectory $\mathbf p_{ref}$. The two obstacles are then moved into and out of the feasible region by introducing a binary variable $z_j\in\{0,1\}$ for each target ship $j$ which controls an offset $M \mathbf{\hat n}_{ref}$, where $M$ is a large positive number. More formally, the constraints are given by
+
+
+\begin{equation}\label{eq:colregs-bigM}
+    \mathcal Q_j: \quad
+    \begin{cases}
+        \mathbf{n}_{\text p, j}(t) \cdot \mathbf{p}(t) - b_{\text p, j}(t) \ge  d_{\min, j} - M\,z_j, \\[1ex]
+        \mathbf{n}_{\text p, j}(t) \cdot \mathbf{q}_j(t) - b_{\text p, j}(t) \le M\,z_j, \\[1ex]
+        \mathbf{n}_{\text p, j}(t) \cdot \big(\mathbf{q}_j(t) + 2M\,\mathbf{\hat n}_\text{ref}\big) - b_{\text p, j}(t) \le -M, \\[2ex]
+
+        \mathbf{n}_{\text s, j}(t) \cdot \mathbf{p}(t) - b_{\text s, j}(t) \ge
+        d_{\min, j} - M\,(1 - z_j), \\[1ex]
+        \mathbf{n}_{\text s, j}(t) \cdot \mathbf{q}_j(t) - b_{\text s, j}(t) \le -M\,(1 - z_j), \\[1ex]
+        \mathbf{n}_{\text s, j}(t) \cdot \big(\mathbf{q}_j(t) - 2M\,\mathbf{\hat n}_\text{ref}\big) - b_{\text s, j}(t) \le -M,
+    \end{cases}
+    \quad t\in \mathcal{T},
+    \quad z_j \in \{0,1\}.
+\end{equation}
+    
+Here, $\mathbf{p}_j(t)$ is the position of the target ship $j$, $\mathbf{n}_j$ is the normal vector of the target ship, and $b(t)$ is a function that defines the distance between the two ships. The variable $d_{\min}$ is the minimum distance between the two ships. The variable $M$ is a large positive number that ensures that the constraints are satisfied for both cases. The variable $z_j$ is a binary variable that indicates which side of the target ship to pass on.
+This Big–$M$ formulation ensures that:
+
+\begin{itemize}
+    \item If $z_j = 0$ (pass on the left), then
+    $$
+        \mathbf{n}_j^\top\bigl(\mathbf{p}(t)-\mathbf{p}_j(t)\bigr)
+        \;\ge\; d_{\min},
+        \quad
+        \mathbf{n}_j^\top\bigl(\mathbf{p}(t)-\mathbf{p}_j(t)\bigr)
+        \;\le\; -\,d_{\min} + M,
+    $$
+    where the second inequality is non-binding for sufficiently large $M$.
+    \item If $z_j = 1$ (pass on the right), then
+    $$
+        \mathbf{n}_j^\top\bigl(\mathbf{p}(t)-\mathbf{p}_j(t)\bigr)
+        \;\le\; -\,d_{\min},
+        \quad
+        \mathbf{n}_j^\top\bigl(\mathbf{p}(t)-\mathbf{p}_j(t)\bigr)
+        \;\ge\; d_{\min} - M,
+    $$
+    where the latter is non-binding for large $M$.
+\end{itemize}
+    
+Including all ships’ constraints $\mathcal{O}_j$ guarantees that a passing side is chosen for each target and that the required separation is maintained.
+    
+
+
 \begin{subequations}\label{eq:colregs-constraints}
     \begin{align}
         \mathbf p_{j}(t) \cdot{\mathbf n}(t) &\ge b(t) + z_j M, \quad\forall \mathbf p_j\in\mathbf P_{TS}^L, \label{eq:colregs-left} \\
@@ -168,8 +214,21 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
 
 \begin{figure}
     \centering
-    \includesvg[width=0.8\textwidth]{fig/b-spline/non-convex-obstacle-mi.svg}
-    \caption{Red dots: Fixed start- and end-points of the trajectory. Black line: current trajectory. Dotted line: reference trajectory. The left and right target ship obstacles are shown in blue and orange, respectively. The left obstacle is moved into the feasible region if $z_j = 0$, and the right obstacle is moved into the feasible region if $z_j = 1$.}
+    \begin{subfigure}[t]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\scriptsize]{fig/b-spline/non-convex-obstacle-mi-sb.svg}
+        \caption{Starboard maneuver ($z_j=1$)}
+        \label{fig:non-convex-obstacle-mi-sb}
+    \end{subfigure}
+    \begin{subfigure}[t]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\scriptsize]{fig/b-spline/non-convex-obstacle-mi-port.svg}
+        \caption{Port maneuver ($z_j=0$)}
+        \label{fig:non-convex-obstacle-mi-port}
+    \end{subfigure}
+    \caption{Visualization of the constraints in \cref{eq:colregs-bigM} when performing a starboard maneuver ($z_j=1$). The TS is stationary and represented by starboard and port obstacles colored orange and red respectively. 
+    The starboard obstacle is moved into the feasible region, while the port obstacle is non-binding. The OS along with the hyperplane (line) constraints and their corresponding normals are shown at two time steps $t_1$ and $t_2$. The faded objects represent the situation when $z_j=0$ (port maneuver). 
+    }
     \label{fig:non-convex-obstacle-mi}
 \end{figure}
 
@@ -191,16 +250,16 @@ Finding a reference-following trajectory using B-splines can be viewed as a pena
 More concretely, consider the problem of following a reference trajectory, while ensuring that the OS does not exceed a maximum speed:
 \begin{equation}\label{eq:conservativeness-optimization}
     \begin{aligned}
-        \min_{\mathbf c} \quad & O_\text{ref} \\
+        \min_{\mathbf c} \quad & J_\text{ref} \\
         \text{s.t.} \quad \mathbf p_\text{os}(0) &= \mathbf p_0, \\
                      \mathbf p_\text{os} &= \mathbf B^\top(x) \mathbf c, \\
                      \mathbf p_\text{ref} &= \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
                      \langle p_\text{os}', p_\text{os}' \rangle &\le v_\text{max}^2,
     \end{aligned}
 \end{equation}
-where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The objective function $O_\text{ref}$ to be considered has two different formulations, one based on the sum of the squared control points of the reference error and one based on the definite integral over the squared reference error. The two formulations are given by
+where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The objective function $J_\text{ref}$ to be considered has two different formulations, one based on the sum of the squared control points of the reference error and one based on the definite integral over the squared reference error. The two formulations are given by
 \begin{equation}\label{eq:conservativeness-objective}
-    O_\text{ref} = \begin{cases}
+    J_\text{ref} = \begin{cases}
         \|\text{ctrlPts}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2, & \text{discrete cost} \\
         \int_0^1 \left(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)\right)^\top \left(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)\right) dx, & \text{continuous cost}
     \end{cases}
@@ -242,15 +301,15 @@ With the B-spline framework, however, finding the XTE is not straightforward, an
 \begin{figure}
     \centering
     \begin{subfigure}[b]{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_coeffs_degree_3.svg}
+    \centering
+    \includesvg[width=\textwidth]{fig/conservativeness/conservativeness_traj_coeffs_degree_3.svg}
         \caption{Discrete cost: Trajectory using the sum of squared coefficients of the reference error as a cost function.}
         \label{fig:conservativeness-traj-coeffs}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_integral_degree_3.svg}
+        \includesvg[width=\textwidth]{fig/conservativeness/conservativeness_traj_integral_degree_3.svg}
         \caption{Continuous cost: Trajectory using the definite integral over the squared reference error as a cost function.}
         \label{fig:conservativeness-traj-integral}
     \end{subfigure}
@@ -281,7 +340,7 @@ where $\lambda$ is a parameter that controls the strength of the penalty. This i
 
 \begin{figure}
     \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/p_spline_degree_3_n_10.svg}
+    \includesvg[width=\textwidth]{fig/conservativeness/p_spline_degree_3_n_10.svg}
     \caption{Continuous cost with $N=10$, $p=3$ and a penalty on the second order difference of the optimization coefficients. The trajectory approaches that of \cref{fig:conservativeness-traj-integral} as $\lambda$ is decreased.}\label{fig:conservativeness-oscillation-damping}
 \end{figure}
 
@@ -290,7 +349,7 @@ Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the 
 
 \begin{figure}
     \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_3.svg}
+    \includesvg[width=\textwidth]{fig/conservativeness/compare_conservativeness_degree_3.svg}
     \caption{Comparison of the performance using the discrete and continuous cost functions. The integral of the square error is plotted against the number $N$ of B-spline basis functions for $p=3$.}
     \label{fig:conservativeness}
 \end{figure}
@@ -298,7 +357,7 @@ Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the 
 
 \begin{figure}
     \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_coeffs_all_degrees.svg}
+    \includesvg[width=\textwidth]{fig/conservativeness/compare_conservativeness_coeffs_all_degrees.svg}
     \caption{Logaritmic plot of the Integral of the square error using the discrete cost function. The value of the cost at $N=50$ is subtracted from all values in this plot to highlight the convergence.}
     \label{fig:conservativeness-coeffs}
 \end{figure}
@@ -319,7 +378,7 @@ Rule 8b) of the COLREGS states that any alteration of course should be large eno
 \end{figure}
 
 \cite{Thyri2022-MPC} proposes a solution to improve the compliance of rule 8 by introducing a time window where the cost for altering course is lowered. The goal of this is to control when the OS should alter course, and with manipulation of the length and position of the time window, the cost function can facilitate a more COLREGS compliant trajectory. This idea is adapted to the B-spline MINMPC framework as follows:
-An encounter window $W_\text e$ is defined, during which the OS should ensure safe passage. Within $W_\text e$, the cost for reference trajectory following is reduced, while the cost for altering course remains high, except at the start and end of $W_\text e$, denoted as maneuver windows $W_\text m$. 
+An encounter window $W_\text e$ is defined, during which the OS should ensure safe passage. Within $W_\text e$, the cost for reference trajectory following is reduced, while the cost for altering course remains high, except at the start and end of $W_\text e$, denoted as maneuver windows $W_\text{mv}$. 
 The reason for the second maneuver window as opposed to the singular one in \cite{Thyri2022-MPC} is to facilitate a clear maneuver back to the reference trajectory after the encounter window.
 
 \begin{figure}
@@ -329,15 +388,15 @@ The reason for the second maneuver window as opposed to the singular one in \cit
     \label{fig:maneuver-window}
 \end{figure}
 
-The encounter window and maneuver windows enter the cost function as weights $w_\text e(x)$ and $w_\text m(x)$, respectively on the reference trajectory following cost and the cost for altering course. The weights enter the cost function $O$ as
+The encounter window and maneuver windows enter the cost function as weights $w_\text e(x)$ and $w_\text{mv}(x)$, respectively on the reference trajectory following cost and the cost for altering course. The weights enter the cost function $O$ as
 \begin{equation}\label{eq:cost-maneuver-window}
     \begin{aligned}
-        O_\text{m} &= \|\text{ctrlPts}\big(w_\text m(x)(\mathbf p'_\text{os}(x) - \mathbf p'_\text{ref}(x))\big)\|_\text{F}^2, \\
-        O_\text{ref} &= \|\text{ctrlPts}\big(w_\text e(x)(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x))\big)\|_\text{F}^2, \\
-        O &= O_\text{ref} + O_\text{m}, \\
+        J_\text{mv} &= \|\text{ctrlPts}\big(w_\text{mv}(x)(\mathbf p'_\text{os}(x) - \mathbf p'_\text{ref}(x))\big)\|_\text{F}^2, \\
+        J_\text{ref} &= \|\text{ctrlPts}\big(w_\text e(x)(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x))\big)\|_\text{F}^2, \\
+        J &= J_\text{ref} + J_\text{mv}, \\
     \end{aligned}
 \end{equation}
-where $O_\text{m}$ is the cost for altering course, $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text m(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. Notice that $O_\text{m}$ is defined using the Frobenius norm over the control points of the B-spline function as opposed to the definite integral over the squared reference error for the same reason as in \cref{sec:oscillations}.
+where $J_\text{mv}$ is the cost for altering course, $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text{mv}(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. Notice that $J_\text{mv}$ is defined using the Frobenius norm over the control points of the B-spline function as opposed to the definite integral over the squared reference error for the same reason as in \cref{sec:oscillations}.
 
 The advantage of the B-spline framework in this case is that the weights can be defined as B-spline functions themselves. This allows for great flexibility in shaping the desired encounter trajectory. The function shape shown in \cref{fig:maneuver-window}, can be represented using a zero-degree B-spline. If smoother transitions are desired, higher degree B-splines can be used.
 If the weights are fixed as a function of time before the optimization problem is solved, then the costs are constant with respect to the optimization variables and the optimization problem is convex as opposed to that of \cref{fig:turn-rate-cost}.
@@ -397,3 +456,49 @@ sol = opti.solve()
 \end{example}
 
 
+\section{Summary}
+
+
+
+\subsection{Complete Optimization Problem}
+
+Let $\mathbf{p}(\cdot)$ and $t(\cdot)$ denote the decision functions for the path and timing, and let $Z = \{z_1,\dots,z_J\}$ be the binary side-choice variables for $J$ target ships. The B-spline MINMPC problem can be written compactly as
+
+\begin{equation}
+\label{eq:minmpc-compact}
+\begin{aligned}
+\min_{\mathbf{p}(\cdot),\,t(\cdot),\,Z}
+\quad & 
+\underbrace{\sum_{i \in \mathcal{I}}
+         \bigl\|\mathbf{p}(x_i) - \mathbf{p}^{\mathrm{ref}}(x_i)\bigr\|^2}_{J_{\mathrm{ref}}}
+\;+\;
+\underbrace{\sum_{k \in \mathcal{K}}
+         w_k\,\bigl\|\mathbf{p}^{(m)}(t)\bigr\|^2}_{J_{\mathrm{mw}}}
+\\[1ex]
+\text{subject to}\quad
+& \mathcal{D}_{DI}\bigl(\mathbf{p},t\bigr)
+\;\;\text{or}\;\;
+  \mathcal{D}_{PH}\bigl(\mathbf{p},t\bigr),
+\\[0.75ex]
+& \mathcal{O}_j\bigl(\mathbf{p},z_j\bigr),
+\quad \forall\,j=1,\dots,J,
+\\[0.5ex]
+& z_j \in \{0,1\}, \quad \forall\,j,
+\\[0.5ex]
+& \mathbf{p}(0) = \mathbf{p}_0,\quad \mathbf{v}(0)=\mathbf{v}_0,
+\quad \mathbf{p}(T) = \mathbf{p}_f\;\;(\text{if required}),
+\\[0.5ex]
+& \|\mathbf{v}(t)\|\le v_{\max},\quad 
+  \|\mathbf{a}(t)\|\le a_{\max},\quad
+  |\omega(t)|\le \omega_{\max},\;\dots
+\end{aligned}
+\end{equation}
+
+In this formulation:
+\begin{itemize}
+  \item $\mathcal{D}_{DI}$ and $\mathcal{D}_{PH}$ denote the double‐integrator and PH‐spline Dubins model constraints, respectively.
+  \item $\mathcal{O}_j$ is the Big-$M$ collision‐avoidance constraint set from \eqref{eq:colregs-bigM}.
+  \item $J_{\mathrm{ref}}$ penalizes deviation from the reference trajectory at points $x_i$.
+  \item $J_{\mathrm{mw}}$ penalizes maneuvers outside the desired time window via weights $w_k$ on derivative norms $\|\mathbf{p}^{(m)}(t)\|$.
+\end{itemize}
+```

@@ -5,10 +5,8 @@ permissions:
 
 on:
   push:
-    # Run on pushes to the main branch…
     branches:
       - main
-    # …and also on pushes of version tags like v1.2.3
     tags:
       - 'v*.*.*'
   workflow_dispatch:

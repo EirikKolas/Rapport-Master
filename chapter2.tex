@@ -595,7 +595,8 @@ So, to find the PW inner product $h(x) = \mathbf f(x) \cdot \mathbf g(x)$, \cref
 As for the regular product, the PW inner product can be made more efficient by not computing the terms in the Kronecker product that correspond to non-overlapping supports of the basis functions. The most common case for applying the PW inner product is between two vector-valued B-splines of the same basis, in which case the number of non-zero entires is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline. This is linear in the number of basis functions, instead of quadratic as for when this optimization is not used. See explanation in \cref{fig:overlapping-bases}. Finding a general formula arbitrary bases is not as easily acheivable, as the number of non-zero entries depends on the placement of the knots in the knot vectors.
 
 \begin{figure}
-    \includesvg[width=\textwidth,pretex=\small]{fig/b-spline/overlapping-bases.svg}
+    \centering
+    \includesvg[width=.8\textwidth,pretex=\scriptsize]{fig/b-spline/overlapping-bases.svg}
     \caption{The overlapping supports of the B-splines. Each rectangle represents the support of a basis function, so counting the number of basis functions withing each knot interval gives the number of multiplications for that interval. The total number of multiplications then the area of all the rectangles, which is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline.}
     \label{fig:overlapping-bases}
 \end{figure}
@@ -739,7 +740,7 @@ Table of operations for B-splines and NURBS is given in \cref{tab:operations},
 \renewcommand{\arraystretch}{1.5}
 \begin{table}
     \centering
-    \caption{Summary of B-spline operations and their properties. The symbols $f$ and $g$ denote B-spline functions, while $a$ denotes a scalar. Their corresponding bold-faced symbols denote vector-valued functions and vectors in $\mathbf R^n$ space respectively. The ``Coefficients'' column indicates the transformation type of the operation on the coefficients. The ``Space'' column indicates the space of the resulting B-spline. The knot vectors for these spaces are ommited for brevity as they should be clear from the context.}
+    \caption{Summary of B-spline operations and their properties. The symbols $f$ and $g$ denote B-spline functions, while $a$ denotes a scalar. Their corresponding bold-faced symbols denote vector-valued functions and vectors in $\mathbf R^n$ space respectively. The ``Coefficients'' column indicates the transformation type of the operation on the coefficients. The ``Space'' column indicates the space of the resulting B-spline. The knot vectors for these spaces are ommited for brevity and can be found in the references in the ``Algorithms'' column.}
     \label{tab:operations}
     \begin{tabular}{|l|l|l|l|c|}
     \hline

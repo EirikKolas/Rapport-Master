@@ -10,6 +10,8 @@
 \usepackage{amsthm}
 \usepackage{mathtools}
 \usepackage{amsmath}
+\usepackage{etoolbox}
+\usepackage{cases}
 \usepackage{xargs}
 \usepackage{mdframed}
 \usepackage{capt-of}
@@ -53,6 +55,9 @@
     urlcolor=black
 }
 \usepackage[capitalize]{cleveref}
+\usepackage{zref-clever}
+\zcsetup{noname}
+
 \crefname{equation}{}{}
 \Crefname{equation}{Equation}{}
 \crefname{figure}{Figure}{figures}
@@ -157,3 +162,16 @@ bordercolor=ForestGreen,#1]{#2}}
 
 % Def eq command
 \newcommand{\defeq}{\vcentcolon=}
+
+
+% \patchcmd\subequations
+%   {\theparentequation\alph{equation}}
+%   {\subequationsformat}
+%   {}{}
+% \newcommand{\subequationsformat}{\theparentequation.\arabic{equation}}
+
+
+\renewcommand\topfraction{.9}
+\renewcommand\bottomfraction{.7}
+\renewcommand\textfraction{.1}
+\renewcommand\floatpagefraction{.95}

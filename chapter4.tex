@@ -123,94 +123,80 @@ The standard way to enforce collision constraints between the OS and TS is to ap
 \begin{equation}\label{eq:minimum-distance}
     (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \cdot (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \geq d_{\text{min}}^2,
 \end{equation}
-where $\mathbf p_{\text{OS}}$ and $\mathbf p_{\text{TS}}$ are the positions of the OS and TS, respectively, and $d_{\text{min}}$ is the minimum distance between the two ships. The $\cdot$ symbol denotes the dot product. 
+where $\mathbf p_{\text{OS}}$ and $\mathbf p_{\text{TS}}$ are the positions of the OS and TS, respectively, and $d_{\text{min}}$ is the minimum distance between the two ships. Examples of this type of constraint can be found in \cite{Thyri2022-MPC}.\todo{flere kilder} This constraint is non-convex, as the feasible region for the OS lies outside the circle with radius $d_{\text{min}}$ centered at the TS.
 
+Another method of enforcing collision avoidance is to use the hyperplane separation theorem. Although still non-convex, this method allows for a more flexible formulation of the constraint, as it is not only restricted to circular shapes. 
 The hyperplane separation theorem states that for two disjoint convex sets $\mathcal A$ and $\mathcal B$, there exists $\mathbf n\in \mathbb R^n\backslash\{\mathbf0\}$ and $b\in\mathbb R$ such that the hyperplane $H=\{\mathbf x\in\mathbb R^n \mid \mathbf n^\top \mathbf x = b\}$ separates $\mathcal A$ and $\mathcal B$ \citep{Boyd2004-ih}. In other words, there exists a function $a^\top x - b$ that is non-negative for all $x \in \mathcal A$ and non-positive for all $x \in \mathcal B$. 
 
-Using this theorem the collision avoidance problem can essentially be transformed into a classification problem. The objective is to find a line that separates points $\mathbf p_i$ representing the OS from points $\mathbf q_j$ belonging to the TS.
-\begin{subequations}\label{eq:minimum-distance-hyperplane}
-    \begin{align}
-        \mathbf p_{i}(t) \cdot{\mathbf n}(t) &\ge b(t), \quad\forall \mathbf p_i\in\mathbf P_{OS}
-        \label{eq:hyperplane-os} \\
-        \mathbf q_{j}(t) \cdot{\mathbf n}(t) &\le b(t) + d_{j}, \quad\forall \mathbf q_j\in\mathbf P_{TS}
-        \label{eq:hyperplane-ts} \\
-        \|{\mathbf n}(t)\|_\infty &\le 1.
-        \label{eq:hyperplane-norm}
-    \end{align}
-\end{subequations}
-The constraints in \cref{eq:hyperplane-os,eq:hyperplane-ts} are enforced by
-letting $\mathbf n(t)$ and $b(t)$ be optimization variables. \Cref{eq:hyperplane-norm} is a box constraint on $\mathbf n(t)$, ensuring that the hyperplane normal doesn't become too large. The minimum distance constraint in \cref{eq:minimum-distance} can be equivalently expressed using the hyperplane separation theorem by letting $\mathbf P_{OS} = \{\mathbf p_{OS}\}$ and $\mathbf P_{TS} = \{\mathbf p_{TS}\}$ in \cref{eq:minimum-distance-hyperplane}.
+Using this theorem, the collision avoidance task can be transformed to a classification problem. The objective is to find a line that separates the OS and TS, such that the distance between the line and the ships is greater than a given threshold. This is done in the B-spline framework by introducing a hyperplane $\mathcal H$ with normal $\mathbf n(t)\in\mathbb{S}^2_{p,\mathbf t}$ and offset $b(t)\in\mathbb{S}_{p,\mathbf t}$, which separates the OS and TS. This hyperplane is implemented using the following constraints:
+\begin{subnumcases}{\label{eq:minimum-distance-hyperplane}\mathcal{H}:}
+    \mathbf p_\text{OS}(t) \cdot{\mathbf n}(t) & $\ge b(t) + d_\text{OS}$,
+    \label{eq:hyperplane-os} \\
+    \mathbf p_\text{TS}(t) \cdot{\mathbf n}(t) & $\le b(t) - d_\text{TS}$,
+    \label{eq:hyperplane-ts} \\
+    \|{\mathbf n}(t)\|_\infty & $\le 1$.
+    \label{eq:hyperplane-norm}
+\end{subnumcases}
+The constraints in \zcref{eq:hyperplane-os,eq:hyperplane-ts} are enforced by
+letting $\mathbf n(t)$ and $b(t)$ be optimization variables. Equation \zcref{eq:hyperplane-norm} is a box constraint on $\mathbf n(t)$, ensuring that the hyperplane normal doesn't become too large. The minimum distance constraint in \cref{eq:minimum-distance} can be equivalently expressed using the hyperplane separation theorem by letting $d_\text{OS} = 0$ and $d_\text{TS} = d_\text{min}$ in \zcref{eq:hyperplane-os,eq:hyperplane-ts}. As the following section shows,
 
-\subsection{COLREGS Constraints}
+\subsection{Collision Constraints}
 
-Finding a collision-free trajectory around an obstacle is in general a non-convex problem. Moreover, fixing the starting- and end-points of the trajectory it is not possible to continuously move the trajectory from one side of the obstacle to the other without passing through the obstacle. This is illustrated in \cref{fig:non-convex-obstacle} and is problematic from a numerical optimization perspective, as given an initial solution passing on one side of the obstacle, and the solvers incrementally stepping nature, there is no guarantee that the solver will find a solution on the other side of the obstacle as it has to pass through the obstacle to get there\todo{omformuler mer presist}. This is a simplified description of the problem, which only applies to convex problem solvers. The true behaviour is dependent on the type of solver used, and the constraint formulation.
-
+Collision avoidance is non-convex: with fixed start/end points one cannot deform a trajectory from one side of the obstacle to the other without intersection. A convex solver will therefore remain on the same side (see \cref{fig:non-convex-obstacle}), potentially missing the globally optimal path.
 \begin{figure}
     \centering
     \includesvg[width=0.8\textwidth]{fig/b-spline/non-convex-obstacle.svg}
-    \caption{Red dots: Fixed start- and end-points of the trajectory. Black line: current trajectory. Dotted line: reference trajectory. Black circle: obstacle. A convex optimization solver will \emph{in general} not be able to find the optimal trajectory as it is not possible to continuously move the trajectory from one side of the obstacle to the other without violating the obstacle constraint.}
+    \caption{Black dots: fixed start/end points. Dotted line: current trajectory. Solid line: reference. Red circle: obstacle. A convex solver cannot switch sides without violating the obstacle constraint.}
     \label{fig:non-convex-obstacle}
 \end{figure}
 
 For designing a COLREGS-compliant trajectory, being able to decide which side of a given target ship to pass on is essential. So to address the aforementioned issue, which side to pass the obstacle on is made a decision variable in a mixed integer programming (MIP) problem as follows:
 
-The idea is that each target ship is represented by two obstacles, each obstacle having only one feasible side to be passed on. The passing side of the target ship is enforced by adding a point $\mathbf p_j$ to each obstacle on the opposide side of the passing side using the normal $\mathbf{\hat n}_{ref}$ of the reference trajectory $\mathbf p_{ref}$. The two obstacles are then moved into and out of the feasible region by introducing a binary variable $z_j\in\{0,1\}$ for each target ship $j$ which controls an offset $M \mathbf{\hat n}_{ref}$, where $M$ is a large positive number. More formally, the constraints are given by
+The idea is that each target ship is represented by two obstacles, each obstacle having only one feasible side to be passed on. The passing side of the target ship is enforced by adding additional points to each obstacle on the opposide side of the passing side using the normal $\mathbf{\hat n}_\text{ref}$ of the reference trajectory $\mathbf p_\text{ref}$. The two obstacles are then moved into and out of the feasible region by introducing a binary variable $z_j\in\{0,1\}$ for each target ship $j$ which controls an offset $M \mathbf{\hat n}_\text{ref}$, where $M$ is a large positive number. More formally, the constraints are given by
 
-
-\begin{equation}\label{eq:colregs-bigM}
-    \mathcal Q_j: \quad
-    \begin{cases}
-        \mathbf{n}_{\text p, j}(t) \cdot \mathbf{p}(t) - b_{\text p, j}(t) \ge  d_{\min, j} - M\,z_j, \\[1ex]
-        \mathbf{n}_{\text p, j}(t) \cdot \mathbf{q}_j(t) - b_{\text p, j}(t) \le M\,z_j, \\[1ex]
-        \mathbf{n}_{\text p, j}(t) \cdot \big(\mathbf{q}_j(t) + 2M\,\mathbf{\hat n}_\text{ref}\big) - b_{\text p, j}(t) \le -M, \\[2ex]
-
-        \mathbf{n}_{\text s, j}(t) \cdot \mathbf{p}(t) - b_{\text s, j}(t) \ge
-        d_{\min, j} - M\,(1 - z_j), \\[1ex]
-        \mathbf{n}_{\text s, j}(t) \cdot \mathbf{q}_j(t) - b_{\text s, j}(t) \le -M\,(1 - z_j), \\[1ex]
-        \mathbf{n}_{\text s, j}(t) \cdot \big(\mathbf{q}_j(t) - 2M\,\mathbf{\hat n}_\text{ref}\big) - b_{\text s, j}(t) \le -M,
-    \end{cases}
-    \quad t\in \mathcal{T},
-    \quad z_j \in \{0,1\}.
-\end{equation}
+\begin{subnumcases}{\label{eq:colregs-bigM}\mathcal{O}_j:}
+    \mathbf{n}_{p,j}(t)\cdot\mathbf{p}_{\mathrm{OS}}(t)
+      & \label{eq:colregs-bigM-os-p}$\ge b_{p,j}(t) + d_{\text{OS}}$\\
+    \mathbf{n}_{p,j}(t)\cdot\mathbf{p}_{\mathrm{TS},j}(t)
+      & \label{eq:colregs-bigM-ts-p}$\le b_{p,j}(t) - d_{\text{TS},j} + M\,z_j$\\
+    \mathbf{n}_{p,j}(t)\cdot\bigl(\mathbf{p}_{\mathrm{TS},j}(t)+2M\,\mathbf{\hat n}_{\mathrm{ref}}(t)\bigr)
+      & \label{eq:colregs-bigM-ts-o-p}$\le b_{p,j}(t) - M$\\[1.5ex]
+      %
+    \mathbf{n}_{s,j}(t)\cdot\mathbf{p}_{\mathrm{OS}}(t)
+      & \label{eq:colregs-bigM-os-s}$\ge b_{s,j}(t) + d_{\text{OS}}$\\
+    \mathbf{n}_{s,j}(t)\cdot\mathbf{p}_{\mathrm{TS},j}(t)
+      & \label{eq:colregs-bigM-ts-s}$\le b_{s,j}(t) - d_{\text{TS},j} + M\,(1-z_j)$\\
+    \mathbf{n}_{s,j}(t)\cdot\bigl(\mathbf{p}_{\mathrm{TS},j}(t)-2M\,\mathbf{\hat n}_{\mathrm{ref}}(t)\bigr)
+      & \label{eq:colregs-bigM-ts-o-s}$\le b_{s,j}(t) - M$\\[1.5ex]
+    z_j \in \{0,1\} & \label{eq:colregs-bigM-z} \\
+    \|\mathbf{n}_{p,j}(t)\|_\infty\le 1 & \label{eq:colregs-bigM-np} \\
+    \|\mathbf{n}_{s,j}(t)\|_\infty\le 1 & \label{eq:colregs-bigM-ns}
+\end{subnumcases}
     
-Here, $\mathbf{p}_j(t)$ is the position of the target ship $j$, $\mathbf{n}_j$ is the normal vector of the target ship, and $b(t)$ is a function that defines the distance between the two ships. The variable $d_{\min}$ is the minimum distance between the two ships. The variable $M$ is a large positive number that ensures that the constraints are satisfied for both cases. The variable $z_j$ is a binary variable that indicates which side of the target ship to pass on.
-This Big–$M$ formulation ensures that:
-
+Here,
 \begin{itemize}
-    \item If $z_j = 0$ (pass on the left), then
-    $$
-        \mathbf{n}_j^\top\bigl(\mathbf{p}(t)-\mathbf{p}_j(t)\bigr)
-        \;\ge\; d_{\min},
-        \quad
-        \mathbf{n}_j^\top\bigl(\mathbf{p}(t)-\mathbf{p}_j(t)\bigr)
-        \;\le\; -\,d_{\min} + M,
-    $$
-    where the second inequality is non-binding for sufficiently large $M$.
-    \item If $z_j = 1$ (pass on the right), then
-    $$
-        \mathbf{n}_j^\top\bigl(\mathbf{p}(t)-\mathbf{p}_j(t)\bigr)
-        \;\le\; -\,d_{\min},
-        \quad
-        \mathbf{n}_j^\top\bigl(\mathbf{p}(t)-\mathbf{p}_j(t)\bigr)
-        \;\ge\; d_{\min} - M,
-    $$
-    where the latter is non-binding for large $M$.
+    \item $\mathbf{n}_{p,j}(t)$ and $b_{p,j}(t)$ are the port‐side hyperplane normal and offset,
+    \item $\mathbf{n}_{s,j}(t)$ and $b_{s,j}(t)$ are the starboard‐side normal and offset,
+    \item $d_{\text{OS}}$ and $d_{\text{TS},j}$ are the required minimum separations for the OS and TS from the hyperplane, 
+    \item $z_j\in\{0,1\}$ selects port‐side ($z_j=0$) or starboard‐side ($z_j=1$) passage,
+    \item $\mathbf{p}_{\mathrm{TS},j}(t)+2M\,\mathbf{\hat n}_{\mathrm{ref}}(t)$ and $\mathbf{p}_{\mathrm{TS},j}(t)-2M\,\mathbf{\hat n}_{\mathrm{ref}}(t)$ are the two obstacles on the opposite side of the passing side,
+    \item $M$ is a large constant that renders inactive constraints nonbinding.
+    \item and $\mathbf{\hat n}_{\mathrm{ref}}(t)$ is the unit normal of the reference trajectory $\mathbf p_\text{ref}(t)$, defined as
+    \begin{equation}\label{eq:reference-normal}
+        \mathbf{\hat n}_{\mathrm{ref}}(t) = \mathbf R\frac{\mathbf p_\text{ref}'(t)}{\|\mathbf p_\text{ref}'(t)\|_2}.
+    \end{equation}
+    where $\mathbf R$ is a rotation matrix that rotates 90 degrees counterclockwise around the down axis in a North-East-Down coordinate system.
 \end{itemize}
+The first three inequalities
+(\zcref{eq:colregs-bigM-os-p,eq:colregs-bigM-ts-p,eq:colregs-bigM-ts-o-p})
+apply when passing on the port side, while the last three
+(\zcref{eq:colregs-bigM-os-s,eq:colregs-bigM-ts-s,eq:colregs-bigM-ts-o-s})
+enforce the starboard‐side conditions.
+
+
+Including all ships’ constraints $\mathcal{O}_j$ guarantees that a passing side is chosen for each TS and that the required separation is maintained.
     
-Including all ships’ constraints $\mathcal{O}_j$ guarantees that a passing side is chosen for each target and that the required separation is maintained.
-    
-
-
-\begin{subequations}\label{eq:colregs-constraints}
-    \begin{align}
-        \mathbf p_{j}(t) \cdot{\mathbf n}(t) &\ge b(t) + z_j M, \quad\forall \mathbf p_j\in\mathbf P_{TS}^L, \label{eq:colregs-left} \\
-        \mathbf q_{j}(t) \cdot{\mathbf n}(t) &\le b(t) + d_{j} + (1 - z_j) M, \quad\forall \mathbf q_j\in\mathbf P_{TS}^R, \label{eq:colregs-right} \\
-        z_j &\in \{0,1\}, \label{eq:colregs-binary}
-    \end{align}
-\end{subequations}
-where $\mathbf P_{TS}^L$ and $\mathbf P_{TS}^R$ are the left and right target ship obstacles, respectively. The left and right target ship obstacles are defined as the two points on the opposite side of the passing side of the target ship, as shown in \cref{fig:non-convex-obstacle-mi}. The binary variable $z_j$ is used to control which side of the target ship to pass on. If $z_j = 0$, the left obstacle is moved into the feasible region, and if $z_j = 1$, the right obstacle is moved into the feasible region.
-
-In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a way to continuously move the trajectory from one side of the obstacle to the other without violating any constraints. To be clear, all of the obstacles and points are active at the same time, but with a large enough chosen constant $M$, the inactive obstacles are so far away from the trajectory that they do not affect the optimization problem. This strategy is commonly referred to as the big-M method in Mixed Integer Programming (MIP) literature \citep{gan2012adaptive}. There are other methods, such as the convex hull reformulation \citep{sherali1994hierarchy}, which yields tighter relaxations in the solver framework, but this is not considered in this work due to the increased complexity of the implementation and nonlinear nature of the problem.
+In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a way to continuously move the trajectory from one side of the obstacle to the other without violating any constraints. To be clear, all of the obstacles and points are active at the same time, but with a large enough chosen constant $M$, the inactive obstacles are so far away from the trajectory that they do not affect the optimization problem. This strategy is commonly referred to as the big-M method in Mixed Integer Programming (MIP) literature \citep{gan2012adaptive,Cococcioni2020}.
 
 \begin{figure}
     \centering
@@ -226,9 +212,7 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
         \caption{Port maneuver ($z_j=0$)}
         \label{fig:non-convex-obstacle-mi-port}
     \end{subfigure}
-    \caption{Visualization of the constraints in \cref{eq:colregs-bigM} when performing a starboard maneuver ($z_j=1$). The TS is stationary and represented by starboard and port obstacles colored orange and red respectively. 
-    The starboard obstacle is moved into the feasible region, while the port obstacle is non-binding. The OS along with the hyperplane (line) constraints and their corresponding normals are shown at two time steps $t_1$ and $t_2$. The faded objects represent the situation when $z_j=0$ (port maneuver). 
-    }
+    \caption{Visualization of the Big–$M$ collision-avoidance constraints in \cref{eq:colregs-bigM}: the top panel shows a starboard maneuver and the bottom panel a port maneuver. The red/orange polygon represents the target ship (TS) and the blue polygon the own ship (OS). Grey areas indicate infeasible regions (not to scale). The solid line denotes the reference trajectory, while the dashed line depicts the planned trajectory under the current optimization variables.}
     \label{fig:non-convex-obstacle-mi}
 \end{figure}
 
@@ -251,10 +235,10 @@ More concretely, consider the problem of following a reference trajectory, while
 \begin{equation}\label{eq:conservativeness-optimization}
     \begin{aligned}
         \min_{\mathbf c} \quad & J_\text{ref} \\
-        \text{s.t.} \quad \mathbf p_\text{os}(0) &= \mathbf p_0, \\
-                     \mathbf p_\text{os} &= \mathbf B^\top(x) \mathbf c, \\
-                     \mathbf p_\text{ref} &= \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
-                     \langle p_\text{os}', p_\text{os}' \rangle &\le v_\text{max}^2,
+        \text{subject to} \quad &\mathbf p_\text{os}(0) = \mathbf p_0, \\
+                     &\mathbf p_\text{os} = \mathbf B^\top(x) \mathbf c, \\
+                     &\mathbf p_\text{ref} = \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
+                     &\langle p_\text{os}', p_\text{os}' \rangle \le v_\text{max}^2,
     \end{aligned}
 \end{equation}
 where $\mathbf p_\text{os}$ is the position of the OS and $\mathbf p_\text{ref}$ is the reference position in their respecive B-spline bases $\mathbf B$ and $\mathbf B_\text{ref}$. The objective function $J_\text{ref}$ to be considered has two different formulations, one based on the sum of the squared control points of the reference error and one based on the definite integral over the squared reference error. The two formulations are given by
@@ -345,7 +329,7 @@ where $\lambda$ is a parameter that controls the strength of the penalty. This i
 \end{figure}
 
 
-Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the discrete cost function is much more conservative than the continuous cost function for low $N$. As $N$ increases, the trajectory using the discrete cost function approaches that of the continuous cost function. This can be seen more clearly in \cref{fig:conservativeness}, where the integral of the square error is plotted against the number $N$ of B-spline basis functions up to $N=40$ for both cost functions. This convergence to the same value is expected, as increasing the number of basis functions will make the optimization problem less conservative, as discussed in \cref{sec:b-spline-relaxation}. \Cref{fig:conservativeness-coeffs} shows a logaritmic plot of the difference between the integral of the square error for $N\in\{3,\ldots,40\}$ and $N=50$ for the discrete cost function. For these values of $N$, the plot shows an exponential convergence to the same value, with the degree of the B-spline basis functions $p$ having a small effect on the convergence.
+Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the discrete cost function is much more conservative than the continuous cost function for low $N$. As $N$ increases, the trajectory using the discrete cost function approaches that of the continuous cost function. This can be seen more clearly in \cref{fig:conservativeness}, where the integral of the square error is plotted against the number $N$ of B-spline basis functions up to $N=40$ for both cost functions. For these values of $N$, the plot shows an exponential convergence to the same value, with the degree of the B-spline basis functions $p$ having a small effect on the convergence.
 
 \begin{figure}
     \centering
@@ -389,13 +373,13 @@ The reason for the second maneuver window as opposed to the singular one in \cit
 \end{figure}
 
 The encounter window and maneuver windows enter the cost function as weights $w_\text e(x)$ and $w_\text{mv}(x)$, respectively on the reference trajectory following cost and the cost for altering course. The weights enter the cost function $O$ as
-\begin{equation}\label{eq:cost-maneuver-window}
-    \begin{aligned}
-        J_\text{mv} &= \|\text{ctrlPts}\big(w_\text{mv}(x)(\mathbf p'_\text{os}(x) - \mathbf p'_\text{ref}(x))\big)\|_\text{F}^2, \\
-        J_\text{ref} &= \|\text{ctrlPts}\big(w_\text e(x)(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x))\big)\|_\text{F}^2, \\
-        J &= J_\text{ref} + J_\text{mv}, \\
-    \end{aligned}
-\end{equation}
+\begin{subequations}\label{eq:cost-maneuver-window}
+    \begin{align}
+        J_\text{mv} &= \|\text{ctrlPts}\big(w_\text{mv}(x)(\mathbf p'_\text{os}(x) - \mathbf p'_\text{ref}(x))\big)\|_\text{F}^2, \label{eq:cost-maneuver-window-mv}\\
+        J_\text{ref} &= \|\text{ctrlPts}\big(w_\text e(x)(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x))\big)\|_\text{F}^2, \label{eq:cost-maneuver-window-ref}\\
+        J &= J_\text{ref} + J_\text{mv}, \label{eq:cost-maneuver-window-total}
+    \end{align}
+\end{subequations}
 where $J_\text{mv}$ is the cost for altering course, $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text{mv}(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. Notice that $J_\text{mv}$ is defined using the Frobenius norm over the control points of the B-spline function as opposed to the definite integral over the squared reference error for the same reason as in \cref{sec:oscillations}.
 
 The advantage of the B-spline framework in this case is that the weights can be defined as B-spline functions themselves. This allows for great flexibility in shaping the desired encounter trajectory. The function shape shown in \cref{fig:maneuver-window}, can be represented using a zero-degree B-spline. If smoother transitions are desired, higher degree B-splines can be used.
@@ -458,47 +442,32 @@ sol = opti.solve()
 
 \section{Summary}
 
-
-
-\subsection{Complete Optimization Problem}
-
-Let $\mathbf{p}(\cdot)$ and $t(\cdot)$ denote the decision functions for the path and timing, and let $Z = \{z_1,\dots,z_J\}$ be the binary side-choice variables for $J$ target ships. The B-spline MINMPC problem can be written compactly as
-
+The complete B-spline MINMPC problem can be written compactly as
 \begin{equation}
 \label{eq:minmpc-compact}
-\begin{aligned}
-\min_{\mathbf{p}(\cdot),\,t(\cdot),\,Z}
-\quad & 
-\underbrace{\sum_{i \in \mathcal{I}}
-         \bigl\|\mathbf{p}(x_i) - \mathbf{p}^{\mathrm{ref}}(x_i)\bigr\|^2}_{J_{\mathrm{ref}}}
-\;+\;
-\underbrace{\sum_{k \in \mathcal{K}}
-         w_k\,\bigl\|\mathbf{p}^{(m)}(t)\bigr\|^2}_{J_{\mathrm{mw}}}
-\\[1ex]
-\text{subject to}\quad
-& \mathcal{D}_{DI}\bigl(\mathbf{p},t\bigr)
-\;\;\text{or}\;\;
-  \mathcal{D}_{PH}\bigl(\mathbf{p},t\bigr),
-\\[0.75ex]
-& \mathcal{O}_j\bigl(\mathbf{p},z_j\bigr),
-\quad \forall\,j=1,\dots,J,
-\\[0.5ex]
-& z_j \in \{0,1\}, \quad \forall\,j,
-\\[0.5ex]
-& \mathbf{p}(0) = \mathbf{p}_0,\quad \mathbf{v}(0)=\mathbf{v}_0,
-\quad \mathbf{p}(T) = \mathbf{p}_f\;\;(\text{if required}),
-\\[0.5ex]
-& \|\mathbf{v}(t)\|\le v_{\max},\quad 
-  \|\mathbf{a}(t)\|\le a_{\max},\quad
-  |\omega(t)|\le \omega_{\max},\;\dots
-\end{aligned}
+    \begin{aligned}
+        \min
+        \quad & J_\text{ref}(\mathbf{p}_\text{OS}) + J_\text{mv}(\mathbf{p}_\text{OS}) + w_\text{time}\,t(1)
+        \\
+        \text{subject to}\quad
+        & \mathcal{D}_{DI}(\mathbf{p}_\text{OS})
+        \text{ or }
+        \mathcal{D}_{PH}(\mathbf{p}_\text{OS}),
+        \\
+        & \mathcal{O}_j\bigl(
+            \mathbf{n}_{p,j}, \mathbf{n}_{s,j}, b_{p,j}, b_{s,j}, z_j
+        \bigr),
+        \quad &\forall j&\in \{1,\ldots,N_\text{TS}\},
+    \end{aligned}
 \end{equation}
 
 In this formulation:
 \begin{itemize}
-  \item $\mathcal{D}_{DI}$ and $\mathcal{D}_{PH}$ denote the double‐integrator and PH‐spline Dubins model constraints, respectively.
-  \item $\mathcal{O}_j$ is the Big-$M$ collision‐avoidance constraint set from \eqref{eq:colregs-bigM}.
-  \item $J_{\mathrm{ref}}$ penalizes deviation from the reference trajectory at points $x_i$.
-  \item $J_{\mathrm{mw}}$ penalizes maneuvers outside the desired time window via weights $w_k$ on derivative norms $\|\mathbf{p}^{(m)}(t)\|$.
+    \item $J_{\mathrm{mw}}$ penalizes maneuvers outside the desired time window via weights $w_k$ on derivative norms (\cref{eq:cost-maneuver-window-mv}).
+    \item $J_{\mathrm{ref}}$ penalizes deviation from the reference trajectory via the squared Frobenius norm of the B-spline coefficients (\cref{eq:cost-maneuver-window-ref}).
+    \item $\mathcal{D}_{DI}$ and $\mathcal{D}_{PH}$ denote the double‐integrator and PH‐spline Dubins model constraints, respectively.
+    \item $\mathcal{O}_j$ is the Big-M collision‐avoidance constraint set from \eqref{eq:colregs-bigM} for each target ship $j$ in the encounter.
+    \item $w_\text{time}$ is a weight on the final time of the variable $t(x)$, which is a B-spline variable representing the time of the OS.
 \end{itemize}
-```
+The optimization variables are the B-spline coefficients of the spline functions
+$\mathbf{p}_\text{OS}(t)$, $t(x)$, $\mathbf{n}_{p,j}(x)$, $\mathbf{n}_{s,j}(x)$, $b_{p,j}(x)$, $b_{s,j}(x)$ defined over a suitable knot vector $\mathbf{t}\in[0,1]$, and the binary variables $z_j$.

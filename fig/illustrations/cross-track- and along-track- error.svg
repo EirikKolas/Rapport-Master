@@ -25,8 +25,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.5597022"
-     inkscape:cx="357.44003"
-     inkscape:cy="525.42081"
+     inkscape:cx="295.88982"
+     inkscape:cy="650.76526"
      inkscape:window-width="2880"
      inkscape:window-height="1496"
      inkscape:window-x="-12"
@@ -67,30 +67,30 @@
        inkscape:transform-center-y="1.9692466">
       <path
          id="path6"
-         style="fill:#008cc7;fill-opacity:1;stroke:#000000;stroke-width:1.02908;stroke-dasharray:none"
+         style="fill:#008cc7;fill-opacity:1;stroke:#000000;stroke-width:1.54362127;stroke-dasharray:none"
          d="M 35.105242,8.1433353 34.322199,-10.040564 52.522896,-9.9965722 75.730649,12.287148 58.312992,30.427057 Z"
          sodipodi:nodetypes="cccccc"
          inkscape:transform-center-y="0.51110356"
          inkscape:transform-center-x="0.52540346" />
       <path
          id="path3"
-         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.02908;stroke-dasharray:2.05816007,2.05816007;stroke-dashoffset:0"
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.54362127;stroke-dasharray:3.08724254,3.08724254;stroke-dashoffset:0"
          d="m -45.974127,54.211963 -1.738738,-18.117509 18.1778,-0.913734 24.3481036,21.031734 -16.4390646,19.031243 z"
          sodipodi:nodetypes="cccccc"
          inkscape:transform-center-y="0.78174186"
          inkscape:transform-center-x="0.7791604" />
       <path
-         style="fill:none;stroke:#000000;stroke-width:1.28635;stroke-dasharray:none"
+         style="fill:none;stroke:#000000;stroke-width:2.05816169;stroke-dasharray:none"
          d="m 190.71403,178.88491 c 0,0 -35.13225,15.96052 -87.25456,-3.86323 C 51.337166,155.19794 55.41305,103.20411 -6.7086043,67.524366 -44.074687,46.063052 -55.250567,24.034473 -65.264322,5.5232174"
          id="path1"
          sodipodi:nodetypes="cssc" />
       <path
-         style="fill:none;stroke:#000000;stroke-width:1.28635;stroke-dasharray:10.2908, 1.28635;stroke-dashoffset:0"
+         style="fill:none;stroke:#000000;stroke-width:1.54362127;stroke-dasharray:12.34897015,1.54362127;stroke-dashoffset:0"
          d="M 49.178282,3.8144332 4.4373118,75.256873"
          id="path2"
          sodipodi:nodetypes="cc" />
       <path
-         style="fill:none;stroke:#000000;stroke-width:1.28635;stroke-dasharray:5.14540005,2.57270002;stroke-dashoffset:0"
+         style="fill:none;stroke:#000000;stroke-width:1.54362127;stroke-dasharray:6.17448508,3.08724254;stroke-dashoffset:0"
          d="m 190.71403,178.88491 c 0,0 -43.15077,18.8772 -75.73481,-18.41693 C 93.676874,136.08634 89.354035,98.995927 83.853994,73.215663 78.410157,47.69884 81.356315,33.885263 50.247576,4.8103097 21.286066,-22.257793 16.069898,-19.533086 3.8762555,-22.921298"
          id="path4"
          sodipodi:nodetypes="csssc" />
@@ -100,7 +100,7 @@
          id="path5" />
       <path
          id="rect5"
-         style="fill:none;stroke:#000000;stroke-width:1.28635"
+         style="fill:none;stroke:#000000;stroke-width:1.54362127;stroke-dasharray:none"
          inkscape:transform-center-x="-5.4332794"
          inkscape:transform-center-y="3.0823039"
          transform="rotate(-146.46584)"
@@ -121,7 +121,7 @@
          r="1.6972972"
          transform="rotate(-130.75739)" />
       <path
-         style="fill:none;stroke:#000000;stroke-width:1.28635;stroke-dasharray:10.2908, 1.28635;stroke-dashoffset:0"
+         style="fill:none;stroke:#000000;stroke-width:1.54362127;stroke-dasharray:12.34897015,1.54362127;stroke-dashoffset:0"
          d="M 49.233775,3.7803483 -29.536467,52.162621"
          id="path27"
          sodipodi:nodetypes="cc" />
@@ -148,7 +148,7 @@
            id="tspan8"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;stroke-width:1.28635"
            x="-10.871686"
-           y="9.4192381">$\mathbf p_\text{os}(t)$</tspan></text>
+           y="9.4192381">$\mathbf p(t)$</tspan></text>
       <text
          xml:space="preserve"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;display:inline;fill:#000000;stroke-width:1.28635"

@@ -13,16 +13,30 @@
 
 The B-spline MINMPC is implemented in Python using the library presented in \cref{sec:python-implementation}. The simulation is run on a laptop with an AMD Ryzen 7 5000 Series CPU and 16 GB of RAM. The simulation parameters are summarized in \cref{tab:simulation-parameters}. 
 
-Unless otherwise specified the OS is represented with a 3rd degree uniform B-spline of length 10 over the interval $[0, 1]$. The double integrator model in \cref{sec:double-integrator} is used to represent the OS, which has a maximum speed of 6 m/s. In the different simulation scenarios, the TS heading will vary to force the situations described by the COLREGS rules 8 and 13-17.
+Unless otherwise specified the bases for the spline functions in the optimization problem are given in \cref{tab:sim-spline-basis}.
+The double integrator model in \cref{sec:double-integrator} is used to represent the OS, which has a maximum speed of 6 m/s. In the different simulation scenarios, the TS heading and speed will vary to force the situations described by the COLREGS rules 8 and 13-17.
 
-For all cases going forward, the solver is initialized with the position spline of the OS equal to the reference trajectory, and the normal vectors of the starboard and port side of the TSs are initialized to the normal vectors of the reference trajectory. All other optimization variables are set to zero.
+The optimization problem in \cref{eq:minmpc-compact} is solved using Bonmin \citep{bonmin2008}, which combines existing open source libraries such as Ipopt \citep{ipopt2006} for NLPs, and Cbc \citep{cbc2005} for MIPs, to solve MINLPs. Bonmin is accessed through the CasADi framework as described in \cref{sec:python-implementation}. 
+For all cases going forward, the solver is initialized as follows:
+\begin{algorithmic}
+    \State $\mathbf p_\text{OS}(t) \gets \mathbf p_\text{ref}(t)$
+    \For{each TS $j$}
+        \State $\mathbf n_{s,j}(t) \gets -\mathbf{\hat n}_\text{ref}(t)$
+        \State $\mathbf n_{p,j}(t) \gets \mathbf{\hat n}_\text{ref}(t)$
+    \EndFor
+\end{algorithmic}
+All other optimization variables are initialized to zero. Notice the opposite signs for $\mathbf n_{s,j}(t)$ and $\mathbf n_{p,j}(t)$.
+This choice ensures that the normal vectors are initialized pointing toward the OS reference from the TS constraints, which is always a feasible guess if the OS can follow the reference trajectory. 
+The specific direction of the normals is reasoned from the definition of $\mathbf{\hat n}_\text{ref}(t)$ in \cref{eq:reference-normal}.
 
-
-\begin{table}[H]
+\renewcommand{\arraystretch}{1.2}
+\begin{table}[htbp]
     \centering
+    \caption{Simulation parameters.}
+    \label{tab:simulation-parameters}
     \begin{tabular}{|c|c|c|p{7cm}|}
         \hline
-        Parameter & Value & Unit & Description \\
+        \textbf{Parameter} & \textbf{Value} & \textbf{Unit} & \textbf{Description} \\
         \hline
         \rule{0pt}{2.5ex}$k$ & 3 & - & Degree of the B-spline basis \\
         \hline
@@ -35,83 +49,97 @@ For all cases going forward, the solver is initialized with the position spline 
         \rule{0pt}{2.5ex}$d_o$ & 100 & m & Minimum distance to target on the opposide side \\
         \hline
     \end{tabular}
-    \caption{Simulation parameters.}
-    \label{tab:simulation-parameters}
 \end{table}
+\renewcommand{\arraystretch}{1.0}
+
+\renewcommand{\arraystretch}{1.2}
+\begin{table}[htbp]
+    \centering
+    \caption{Spline functions and their B-spline bases used for the simulations.}\label{tab:sim-spline-basis}
+    \begin{tabular}{|p{2.5cm}||c|c|l|}
+        \hline
+        \rule{0pt}{2.5ex}
+        \textbf{Spline Variable} & \multicolumn{3}{c|}{\textbf{B-spline Basis} $\mathbf{B}_{p, \mathbf t} = [B_{i, p, \mathbf t}(x)]_{i=0}^{N-1}$} \\[0.4ex]
+        \hline
+        & $N$ & $p$ & $\mathbf{t}$ \\
+        \hline
+        \hline
+        $\mathbf{p}_\text{OS}$, $\mathbf{n}_{s, j}$, $\mathbf{n}_{p, j}$, $b_{p,j}$, $b_{s,j}$ 
+        & 14 & 2 & $\{0, 0, 0, 0.1, 0.2, \ldots, 0.8, 0.9, 1, 1, 1\}$ \\
+        \hline
+        $\mathbf{p}_\text{ref}$, $\mathbf{p}_\text{TS}$ & 2 & 1 & $\{0, 0, 1, 1\}$ \\
+        \hline
+        $w_\text{ref}$, $w_\text{mv}$ & 10 & 0 & $\{0, 0.1, 0.2, \ldots, 0.8, 0.9, 1\}$ \\
+        \hline
+    \end{tabular}
+\end{table}
+\renewcommand{\arraystretch}{1.0}
 
 
 \section{Simulation Results}\label{sec:simulation-results}
 
-\todo[inline]{Diskuter hastighetsendring vs kursendring}
-
 \subsection{Case 1: Stationary Targets}
 \label{sec:case-1-stationary-targets}
 
-To demonstrate the B-MINMPC's ability to find optimal trajectories in non-convex environments, a stationary TS is placed at the position $(20, 0)$ in the simulation environment. The TS is located at $(20, 0)$ with a minimum passing distance of 50 m. COLREGS are not considered in scenarios 1.x, as the TSs are stationary. 
-
-All varying parameters are summarized in \cref{tab:stationary-targets}. In \cref{fig:stationary-target} the trajectory is shown to pass the TS on the south side. This is expected, as the center of the TS is located above the North=0 axis. The following scenarios in Case 1 are variations of the first scenario, where 1.1-1.3 show the effect of changing the position of the TS, and 1.4-1.6 show the effect of changing the weights in the optimization problem. The cost function is given by
-\begin{equation}
-    \begin{aligned}
-        \min_{\mathbf c} \quad & w_\text{time} T \\
-        + & w_\text{traj}\|\text{coeffs}(\mathbf p_\text{os} - \mathbf p_\text{ref})\|_\text{F}^2 \\
-        + & w_\text{acc}\|\text{coeffs}((\mathbf p_\text{os} - \mathbf{p}_\text{ref})')\|_\text{F}^2
-    \end{aligned}
-\end{equation}
-
+To demonstrate the B-MINMPC's ability to find optimal trajectories in non-convex environments, a stationary TS is placed at the position $(10, 0)$ in the simulation environment. The domain of the TS is set to 50m, and the OS is constrained to stay at least 10m away from this domain. COLREGS are not considered here, as only the qualitative behavior of the B-MINMPC is studied in cases 1.x. Both the Port and starboard maneuver directions are therefore considered as passing sides. The following cases 1.1-1.6 are variations of the first scenario, where 1.1-1.3 demonstrate the effect of changing the position of the TS. In the cases 1.4-1.6 the cost weight parameters are tuned to explore how maneuverside decisions are affected by the cost function. 
+All varying parameters for the scenarios are listed in \cref{tab:stationary-targets}.
 
 
 \begin{table}
     \centering
+    \caption{Simulation cases for stationary targets. The first column indicates the case number, the second column indicates the position of the TS, and the subsequent three columns indicate the weights used in the optimization problem.}
+    \label{tab:stationary-targets}
     \begin{tabular}{|c|c|c|c|c|c|c|}
         \hline
-        Case & \multicolumn{2}{c|}{TS position} & $w_\text{time}$ & $w_\text{traj}$ & $w_\text{acc}$ & Plot \\
+        Case & \multicolumn{2}{c|}{TS position} & $w_\text{time}$ & $w_\text{ref}$ & $w_\text{mv}$ & Plot \\
         \hline
-        1.0 & (20, 0) & $-$ & 1 & 1 & 0 & \cref{fig:stationary-target} \\
+        1.0 & (10, 0) & $-$ & 1 & 1 & 0 & \cref{fig:stationary-target} \\
         \hline
-        1.1 & (20, 0) & $\mathbf{(-20, 100)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-2} \\
+        1.1 & (10, 0) & $\mathbf{(-50, 0)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-2} \\
         \hline
-        1.2 & (20, 0) & $\mathbf{(-10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-3} \\
+        1.2 & (10, 0) & $\mathbf{(-10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-3} \\
         \hline
-        1.3 & (20, 0) & $\mathbf{(10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-4} \\
+        1.3 & (10, 0) & $\mathbf{(10, 200)}$ & 1 & 1 & 0 & \cref{fig:stationary-target-4} \\
         \hline
-        1.4 & (20, 0) & (-10, 200) & $\mathbf{100}$ & 1 & $1/100^2$ & \cref{fig:stationary-target-5} \\
+        1.4 & (10, 0) & (-10, 200) & $\mathbf{100}$ & 1 & $1/100^2$ & \cref{fig:stationary-target-5} \\
         \hline
-        1.5 & (20, 0) & (-10, 200) & 1 & $\mathbf{100}$ & $1/100^2$ & \cref{fig:stationary-target-6} \\
+        1.5 & (10, 0) & (-10, 200) & 1 & $\mathbf{100}$ & $1/100^2$ & \cref{fig:stationary-target-6} \\
         \hline
-        1.6 & (20, 0) & (-10, 200) & 1 & 1 & $\mathbf{1/100}$ & \cref{fig:stationary-target-7} \\
+        1.6 & (10, 0) & (-10, 200) & 1 & 1 & $\mathbf{1/100}$ & \cref{fig:stationary-target-7} \\
         \hline
     \end{tabular}
-    \caption{Simulation cases for stationary targets. The first column indicates the case number, the second column indicates the position of the TS, and the last three columns indicate the weights used in the optimization problem.}
-    \label{tab:stationary-targets}
 \end{table}
 
 
 \begin{figure}
     \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/1_stationary_obstacle.svg}
+    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/stationary_obstacle/1_stationary_obstacle.svg}
     \caption{\emph{Case 1.0}: Trajectory generation around a stationary target. }
     \label{fig:stationary-target}
 \end{figure}
+
+In Case 1.0 a solution is found that passes the TS on the south side. This is expected, as the center of the TS is located above the North=0 axis. Using the cost function based on the squared coefficients of the reference error and the trajectory is free of oscillations (The other case with the definite integral cost is not shown). This is shown in \cref{fig:stationary-target} with the blue trajectory. The colored arrows indicate the direction of the trajectory and serve as time-stamps  spaced 60 seconds apart. These are present in all North-East plots in this chapter, and in cases where there are multiple trajectories, the same color represents the same time stamp. 
+
 
 \begin{figure}
     \centering
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_above_both.svg}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/stationary_obstacle/2_stationary_obstacles_above_both.svg}
         \caption{\emph{Case 1.1}: Trajectory generation around two stationary targets (above both).}
         \label{fig:stationary-target-2}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_between.svg}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/stationary_obstacle/2_stationary_obstacles_between.svg}
         \caption{\emph{Case 1.2}: Trajectory generation around two stationary targets (between).}
         \label{fig:stationary-target-3}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_below_both.svg}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/stationary_obstacle/2_stationary_obstacles_below_both.svg}
         \caption{Trajectory generation around two stationary targets (below both).}
         \label{fig:stationary-target-4}
     \end{subfigure}
@@ -119,26 +147,31 @@ All varying parameters are summarized in \cref{tab:stationary-targets}. In \cref
     \label{fig:stationary-targets-subfigures}
 \end{figure}
 
+\todo[inline]{generer nye plot som representerer det som er skrevet i figurteksten.}
+
+Cases 1.1-1.3 in \cref{fig:stationary-targets-subfigures} introduces a second TS. Here it is demonstrated that for the same initial conditions and parameters, the B-MINMPC finds different solutions regarding starboard and port passing depending on the position of the second TS\todo{endre kostfunksjonen igjen slik at dette faktisk skjer}. This is the main goal of this constraint formulation in this work. 
+
+Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of changing the weights of the cost function. In \cref{fig:stationary-target-5} $w_\text{time}$ is set to 100, which means that minimizing the total time of the trajectory is prioritized. This results in a trajectory that passes both TSs with a starboard maneuver, as this is the fastest route. Another effect of this is that the trajectory is more aggressive, yielding sharp turns between straight segments. With $w_\text{ref}$ set to 100 in case 1.5, (\cref{fig:stationary-target-6}), the solution trajectory passes between the two TSs, as this yields the lowest overall reference error. The same argument can be made for case 1.6 from \cref{fig:stationary-target-7}, where $w_\text{mv}$ is set to $1/100$, a port side maneuver is chosen to minimize the control effort. This is a result of how the TS at $(-10, 200)$ is positioned close to the end point of the reference trajectory, and so a less agressive maneuver is possible on the port side. \todo{endre kostfunksjonen igjen slik at dette faktisk skjer}
 
 \begin{figure}
     \centering
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_high_time_ref_ratio.svg}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/stationary_obstacle/2_stationary_obstacles_high_time_ref_ratio.svg}
         \caption{\emph{Case 1.4}: Trajectory generation around two stationary targets (high time reference ratio).}
         \label{fig:stationary-target-5}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_low_time_ref_ratio.svg}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/stationary_obstacle/2_stationary_obstacles_low_time_ref_ratio.svg}
         \caption{\emph{Case 1.5}: Trajectory generation around two stationary targets (low time reference ratio).}
         \label{fig:stationary-target-6}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{\textwidth}
         \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/stationary_obstacle/2_stationary_obstacles_high_acc.svg}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/stationary_obstacle/2_stationary_obstacles_high_acc.svg}
         \caption{\emph{Case 1.6}: Trajectory generation around two stationary targets (high acceleration).}
         \label{fig:stationary-target-7}
     \end{subfigure}
@@ -147,34 +180,38 @@ All varying parameters are summarized in \cref{tab:stationary-targets}. In \cref
 \end{figure}
 
 
+\FloatBarrier
 \subsection{Case 2: Head-on}
 \label{sec:case-2-head-on}
-\begin{figure}
+
+The next three cases serve to evaluate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. 
+
+\begin{figure}[htbp]
     \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/scenarios/Head on scenario.svg}
+    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Head on scenario.svg}
     \caption{Trajectory generation in a head-on situation.}
     \label{fig:head-on}
 \end{figure}
 
+
+\FloatBarrier
 \subsection{Case 3: Crossing}
 \label{sec:case-3-crossing}
-\begin{figure}
+\begin{figure}[htbp]
     \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/scenarios/Crossing scenario.svg}
+    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Crossing scenario.svg}
     \caption{Trajectory generation in a crossing situation.}
     \label{fig:crossing}
 \end{figure}
 
 
+
+\FloatBarrier
 \subsection{Case 4: Overtaking}
 \label{sec:case-4-overtaking}
-\begin{figure}
+\begin{figure}[htbp]
     \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/scenarios/Overtaking scenario.svg}
+    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Overtaking scenario.svg}
     \caption{Trajectory generation in an overtaking situation.}
     \label{fig:overtaking}
 \end{figure}
-
-Conservativeness vs. performance
-
-Use a more spcialized solver. Bonmin was used. Could have used CPLEX, as the problem is quadratically constrainted with a quadratic objective, although it is not open source. 

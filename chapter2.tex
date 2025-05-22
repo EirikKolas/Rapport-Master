@@ -159,7 +159,7 @@ As integration and differentiation are inverse operations, it should come as no 
 
 
 \section{Transforming Between Bases}\label{sec:basis-transformation}
-In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$\todo[inlinepar]{ikke helt sant} \citep{Grimstad2016}. Moreover, the coefficients in the new basis can be found by solving a linear system of equations. This is the core idea behind the basis transformation method presented in this section.
+In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$\todo[inlinepar]{ikke helt sant} \citep{Grimstad2016}. Moreover, the coefficients in the new basis can be found by solving a linear system of equations. The following basis transformation method is employed in many algorithms in literature, and forms the foundation for the rest of the methods in this chapter, which is why a thorough explanation of this method is given attention here.
 
 The goal is to find the transformation matrix $\mathbf T$ such that $\mathbf c_{q, \boldsymbol \tau} = \mathbf T \mathbf c_{p, \mathbf t}$, where $\mathbf c_{q, \boldsymbol \tau}$ and $\mathbf c_{p, \mathbf t}$ are the coefficients of the spline function $\mathbf S$ in the bases $\mathbf B_{q,\boldsymbol \tau}$ and $\mathbf B_{p,\mathbf t}$, respectively.
 
@@ -183,26 +183,26 @@ for $\mathbf c_{q, \boldsymbol \tau}$. This can be written in matrix form as
         \mathbf B_{q,\boldsymbol \tau}(\xi_{q,\boldsymbol \tau}(1))^\top \\
         \vdots                                                             \\
         \mathbf B_{q,\boldsymbol \tau}(\xi_{q,\boldsymbol \tau}(m-1))^\top
-    \end{bmatrix}}_{m \times m}
+    \end{bmatrix}}_{\mathbf A:\;m \times m}
     \underbrace{\begin{bmatrix}
         c_{q, \boldsymbol \tau, 0}   \\
         c_{q, \boldsymbol \tau, 1}   \\
         \vdots                       \\
         c_{q, \boldsymbol \tau, m-1} \\
-    \end{bmatrix}}_{m \times 1}
+    \end{bmatrix}}_{\mathbf c_{q,\boldsymbol\tau}:\;m \times 1}
     = 
     \underbrace{\begin{bmatrix}
         \mathbf B_{p,\mathbf t}(\xi_{q,\boldsymbol \tau}(0))^\top  \\
         \mathbf B_{p,\mathbf t}(\xi_{q,\boldsymbol \tau}(1))^\top  \\
         \vdots                                                       \\
         \mathbf B_{p,\mathbf t}(\xi_{q,\boldsymbol \tau}(m-1))^\top
-    \end{bmatrix}}_{m \times n}
+    \end{bmatrix}}_{\mathbf D:\;m \times n}
     \underbrace{\begin{bmatrix}
         c_{p, \mathbf t, 0}   \\
         c_{p, \mathbf t, 1}   \\
         \vdots                \\
         c_{p, \mathbf t, n-1}
-    \end{bmatrix}}_{n \times 1},
+    \end{bmatrix}}_{\mathbf c_{p,\mathbf t}:\;n \times 1}
 \end{equation}
 or more compactly as
 \begin{equation}
@@ -213,7 +213,7 @@ The matrix $\mathbf T$ is then simply
 \begin{equation}\label{eq:transformation-matrix-solution}
     \mathbf T = [\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \xi_{q,\boldsymbol \tau})^\top]^{-1} [\mathbf B_{p,\mathbf t}(\boldsymbol \xi_{q,\boldsymbol \tau})^{\top}].
 \end{equation}
-As the B-spline basis functions are linearly independent, and the Greville abscissae are chosen such that each basis function is sampled at a point near the ``center'' of its support, the matrix $[\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \xi_{q,\boldsymbol \tau})^\top]$ is always invertible\todo[inlinepar]{Finn kilde}. This matrix is also known as the \emph{Collocation matrix} in the literature \todo[inlinepar]{Finn kilde} and is used to interpolate an arbitrary function with a B-spline.
+As the B-spline basis functions are linearly independent, and the Greville abscissae are chosen such that each basis function is sampled at a point near the ``center'' of its support, the matrix $[\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \xi_{q,\boldsymbol \tau})^\top]$ is always invertible. This method follows from the Schoenberg-Whitney Theorem \citep{schoenberg1988polya} for which a simple proof can be found in \cite{schoenberg2022proof}. The matrix $\mathbf A$ in \cref{eq:transformation-matrix} is known as a \emph{Collocation matrix} in the literature \todo[inlinepar]{Finn kilde} and can be used to interpolate an arbitrary function with a B-spline by replacing the right hand side of \cref{eq:transformation-matrix} with the function values sampled at the Greville abscissae.
 
 \begin{algorithm}
     \caption{B-spline Basis Transformation}\label{alg:basis-transformation}

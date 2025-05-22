@@ -19,6 +19,7 @@ The double integrator model in \cref{sec:double-integrator} is used to represent
 The optimization problem in \cref{eq:minmpc-compact} is solved using Bonmin \citep{bonmin2008}, which combines existing open source libraries such as Ipopt \citep{ipopt2006} for NLPs, and Cbc \citep{cbc2005} for MIPs, to solve MINLPs. Bonmin is accessed through the CasADi framework as described in \cref{sec:python-implementation}. 
 For all cases going forward, the solver is initialized as follows:
 \begin{algorithmic}
+    \centering
     \State $\mathbf p_\text{OS}(t) \gets \mathbf p_\text{ref}(t)$
     \For{each TS $j$}
         \State $\mathbf n_{s,j}(t) \gets -\mathbf{\hat n}_\text{ref}(t)$
@@ -151,7 +152,7 @@ In Case 1.0 a solution is found that passes the TS on the south side. This is ex
 
 Cases 1.1-1.3 in \cref{fig:stationary-targets-subfigures} introduces a second TS. Here it is demonstrated that for the same initial conditions and parameters, the B-MINMPC finds different solutions regarding starboard and port passing depending on the position of the second TS\todo{endre kostfunksjonen igjen slik at dette faktisk skjer}. This is the main goal of this constraint formulation in this work. 
 
-Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of changing the weights of the cost function. In \cref{fig:stationary-target-5} $w_\text{time}$ is set to 100, which means that minimizing the total time of the trajectory is prioritized. This results in a trajectory that passes both TSs with a starboard maneuver, as this is the fastest route. Another effect of this is that the trajectory is more aggressive, yielding sharp turns between straight segments. With $w_\text{ref}$ set to 100 in case 1.5, (\cref{fig:stationary-target-6}), the solution trajectory passes between the two TSs, as this yields the lowest overall reference error. The same argument can be made for case 1.6 from \cref{fig:stationary-target-7}, where $w_\text{mv}$ is set to $1/100$, a port side maneuver is chosen to minimize the control effort. This is a result of how the TS at $(-10, 200)$ is positioned close to the end point of the reference trajectory, and so a less agressive maneuver is possible on the port side. \todo{endre kostfunksjonen igjen slik at dette faktisk skjer}
+Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of changing the weights of the cost function. In \cref{fig:stationary-target-5} $w_\text{time}$ is set to 100, which means that minimizing the total time of the trajectory is prioritized. This results in a trajectory that passes both TSs with a starboard maneuver, as this is the fastest route. Another effect of this is that the trajectory is more aggressive, yielding sharp turns between straight segments. With $w_\text{ref}$ set to 100 in case 1.5, (\cref{fig:stationary-target-6}), the solution trajectory passes between the two TSs, as this yields the lowest overall reference error. The same argument can be made for case 1.6 from \cref{fig:stationary-target-7}, where $w_\text{mv}$ is set to $1/100$, a port side maneuver is chosen to minimize the control effort. This is a result of how the TS at $(-10, 200)$ is positioned with a bias towards the south close to the end of the reference trajectory, and so a less agressive maneuver is possible on the northern side. \todo{endre kostfunksjonen igjen slik at dette faktisk skjer}
 
 \begin{figure}
     \centering
@@ -184,12 +185,38 @@ Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of c
 \subsection{Case 2: Head-on}
 \label{sec:case-2-head-on}
 
-The next three cases serve to evaluate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. 
+The next three cases serve to evaluate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. These are constructed such that an OS following an eastwards reference trajectory at $N=0$ is on a collision course with a TS at $(0, 0)$, 250 seconds into the simulation. For each scenario, eight additional simulations are run where the starting points and reference trajectories for the OS are shifted both north and south by an appropriate distance. The speed and heading of the TS varied to create head-on, crossing, and overtaking situations.
+\Cref{tab:batch-params} summarizes the parameters used in the different cases. The weights are set to
+\begin{align}
+    w_\text{time} &= 1 \\
+    w_\text{ref} &= 1 \\
+    w_\text{mv} &= 0
+\end{align}
+
+
+
+\renewcommand{\arraystretch}{1.2}
+\begin{table}[htbp]
+    \centering
+    \caption{Simulation parameters for the head-on, crossing, and overtaking cases.}\label{tab:batch-params}
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        \textbf{Case} & \textbf{TS Heading} & \textbf{TS speed} & \textbf{Plot} \\
+        \hline
+        2.0 & $-97\degree$ & 4.5 m/s & \cref{fig:head-on} \\
+        \hline
+        3.0 & $-10\degree$ & 4.5 m/s & \cref{fig:crossing} \\
+        \hline
+        4.0 & $75\degree$ & 4.0 m/s & \cref{fig:overtaking} \\
+        \hline
+    \end{tabular}
+\end{table}
+\renewcommand{\arraystretch}{1.0}
 
 \begin{figure}[htbp]
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Head on scenario.svg}
-    \caption{Trajectory generation in a head-on situation.}
+    \caption{\emph{Case 2}: Trajectory generation in a head-on situation.}
     \label{fig:head-on}
 \end{figure}
 
@@ -200,7 +227,7 @@ The next three cases serve to evaluate the robustness of the B-MINMPC in situati
 \begin{figure}[htbp]
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Crossing scenario.svg}
-    \caption{Trajectory generation in a crossing situation.}
+    \caption{\emph{Case 2}: Trajectory generation in a crossing situation.}
     \label{fig:crossing}
 \end{figure}
 
@@ -212,6 +239,6 @@ The next three cases serve to evaluate the robustness of the B-MINMPC in situati
 \begin{figure}[htbp]
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Overtaking scenario.svg}
-    \caption{Trajectory generation in an overtaking situation.}
+    \caption{\emph{Case 2}: Trajectory generation in an overtaking situation.}
     \label{fig:overtaking}
 \end{figure}

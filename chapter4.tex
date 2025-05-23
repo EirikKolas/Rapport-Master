@@ -140,7 +140,7 @@ Using this theorem, the collision avoidance task can be transformed to a classif
 The constraints in \zcref{eq:hyperplane-os,eq:hyperplane-ts} are enforced by
 letting $\mathbf n(t)$ and $b(t)$ be optimization variables. Equation \zcref{eq:hyperplane-norm} is a box constraint on $\mathbf n(t)$, ensuring that the hyperplane normal doesn't become too large. The minimum distance constraint in \cref{eq:minimum-distance} can be equivalently expressed using the hyperplane separation theorem by letting $d_\text{OS} = 0$ and $d_\text{TS} = d_\text{min}$ in \zcref{eq:hyperplane-os,eq:hyperplane-ts}. As the following section shows,
 
-\subsection{Collision Constraints}
+\subsection{Collision Constraints}\label{sec:collision-constraints}
 
 Collision avoidance is non-convex: with fixed start/end points one cannot deform a trajectory from one side of the obstacle to the other without intersection. A convex solver will therefore remain on the same side (see \cref{fig:non-convex-obstacle}), potentially missing the globally optimal path.
 \begin{figure}
@@ -351,7 +351,7 @@ To summarize, the discrete cost function is the best choice for the final implem
 For a more in depth analysis of the conservativeness of B-splines, see \citet{Grimstad2016}.
 
 
-\subsection{COLREGS Objectives}
+\subsection{COLREGS Objectives}\label{sec:colregs-objectives}
 Rule 8b) of the COLREGS states that any alteration of course should be large enough to be readily apparent to another vessel. This is impractical in an optimization context as penalizing low turn rates while keeping the cost on high and no turn rates low leads to a non-convex cost. See \cref{fig:turn-rate-cost} for an illustration of the problem. 
 
 \begin{figure}

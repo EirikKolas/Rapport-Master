@@ -79,7 +79,7 @@ The specific direction of the normals is reasoned from the definition of $\mathb
 
 \section{Simulation Results}\label{sec:simulation-results}
 
-\subsection{Case 1: Stationary Targets}
+\subsection{Stationary Targets}
 \label{sec:case-1-stationary-targets}
 
 To demonstrate the B-MINMPC's ability to find optimal trajectories in non-convex environments, a stationary TS is placed at the position $(10, 0)$ in the simulation environment. The domain of the TS is set to 50m, and the OS is constrained to stay at least 10m away from this domain. COLREGS are not considered here, as only the qualitative behavior of the B-MINMPC is studied in cases 1.x. Both the Port and starboard maneuver directions are therefore considered as passing sides. The following cases 1.1-1.6 are variations of the first scenario, where 1.1-1.3 demonstrate the effect of changing the position of the TS. In the cases 1.4-1.6 the cost weight parameters are tuned to explore how maneuverside decisions are affected by the cost function. 
@@ -122,7 +122,7 @@ All varying parameters for the scenarios are listed in \cref{tab:stationary-targ
 In Case 1.0 a solution is found that passes the TS on the south side. This is expected, as the center of the TS is located above the North=0 axis. Using the cost function based on the squared coefficients of the reference error and the trajectory is free of oscillations (The other case with the definite integral cost is not shown). This is shown in \cref{fig:stationary-target} with the blue trajectory. The colored arrows indicate the direction of the trajectory and serve as time-stamps  spaced 60 seconds apart. These are present in all North-East plots in this chapter, and in cases where there are multiple trajectories, the same color represents the same time stamp. 
 
 
-\begin{figure}
+\begin{figure}[hbtp]
     \centering
     \begin{subfigure}[b]{\textwidth}
         \centering
@@ -154,6 +154,8 @@ Cases 1.1-1.3 in \cref{fig:stationary-targets-subfigures} introduces a second TS
 
 Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of changing the weights of the cost function. In \cref{fig:stationary-target-5} $w_\text{time}$ is set to 100, which means that minimizing the total time of the trajectory is prioritized. This results in a trajectory that passes both TSs with a starboard maneuver, as this is the fastest route. Another effect of this is that the trajectory is more aggressive, yielding sharp turns between straight segments. With $w_\text{ref}$ set to 100 in case 1.5, (\cref{fig:stationary-target-6}), the solution trajectory passes between the two TSs, as this yields the lowest overall reference error. The same argument can be made for case 1.6 from \cref{fig:stationary-target-7}, where $w_\text{mv}$ is set to $1/100$, a port side maneuver is chosen to minimize the control effort. This is a result of how the TS at $(-10, 200)$ is positioned with a bias towards the south close to the end of the reference trajectory, and so a less agressive maneuver is possible on the northern side. \todo{endre kostfunksjonen igjen slik at dette faktisk skjer}
 
+In all cases, while being initialized with the reference, the B-MINMPC is able to find a solution that passes the TSs while respecting the constraints. In other words, using the mixed integer constraints presented in \cref{sec:collision-constraints} and a simple initialization scheme, a convex optimizer is able to more robustly find the optimal solution in a non-convex environment than a convex optimizer without these constraints. This is an improvement over the previous work in \citep{Thyri2022-MPC} where a carefully crafted initial guess had to be construced to facilitate a maneuver towards the desired passing side.
+
 \begin{figure}
     \centering
     \begin{subfigure}[b]{\textwidth}
@@ -182,16 +184,17 @@ Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of c
 
 
 \FloatBarrier
-\subsection{Case 2: Head-on}
+\subsection{Head-on, Crossing, and Overtaking Situations}
 \label{sec:case-2-head-on}
 
-The next three cases serve to evaluate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. These are constructed such that an OS following an eastwards reference trajectory at $N=0$ is on a collision course with a TS at $(0, 0)$, 250 seconds into the simulation. For each scenario, eight additional simulations are run where the starting points and reference trajectories for the OS are shifted both north and south by an appropriate distance. The speed and heading of the TS varied to create head-on, crossing, and overtaking situations.
-\Cref{tab:batch-params} summarizes the parameters used in the different cases. The weights are set to
+The next three cases serve to evaluate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. These are constructed such that an OS following an eastwards reference trajectory at $N=0$ is on a collision course with a TS at $(0, 0)$, 250 seconds into the simulation. For each scenario, eight additional simulations are run where the starting points and reference trajectories for the OS are shifted both north and south by an appropriate distance. The speed and heading of the TS varied to create head-on, crossing, and overtaking situations. In these scenarios, the end position and velocity are not constrained, but the max time is set to $T=500$ seconds. 
+\Cref{tab:batch-params} summarizes the parameters used in the different cases. The weights in \cref{tab:sim-spline-basis} are set to
 \begin{align}
-    w_\text{time} &= 1 \\
-    w_\text{ref} &= 1 \\
-    w_\text{mv} &= 0
+    w_\text{time} &= 0 \quad \text{(\emph{time is fixed})}      \\
+    \coeffs(w_\text{ref}) &= \{1, 1, 0, 0, 0, 0, 0, 0, 1, 1\}   \\
+    \coeffs(w_\text{mv}) &= \{1, 1, 0, 0, 10, 10, 0, 0, 1, 1\}
 \end{align}
+to facilitate course and speed corrections in the maneuver windows, as discussed in \cref{sec:colregs-objectives}. These weights correspond to an encounter window of $(t_8-t_2)T=(0.8-0.2)500=300$ seconds, and a maneuver window of $(t_3-t_2)T=(t_7-t_6)T=(0.3-0.2)500=50$ seconds. The encounter window is centered at the time of collision, which again, is set to 250 seconds into the simulation.
 
 
 
@@ -199,11 +202,11 @@ The next three cases serve to evaluate the robustness of the B-MINMPC in situati
 \begin{table}[htbp]
     \centering
     \caption{Simulation parameters for the head-on, crossing, and overtaking cases.}\label{tab:batch-params}
-    \begin{tabular}{|c|c|c|c|}
+    \begin{tabular}{|c|d{-1}|c|c|}
         \hline
-        \textbf{Case} & \textbf{TS Heading} & \textbf{TS speed} & \textbf{Plot} \\
+        \textbf{Case} & \multicolumn{1}{c|}{\textbf{TS Heading}} & \textbf{TS speed} & \textbf{Plot} \\
         \hline
-        2.0 & $-97\degree$ & 4.5 m/s & \cref{fig:head-on} \\
+        2.0 & $-90\degree$ & 4.5 m/s & \cref{fig:head-on} \\
         \hline
         3.0 & $-10\degree$ & 4.5 m/s & \cref{fig:crossing} \\
         \hline
@@ -213,6 +216,11 @@ The next three cases serve to evaluate the robustness of the B-MINMPC in situati
 \end{table}
 \renewcommand{\arraystretch}{1.0}
 
+
+Case 2 is a head-on situation where the TS is heading west at 4.5 m/s with a heading $-90\degree$. Using the encounter classification algorithm from \cite{Thyri2022-Confined-Waters} the OSs starting south of $N=100$ are considered to be in a head-on situation, and has according to COLREGS rule 14 pass the TS with a starboard maneuver. The OSs starting north of $N=100$ are admitted safe passage, and so no COLREGS rules are applicable. The OSs in the head-on situation have the passing distance for the starboard maneuver set to $d_p=50$ m, and the passing distance for the port maneuver set to $d_o=100$ m, as seen in \cref{tab:simulation-parameters}.  
+
+\Cref{fig:head-on} illustrates the trajectories of the OSs and TS in the head-on situation. At ~$t=100$ seconds, the relevant OSs start the starboard maneuver, and follows a course parallell to the reference trajectory from ~$t=150$ until the start of the second maneuver window at $t=350$ seconds where the OSs start to turn back towards their reference trajectories. 
+
 \begin{figure}[htbp]
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Head on scenario.svg}
@@ -221,24 +229,20 @@ The next three cases serve to evaluate the robustness of the B-MINMPC in situati
 \end{figure}
 
 
-\FloatBarrier
-\subsection{Case 3: Crossing}
 \label{sec:case-3-crossing}
 \begin{figure}[htbp]
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Crossing scenario.svg}
-    \caption{\emph{Case 2}: Trajectory generation in a crossing situation.}
+    \caption{\emph{Case 3}: Trajectory generation in a crossing situation.}
     \label{fig:crossing}
 \end{figure}
 
 
 
-\FloatBarrier
-\subsection{Case 4: Overtaking}
 \label{sec:case-4-overtaking}
 \begin{figure}[htbp]
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Overtaking scenario.svg}
-    \caption{\emph{Case 2}: Trajectory generation in an overtaking situation.}
+    \caption{\emph{Case 4}: Trajectory generation in an overtaking situation.}
     \label{fig:overtaking}
 \end{figure}

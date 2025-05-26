@@ -221,6 +221,16 @@ Case 2 is a head-on situation where the TS is heading west at 4.5 m/s with a hea
 
 \Cref{fig:head-on} illustrates the trajectories of the OSs and TS in the head-on situation. At ~$t=100$ seconds, the relevant OSs start the starboard maneuver, and follows a course parallell to the reference trajectory from ~$t=150$ until the start of the second maneuver window at $t=350$ seconds where the OSs start to turn back towards their reference trajectories. 
 
+The 4th and 5th OS from the top in \cref{fig:head-on} are not able to return to the reference trajectory in this case, as the maneuver window is too short. The problem is even more evident in the crossing situation in \cref{fig:crossing}, where four out of the 5 maneuvering OSs are not able to return. Multiple solutions for this are possible, which will now be listed in order of complexity:
+\begin{enumerate}
+    \item Decrease $w_\text{mv}$ after the encounter to prioritize convergence to the reference trajectory over the maneuvering effort.
+    \item Increase the maneuver window to allow for more time to return to the reference trajectory.
+    \item Increase the time horizon to allow for more time to return to the reference trajectory.
+    \item Parameterize the time as a spline variable to allow for more flexibility in the trajectory, fixing the encounter and maneuver windows, but keeping the end time free.
+    \item Represent the reference trajectory as a PH-Spline, which allows for analytical distance calculations. This makes a cost more similar to the XTE feasible and the OS won't try to catch up to the parameterized reference trajectory.
+\end{enumerate}
+
+
 \begin{figure}[htbp]
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Head on scenario.svg}

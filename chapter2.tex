@@ -1,13 +1,15 @@
 % !TeX root = main.tex
 %===================================== CHAP 2 =================================
 
-\chapter{The B-spline}
+\chapter{Background Theory}\label{chap:background-theory}
+
+\section{The B-spline}
 \label{chap:b-spline-theory}
 This chapter will introduce B-splines, a type of spline function that is widely used in computer graphics, computer-aided design, and numerical optimization. B-splines are piecewise polynomial functions that are defined recursively in terms of a degree $p$ and a set of so-called knots. The chapter will cover the definition of B-splines, their properties, and common operations that can be performed on them. 
 
 Important properties and operations on B-splines are presented, providing discussion and intuition around results and theorems without going into the full mathematical details. The goal is to provide the reader with the necessary background to understand the subsequent chapters in addition to being able to implement B-splines in a numerical optimization context from scratch.
 
-\section{Definition and Properties}\label{sec:b-spline-definition}
+\subsection{Definition and Properties}\label{sec:b-spline-definition}
 The following definition is from \cite{Grimstad2016}:
 A B-spline $f: \mathbb R \rightarrow \mathbb R$ is given by $n$ \emph{B-spline coefficients} $\mathbf c = [c_j]_{j=0}^{n-1}$ and $n+p+1$ non-decreasing knots $\mathbf t = [t_j]_{j=0}^{n+p}$ as follows:
 
@@ -82,7 +84,7 @@ Here $a$ and $b$ are constants of appropriate dimensions and the $\leq$ operator
 
 The basis functions span a linear vector space (or spline space) denoted by $\mathcal{S}_{p, \mathbf{t}}$. This space contains all piecewise polynomials of degree $\le p$ on a given knot vector $\mathbf t$ \citep{Grimstad2016}. 
 
-\section{Operations on B-splines}
+\subsection{Operations on B-splines}
 From the recursive relation in \cref{eq:b-spline-recurrence} it follows that the B-spline basis functions are piecewise polynomial functions in $x$ of degree $p$. This property makes it clear that all polynomial operations on B-splines will result in a new B-spline.
 
 In all following sections, it is assumed that for a given B-spline basis of degree $p$, the corresponding knot vector $\mathbf t$ is $p+1$ regular, i.e. all knots have multiplicity of most $p+1$ as well as the first and last knot having multiplicity $p+1$. The knot vector $\mathbf t$ can then be written with the notation 
@@ -91,7 +93,7 @@ In all following sections, it is assumed that for a given B-spline basis of degr
 \end{equation}
 where $\{\eta_i\}$ is the set of unique knots in increasing order and $m_i$ denotes the multiplicity of the corresponding unique knot. For the knot vector to be regular, $m_0 = m_r = p+1$ and $m_i \leq p+1$ for $i \in \{1,2,\ldots,n-1\}$.
 
-\section{Differentiation}\label{sec:derivative}
+\subsection{Differentiation}\label{sec:derivative}
 Given a B-spline $f(x) = \sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)$,
 the derivative of the B-spline can be computed by simply differencing its coefficients. 
 \begin{equation}\label{eq:b-spline-derivative}
@@ -114,7 +116,7 @@ where $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$.
 
 The denominator $t_{j+p}-t_j$ in \cref{eq:b-spline-derivative} illustrates the continuity of the B-spline with respect to knot multiplicity. If a knot is repeated more than $p$ times, the denominator will be zero, and the derivative is not defined at that knot.
 
-\section{Integration}
+\subsection{Integration}
 Given a degree $p$ and initial knot sequence $\mathbf t$, \cref{eq:b-spline-derivative}, gives
 \begin{equation}\label{eq:b-spline-integral-pre}
     p \sum_{j=1}^{n-1} \gamma_j B_{j, p, \boldsymbol{t}}(x) 
@@ -158,7 +160,7 @@ and $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$ still.
 As integration and differentiation are inverse operations, it should come as no surprise that the transformation matrices $\mathbf T_I$ and $\mathbf T_D$ are similirly related. This is explored further in \cref{app:homogeneous-integration-matrix}.
 
 
-\section{Transforming Between Bases}\label{sec:basis-transformation}
+\subsection{Transforming Between Bases}\label{sec:basis-transformation}
 In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$\todo[inlinepar]{ikke helt sant} \citep{Grimstad2016}. Moreover, the coefficients in the new basis can be found by solving a linear system of equations. The following basis transformation method is employed in many algorithms in literature, and forms the foundation for the rest of the methods in this chapter, which is why a thorough explanation of this method is given attention here.
 
 The goal is to find the transformation matrix $\mathbf T$ such that $\mathbf c_{q, \boldsymbol \tau} = \mathbf T \mathbf c_{p, \mathbf t}$, where $\mathbf c_{q, \boldsymbol \tau}$ and $\mathbf c_{p, \mathbf t}$ are the coefficients of the spline function $\mathbf S$ in the bases $\mathbf B_{q,\boldsymbol \tau}$ and $\mathbf B_{p,\mathbf t}$, respectively.
@@ -230,7 +232,7 @@ As the B-spline basis functions are linearly independent, and the Greville absci
     \end{algorithmic}
 \end{algorithm}
 
-\section{Knot Refinement and Degree Elevation}\label{sec:knot-refinement-degree-elevation}
+\subsection{Knot Refinement and Degree Elevation}\label{sec:knot-refinement-degree-elevation}
 The method in \cref{sec:basis-transformation} can be utilized for the two most commonly used techniques for manipulating B-splines: knot refinement and degree elevation. Knot refinement is simply the process of adding new knots to the knot vector, keeping the degree of the B-spline constant. 
 
 Degree elevation, on the other hand, is the process of increasing the degree of the B-spline. There is a subtle caveat here, as the continuity of the B-spline at a knot is equal to the degree of the B-spline minus the multiplicity of the knot. This means that if a spline is to be represented in a higher degree basis, the knot multiplicity must be increased to maintain the same continuity at the knots. So, if a spline function in the basis $\mathbf B_{p,\mathbf t}$ is to be represented in the basis $\mathbf B_{p+1,\boldsymbol \tau}$, the knot vector $\boldsymbol \tau$ must contain the original knots $\mathbf t$ with multiplicity $p+1$.
@@ -422,7 +424,7 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
 
 \end{indentedexample}
 
-\section{Addition and Subtraction}
+\subsection{Addition and Subtraction}
 Finding the sum of two B-splines that share the same basis is a simple task as their coefficients can just be added together:
 \begin{equation}
     f(x) + g(x) =  \mathbf{B}_{p, \mathbf{t}}^{\top}(x) \mathbf{c}_1 + \mathbf{B}_{p, \mathbf{t}}^{\top}(x) \mathbf{c}_2
@@ -463,7 +465,7 @@ To do this, the basis of the lowest degree is first elevated to the highest degr
 
 Scalar addition in the form of $f(x) + a$ can be performed by simply adding the scalar to all the coefficients of the B-spline. This is clear from the fact thats a scalar can be represented as a B-spline with degree $0$ (constant spline), and then performing the addition as described above. 
 
-\section{Multiplication and Inner Product}
+\subsection{Multiplication and Inner Product}
 
 For addition, the common basis had to have degree $q \geq \max(p_1, p_2)$, but for multiplication, the degree of the common basis must be $q = p_1 + p_2$\todo[inlinepar]{forklar hvorfor}. Intuitively, this is because the product of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $p_1 + p_2$ while the sum of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $\max(p_1, p_2)$.
 
@@ -602,7 +604,7 @@ As for the regular product, the PW inner product can be made more efficient by n
 \end{figure}
 
 
-\section{Pythogerean-Hodograph B-splines}\label{sec:pythogerean-hodograph}
+\subsection{Pythogerean-Hodograph B-splines (PH B-Splines)}\label{sec:pythogerean-hodograph}
 The Pythogerean-Hodograph (PH) B-spline is utilized to leverage exact geometric quantities in CAD/CAM. Pythagorean‐Hodograph (PH) B‐splines \cite{Albrecht2016}, a natural extension of PH Bézier curves \cite{Farouki1990}, are employed. In this framework, the hodograph (derivative) of a planar B‐spline
 
 \begin{equation*}
@@ -669,7 +671,7 @@ while the arc-length $s(x)$ is given by
 \end{equation*}
 
 
-\section{Non-Uniform Rational B-splines (NURBS)}
+\subsection{Non-Uniform Rational B-splines (NURBS)}
 In the previous section, rational functions of B-splines were mentioned in the context of Pythagorean-Hodograph curves. \Cref{eq:curvature,eq:turn-rate} are examples of such rational functions. This section formalizes the concept of Non-uniform rational B-splines (NURBS), for which a good reference is \cite{Piegl1997}. 
 
 NURBS are defined by the rational basis functions
@@ -730,7 +732,7 @@ is a degree-$q$ NURBS with weights $w_i$, knot vector $\boldsymbol{\tau}$ and co
 \end{algorithm}
 
 
-\section{Summary}
+\subsection{Summary}
 
 This chapter has introduced the concept of B-splines, their properties, and how they can be used to represent curves and surfaces. B-splines are piecewise polynomial functions defined over a knot vector, and they have several important properties, including local support, non-negativity, and the ability to represent complex shapes. The chapter also discussed the operations of addition, multiplication, and inner product for B-splines, as well as their generalization to Non-Uniform Rational B-splines (NURBS).
 

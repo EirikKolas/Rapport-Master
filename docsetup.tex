@@ -27,8 +27,6 @@
 %\renewcommand{\nomname}{List of Abbreviations}
 %\makenomenclature
 \usepackage{natbib}
-\usepackage[style=altsuper4col,acronym]{glossaries}
-% \usepackage[style=altsuper4colheader]{glossaries}
 \usepackage{float}
 \usepackage{flafter} 
 \usepackage[section]{placeins}
@@ -36,6 +34,7 @@
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc} % set input encoding
+% \usepackage{lmodern} % use the Latin Modern font
 \usepackage{varwidth}
 \usepackage{newfloat}
 \usepackage{algpseudocodex}
@@ -48,6 +47,7 @@
 \usepackage{dcolumn}
 
 \usepackage[pdftex,bookmarks=true]{hyperref}
+% \usepackage[style=altsuper4colheader]{glossaries}
 % \usepackage[pdftex]{hyperref}
 \hypersetup{
     colorlinks,%
@@ -60,20 +60,15 @@
 \usepackage{zref-clever}
 \zcsetup{noname}
 
+\usepackage[style=altsuper4col,acronym]{glossaries}
+\makeglossaries
+
 \crefname{equation}{}{}
 \Crefname{equation}{Equation}{}
 \crefname{figure}{Figure}{figures}
 \crefname{section}{Section}{sections}
 %\floatstyle{boxed} 
 
-% ShareLaTeX does not support glossaries now. Sorry...
-%\usepackage[number=none]{glossary}
-%\makeglossary
-%\newglossarytype[abr]{abbr}{abt}{abl}
-%\newglossarytype[alg]{acronyms}{acr}{acn}
-%\newcommand{\abbrname}{Abbreviations} 
-%\newcommand{\shortabbrname}{Abbreviations}
-%%\makeabbr
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 
 \renewcommand*\contentsname{Table of Contents}
@@ -86,7 +81,6 @@
 \renewcommand{\footrulewidth}{0.1ex}
 \fancypagestyle{plain}{\fancyhf{}\fancyfoot[LE,RO]{\thepage}\renewcommand{\headrulewidth}{0ex}}
 
-\makeglossaries
 
 \DeclareMathOperator{\asin}{asin}
 \DeclareMathOperator{\acos}{acos}
@@ -136,6 +130,7 @@ bordercolor=ForestGreen,#1]{#2}}
 \DeclareUnicodeCharacter{03BB}{$\lambda$} % Greek letter lambda
 \DeclareUnicodeCharacter{2212}{-} % Minus sign
 \DeclareUnicodeCharacter{221E}{\infty} % Infinity symbol
+\DeclareUnicodeCharacter{00D8}{\O} % Danish letter O with stroke
 
 % Add numbered property environment
 \newtheorem{property}{Property}

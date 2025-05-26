@@ -6,24 +6,59 @@
 
 \section{Motivation}
 
+\section{Motivation}
+
+Rapid urbanization and the urgent need for sustainable transportation are driving cities to explore innovative mobility solutions. In particular, autonomous electric passenger increasingly gaining attention by cities as a sustainable mode of urban transit \citep{Alsos2024}. By leveraging existing waterways, such ferries can reduce reliance on carbon-intensive road vehicles and complement land-based public transport. 
+This aligns with global sustainability objectives -- addressing climate action goals and promoting sustainable cities and communities—through zero-emission operations that mitigate greenhouse‐gas emissions and improve urban accessibility \citep{dnvAutonomousUrban}. 
+As \citet{dnvAutonomousUrban} notes, autonomous electric ferries can meet transport needs with minimal environmental impact, help decongest traffic, and reduce the need for costly infrastructure such as new roads or bridges.
+
+% Integrating ferry services into urban waterways can profoundly influence city development and travel patterns. Water bodies often considered barriers can instead become efficient transport corridors when served by autonomous ferries \citep{Alsos2024TRIP}. This approach circumvents the need for resource‐intensive fixed crossings (e.g.\ bridges or tunnels) that induce circuitous routes and road congestion. For instance, in \cref{fig:EstelleRoute}, a short water crossing serviced by an autonomous ferry can dramatically shorten travel time between city districts. In Stockholm, the MF \emph{Estelle} ferry now crosses a 700\,m bay in approximately 6\,minutes—a journey that previously required a 20\,minute detour by road \citep{Eide2023milliAmpere}. Such high‐frequency, flexible ferry services act as “water elevators,” seamlessly connecting waterfront neighborhoods and facilitating sustainable urban expansion without the negative footprint of new highways \citep{Alsos2024TRIP}.
+
+% Pioneering projects worldwide have demonstrated the feasibility and benefits of autonomous electric ferries. The \emph{milliAmpere2} ferry, developed in Trondheim, became the world’s first autonomous urban passenger ferry pilot open to the public in 2022, carrying over 1,500 passengers during a three‐week trial \citep{Eide2023milliAmpere}. Building on these trials, commercial deployments have emerged: in 2023, an autonomous electric ferry service operated by Zeabuz entered Stockholm’s public transport network \citep{Alsos2024TRIP}. Similar initiatives include France’s Hyke prototype on the Seine and Amsterdam’s Roboat self‐navigating canal boats \citep{Alsos2024TRIP}. These real‐world deployments validate concept viability, provide operational data, and underscore the timeliness of researching advanced control and navigation strategies for urban waterways \citep{Menges2024IFAC}.
+
+% Achieving safe and reliable autonomy in busy urban waterways presents substantial technical challenges. Ferries must navigate dynamic environments with varying weather, currents, and high densities of other water users within confined spaces \citep{Menges2024IFAC}. They must also comply with maritime navigation rules—particularly the COLREGs—when encountering manned vessels \citep{Johansen2016COLREG,Hagen2018MPC}. Ensuring passenger safety is paramount: any failure in a public ferry service could be catastrophic, and regulatory approval demands autonomous operation that is as safe as—or safer than—manned vessels \citep{Alsos2024TRIP}. These requirements define an autonomous ferry as a highly complex cyber‐physical system, necessitating sophisticated sensors, decision‐making algorithms, and fail‐safe mechanisms.
+
+% Optimization‐based approaches, especially Model Predictive Control (MPC) and its nonlinear variant (NMPC), have emerged as promising solutions for real‐time navigation and collision avoidance of autonomous vessels. MPC optimizes control actions over a finite horizon while respecting dynamic and safety constraints \citep{Hagen2018MPC}. NMPC accounts for the inherent nonlinearities of marine vehicle dynamics, such as hydrodynamic forces and inertia \citep{Abdelaal2018NMPC}. Recent studies demonstrate that MPC/NMPC frameworks can ensure COLREGs compliance and collision avoidance by evaluating future maneuvers and selecting control inputs that minimize travel time or energy consumption under safety constraints \citep{Johansen2016COLREG,Zhang2025JMSE}. Hybrid approaches combining classical planners with NMPC have further improved computational efficiency and reliability \citep{Zhang2023WarmStart}.
+
+% Despite these advantages, implementing NMPC on an autonomous ferry introduces challenges related to computational load and solver convergence. Each control cycle requires solving a constrained nonlinear optimization problem under real‐time deadlines. The choice of initial guess—i.e.\ warm‐starting—significantly affects solver performance, with poor initialization risking slow convergence or entrapment in local minima. Warm‐start techniques, such as reusing previous trajectories or employing geometric planners for coarse initial paths, are therefore critical for robust real‐time operation \citep{Zhang2023WarmStart}. Addressing these challenges through algorithmic strategies and tailored initialization routines forms the core contribution of this thesis, aiming to advance the state of the art in autonomous ferry motion planning and control.
+
+
 
 \section{Previous Work}
 
 \section{Problem Description}
+Building on, and exploring different aspects of the work presented in the project thesis \cite{prosjektoppgave}, this thesis aims to develop a robust and real-time capable COLREGS aware motion planning algorithm for autonomous sea vessels. The algorithm should produce safe and predictable trajectories for the vessel, ensuring compliance with the COLREGS rules while navigating in the presence of other vessels. The algorithm should be able to handle multiple target ships and provide a stable solution that can adapt to dynamic environments. The specific goals of the thesis are as follows:
 \begin{itemize}
-    \item Robust COLREGS aware motion planning. 
-    \item Stable solution for multiple target ships.  
-    \item The algorithm should be real-time capable.
-
+    \item Provide an introduction to B-spline curves, covering the steps from mathematical representation to a practical implementation.
+    \item Develop a B-Spline-based trajectory planning algorithm that is aware of the COLREGS rules.
+    \item Ensure the algorithm finds the optimal solution by exploring options that pass vessels on either side, avoiding local minima issues, and ensuring the solution is stable.
+    \item Create a library for B-spline optimization to make the implementation of general B-spline optimization problems easier and more efficient.
+    \item Test the algorithm in various COLREGS relevant scenarios, and verify the solutions through simulations. Use these results to provide a detailed analysis of the algorithm's performance, including metrics such as reference path tracking, energy consumption, and computational efficiency.
+    \item Propose potential improvements and future work based on the findings of the thesis.
 \end{itemize}
+
+
 \section{Contributions}
 
+Combining B-spline theory, mixed integer programming, and classical optimal control, this thesis presents a novel approach to trajectory planning for autonomous sea vessels. The contributions of this thesis are as follows:
+
 \begin{itemize}
-    \item A comprehensive introduction to B-spline curves and their use in trajectory planning, covering the steps from mathematical representation to a practical implementation.
-    \item COLREGs-aware optimal control problem formulation for path following with dynamic and static constraints using B-splines. The problem is parameterized in a cross-track and along-track coordinate system relative to the reference path, using mixed integer programming to ensure passage on the COLREGs-compliant side of the target ships.
-    \item A global solution is found using the global optimazation method in \citep{Grimstad2016}, and the robustness is verified using batch simulations in different scenarios.
-    \item The B-spline based algorithm provides a sparse parameterization of the path while maintaining smoothness and constraint satisfaction. Additionally, the side to pass the target ships on are decided using one decision variable each, ensuring few integer variables in the optimization problem.
+    \item A comprehensive introduction to B-spline curves and their application in trajectory planning, ensuring the material is accessible to readers without prior knowledge of piecewise polynomial curves, thereby making the thesis self-contained on this topic.
+    \item A COLREGs-aware optimal control problem formulation for path following in a dynamic environment using B-splines. The B-spline representation provides a sparse parameterization of the trajectory with built-in smoothness and constraint satisfaction.
+    The weights for the contributions of reference track error and control effort in the cost function are parameterized using a B-spline curve, allowing for a flexible way to shape the resulting trajectory and adapt it to the applicable governing COLREGS rules.
+    \item \acrfull{MIP} is used to address the non-convexity of the problem to ensure passage on the COLREGs-compliant side of the target ships.
+    The side to pass the target ships on are decided using one binary decision variable each, limiting the exponential growth of the number of sub-problems in the mixed integer programming formulation.
+    \item A B-spline optimization library is developed based on CasAdi \citep{casadi}, building on the work presented in \cite{mercy2016spline} to include the use of \acrshort{MIP} formulations in B-spline based optimization problems.
+    \item A thorough analysis of the algorithm's performance, including sensitivity to parameter variations. Multiple variations of the same scenario are compared against each other to catch potential local minima issues and to ensure the algorithm's robustness. The results are compared to \cite{Thyri2022-MPC} to ensure the algorithm's performance is on par with existing methods.
+    \item Potential issues with the algorithm are identified, and suggestions for future work are provided to improve the algorithm's performance and robustness.
 \end{itemize}
 
 
 \section{Outline}
+The thesis is structured as follows:
+\begin{itemize}
+    \item \cref{chap:background-theory} provides the necessary background theory on B-splines, optimal control, and mixed integer programming.
+    \item \cref{chap:b-spline-minmpc} presents the method used to develop the COLREGS-aware trajectory planning algorithm, including the mathematical formulation and implementation details.
+    \item \cref{chap:simulation-results} presents the results of the simulations and tests conducted to evaluate the performance of the algorithm.
+    \item \cref{chap:conclusions} discusses the results, potential issues with the algorithm, and suggestions for future work.
+\end{itemize}

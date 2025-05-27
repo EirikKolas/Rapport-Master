@@ -6,28 +6,87 @@
 
 \section{Motivation}
 
-\section{Motivation}
-
 Rapid urbanization and the urgent need for sustainable transportation are driving cities to explore innovative mobility solutions. In particular, autonomous electric passenger increasingly gaining attention by cities as a sustainable mode of urban transit \citep{Alsos2024}. By leveraging existing waterways, such ferries can reduce reliance on carbon-intensive road vehicles and complement land-based public transport. 
-This aligns with global sustainability objectives -- addressing climate action goals and promoting sustainable cities and communities—through zero-emission operations that mitigate greenhouse‐gas emissions and improve urban accessibility \citep{dnvAutonomousUrban}. 
-As \citet{dnvAutonomousUrban} notes, autonomous electric ferries can meet transport needs with minimal environmental impact, help decongest traffic, and reduce the need for costly infrastructure such as new roads or bridges.
+This aligns with global sustainability objectives---addressing climate action goals and promoting sustainable cities and communities through zero-emission operations that mitigate greenhouse‐gas emissions and improve urban accessibility \citep{dnvAutonomousUrban}. 
+As \citet{dnvAutonomousUrban} notes, autonomous electric ferries can meet transport needs with minimal environmental impact, help decongest traffic, and reduce the need for costly infrastructure such as new roads or bridges. This aligns with the United Nations Sustainable Development Goal 13 on climate action and SDG 11 on sustainable cities \citep{UN2024}.
 
-% Integrating ferry services into urban waterways can profoundly influence city development and travel patterns. Water bodies often considered barriers can instead become efficient transport corridors when served by autonomous ferries \citep{Alsos2024TRIP}. This approach circumvents the need for resource‐intensive fixed crossings (e.g.\ bridges or tunnels) that induce circuitous routes and road congestion. For instance, in \cref{fig:EstelleRoute}, a short water crossing serviced by an autonomous ferry can dramatically shorten travel time between city districts. In Stockholm, the MF \emph{Estelle} ferry now crosses a 700\,m bay in approximately 6\,minutes—a journey that previously required a 20\,minute detour by road \citep{Eide2023milliAmpere}. Such high‐frequency, flexible ferry services act as “water elevators,” seamlessly connecting waterfront neighborhoods and facilitating sustainable urban expansion without the negative footprint of new highways \citep{Alsos2024TRIP}.
+Pioneering projects worldwide have demonstrated the feasibility of autonomous electric ferries. The milliAmpere2 ferry (shown in \cref{fig:intro-asv}), developed at NTNU in Trondheim, became the world’s first autonomous urban passenger ferry pilot open to the public in 2022, carrying over 1,500 passengers during a three‐week trial \citep{Alsos2024}. Building on these trials, commercial deployments have emerged: in 2023, an autonomous electric ferry service operated by Zeabuz entered Stockholm’s public transport network with their MF Estelle \citep{Alsos2024}. Similar initiatives include France’s Hyke prototype on the Seine and Amsterdam’s Roboat self‐navigating canal boats \citep{Alsos2024}. Development in this field is rapidly advancing, with research being conducted to address the challenges of human trust in autonomous systems, safety, situational awareness, and collision avoidance, to name a few \citep{Eide2025}.
 
-% Pioneering projects worldwide have demonstrated the feasibility and benefits of autonomous electric ferries. The \emph{milliAmpere2} ferry, developed in Trondheim, became the world’s first autonomous urban passenger ferry pilot open to the public in 2022, carrying over 1,500 passengers during a three‐week trial \citep{Eide2023milliAmpere}. Building on these trials, commercial deployments have emerged: in 2023, an autonomous electric ferry service operated by Zeabuz entered Stockholm’s public transport network \citep{Alsos2024TRIP}. Similar initiatives include France’s Hyke prototype on the Seine and Amsterdam’s Roboat self‐navigating canal boats \citep{Alsos2024TRIP}. These real‐world deployments validate concept viability, provide operational data, and underscore the timeliness of researching advanced control and navigation strategies for urban waterways \citep{Menges2024IFAC}.
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,height=100pt]{fig/images/milliampere.png}
+        \caption{NTNU's ``milliAmpere2''. Image courtesy of \cite{tuFullTillit}.}
+    \end{subfigure}%
+    ~
+    \begin{subfigure}[t]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,height=100pt]{fig/images/MF Estelle.jpg}
+        \caption{Zeabuz's ``MF Estelle''. Image courtesy of \cite{Estelle}.}
+    \end{subfigure}
+    \caption{Examples of autonomous passenger ferries in operation.}
+    \label{fig:intro-asv}
+\end{figure}
 
-% Achieving safe and reliable autonomy in busy urban waterways presents substantial technical challenges. Ferries must navigate dynamic environments with varying weather, currents, and high densities of other water users within confined spaces \citep{Menges2024IFAC}. They must also comply with maritime navigation rules—particularly the COLREGs—when encountering manned vessels \citep{Johansen2016COLREG,Hagen2018MPC}. Ensuring passenger safety is paramount: any failure in a public ferry service could be catastrophic, and regulatory approval demands autonomous operation that is as safe as—or safer than—manned vessels \citep{Alsos2024TRIP}. These requirements define an autonomous ferry as a highly complex cyber‐physical system, necessitating sophisticated sensors, decision‐making algorithms, and fail‐safe mechanisms.
 
-% Optimization‐based approaches, especially Model Predictive Control (MPC) and its nonlinear variant (NMPC), have emerged as promising solutions for real‐time navigation and collision avoidance of autonomous vessels. MPC optimizes control actions over a finite horizon while respecting dynamic and safety constraints \citep{Hagen2018MPC}. NMPC accounts for the inherent nonlinearities of marine vehicle dynamics, such as hydrodynamic forces and inertia \citep{Abdelaal2018NMPC}. Recent studies demonstrate that MPC/NMPC frameworks can ensure COLREGs compliance and collision avoidance by evaluating future maneuvers and selecting control inputs that minimize travel time or energy consumption under safety constraints \citep{Johansen2016COLREG,Zhang2025JMSE}. Hybrid approaches combining classical planners with NMPC have further improved computational efficiency and reliability \citep{Zhang2023WarmStart}.
-
-% Despite these advantages, implementing NMPC on an autonomous ferry introduces challenges related to computational load and solver convergence. Each control cycle requires solving a constrained nonlinear optimization problem under real‐time deadlines. The choice of initial guess—i.e.\ warm‐starting—significantly affects solver performance, with poor initialization risking slow convergence or entrapment in local minima. Warm‐start techniques, such as reusing previous trajectories or employing geometric planners for coarse initial paths, are therefore critical for robust real‐time operation \citep{Zhang2023WarmStart}. Addressing these challenges through algorithmic strategies and tailored initialization routines forms the core contribution of this thesis, aiming to advance the state of the art in autonomous ferry motion planning and control.
-
-
+Achieving safe and reliable autonomy in busy urban waterways presents substantial technical challenges. Ferries must navigate dynamic environments with varying weather, currents, and high densities of other water users within confined spaces \citep{Menges2024}. They must also comply with the \acrfull{COLREGS} when encountering manned vessels \citep{Johansen2016,Hagen2018}. 
 
 \section{Previous Work}
 
+Dynamic obstacle avoidance encompasses a diverse set of techniques which \cite{Liu2024-VO-Traj} divide into reactive and planning-based algorithms. Reactive methods offer high computational efficiency and real-time responsiveness to moving obstacles, making them suitable for scenarios with limited computational resources or time constraints. 
+Motion planning methods, conversely, excel in long-term trajectory planning, generating smooth and predictable paths. The literature offers a variety of planning methods, including time discretization, collocation methods \citep{tysland2020comparison}, and B-spline relaxation techniques \citep{van2015b}. Furthermore, maritime applications require adherence to \acrshort{COLREGS} rules to ensure safe navigation around other vessels.
+
+
+\citet{Wang2019} argues that reactive approaches are particularly effective in open areas with few obstacles, as there is more freedom to maneuver.
+However, because they base decisions solely on the current state---selecting greedy actions that minimize an instantaneous cost---they are ill-suited for long-term trajectory planning, can produce oscillatory motions, and often fail in complex scenarios with multiple moving obstacles \citep{Liu2024-VO-Traj}. This was the main topic of the project thesis by \cite{prosjektoppgave}, which explored the use of the reactive methods developed by \citet{Thyri2022-VO} as an initialization strategy for a more robust trajectory planning algorithm. It was found that reactive methods on their own produce unpredictable trajectories that are very dependent on the tuning of the cost and constraint functions. This work is the continuation of this project thesis, building on the findings and exploring different aspects of the problem.
+
+Planning-based approaches, on the other hand, are more suitable for long-term trajectory planning and can produce smooth and predictable trajectories. They typically involve formulating an optimization problem that considers the entire trajectory, allowing for better handling of complex scenarios with multiple moving obstacles \citep{Liu2024-VO-Traj}.
+The primary challenges in motion planning for autonomous vehicles, as highlighted by \citet{mercy2016spline}, stem from the hard non-convex optimization problems that arise due to factors such as geometric constraints (obstacle avoidance), kinematic constraints (velocity and acceleration limits), and kinetic constraints (vehicle dynamics). Solutions to these challenges typically involve either a coupled approach, where all constraints are simultaneously addressed within a single optimization problem, or a decoupled approach. In a decoupled approach, the problem is divided into two stages: first, a path planning stage generates a geometric path, and second, a path following stage determines the control inputs required to accurately follow the planned path. The subproblems of the decoupled approach are often easier to solve, but the result may be suboptimal compared to a coupled approach \citep{mercy2016spline}.
+
+A second challenge is that the resulting optimization problems involve constraints that must hold during the entire trajectory \citep{mercy2016spline}. The most common approach to handle this is to discretize the trajectory into a time grid, and then enforce the constraints at each time step. This approach does not guarantee that the constraints hold between the time steps, so a sufficiently fine time grid must be used to ensure that the constraints are satisfied. This leads to a large number of constraints, which increases the computational cost of the optimization problem \citep{mercy2016spline}.
+Both of these problems can be solved by representing trajectories with continuous functions such as splines. Splines, which are piecewise polynomial functions, can approximate complex functions with arbitrary continuity using fewer states than time-discretization can. B-splines, in particular, are a popular choice of spline for trajectory planning as their properties can be exploited to ensure smoothness and guaranteed constraint satisfaction \citep{van2015b}. A detailed discussion on B-splines is given in \cref{sec:b-spline-theory}.
+
+% The use of B-splines in trajectory planning has been explored in various contexts. \citet{usenko2017real} quadrotor for creating a sparse replanning framework unmodelled obstacles. \citet{mercy2016spline} present a B-spline-based trajectory optimization framework for autonomous vehicles. \citet{mercy2017spline} extends to dynamic environments, using separating hyperplanes for dynamic constraints, and comparing b-spline methods with time-gridding.
+% \citet{cho2021colreg} maritime narrow canal reparameterization to curvilinear coordinates and considers colregs. \citet{zhang2021real} use B-splines for trajectory planning in dynamic environments, COLREGS, also uses separating hyperplanes for dynamic constraints.
+
+
+The application of B-splines in trajectory planning spans aerial, ground, and marine domains. In aerial robotics, \citet{usenko2017real} present a real-time local replanning framework for aerial vehicles that employs uniform B-splines to avoid unmodeled obstacles. For industrial ground vehicles, \citet{mercy2016spline} develop a time-optimal motion planning scheme using spline parameterization and receding-horizon optimization to avoid both stationary and moving obstacles, which they extend in \citet{mercy2017spline} to dynamic environments by integrating time-varying separating hyperplanes to enforce collision constraints without time-gridding and demonstrate its real-time applicability on a KUKA youBot. In maritime navigation, \citet{cho2021colreg} introduce a COLREGS-compliant collision avoidance algorithm for narrow channels by reparameterizing the waterway’s geometry into curvilinear coordinates via B-splines and applying right-hand-traffic-rule constraints via a simple cost function,  while \citet{zhang2021real} propose a real-time collision avoidance framework for maritime autonomous surface ships based on B-splines and optimal decoupling control, utilizing separating hyperplanes as constraints for the target ships to ensure collision avoidance and COLREGS compliance. 
+
+
+Regarding \acrshort{COLREGS}-compliant, planning‐based approaches with regular time gridding,
+\citet{Hagen2018} presents a COLREGS-compliant MPC using a kinematic model, while \citet{Menges2024} extends this with a nonlinear model and different cost function. Strategies to handle \acrshort{COLREGS} vary: \citet{Hagen2018} uses a cost function to encourage COLREGS compliance, \citet{Thyri2022-MPC} uses a classification algorithm to refine constraints based on encounter type, and \citet{Menges2024} uses a potential field-based cost function.
+
+\todo{skriv hvordan disse metodene er sammenlignet med implementasjonen i denne oppgaven.}
+
+% Rule 8b) of \acrshort{COLREGS} states that course and speed alterations to avoid collision should be apparent to an observer. The methods differ in trajectory shape control, important for following rule 8b). \citet{Hagen2018} and \citet{Thyri2022-MPC} have high control through discrete control inputs and constraints, respectively. \citet{Menges2024} uses continuous control and doesn't distinguish encounter types, resulting in less control. A comparison is in \cref{tab:comparison-colregs-methods}.
+
+
+% \begin{table}
+%     \centering
+%     \footnotesize{
+%     \begin{tabular}{|l|l|l|l|l|} 
+%         \hline
+%         \textbf{Method} & \textbf{Type} & \textbf{Model} & \textbf{Shape control} & \textbf{COLREGS} \\
+%         \hline
+%         \citet{Thyri2022-VO} & Reactive & Kinematic & Low & Constraints \\
+%         \hline
+%         \citet{Hagen2018} & MPC & Kinematic & High & Cost \\
+%         \hline
+%         \citet{Thyri2022-MPC} & NMPC & Kinematic & High & Constraints \\
+%         \hline
+%         \citet{Menges2024} & NMPC & Kinetic & Low & Cost \\
+%         \hline
+%     \end{tabular}}
+%     \caption{Comparison of different methods for COLREGS-aware trajectory planning.}
+%     \label{tab:comparison-colregs-methods}
+% \end{table}
+
+
+
+
 \section{Problem Description}
-Building on, and exploring different aspects of the work presented in the project thesis \cite{prosjektoppgave}, this thesis aims to develop a robust and real-time capable COLREGS aware motion planning algorithm for autonomous sea vessels. The algorithm should produce safe and predictable trajectories for the vessel, ensuring compliance with the COLREGS rules while navigating in the presence of other vessels. The algorithm should be able to handle multiple target ships and provide a stable solution that can adapt to dynamic environments. The specific goals of the thesis are as follows:
+Building on, and exploring different aspects of the work presented in the project thesis \citet{prosjektoppgave}, this thesis aims to develop a robust and real-time capable \acrshort{COLREGS} aware motion planning algorithm for autonomous sea vessels. The algorithm should produce safe and predictable trajectories for the vessel, ensuring compliance with \acrshort{COLREGS} while navigating in the presence of other vessels. The algorithm should be able to handle multiple target ships and provide a stable solution that can adapt to dynamic environments. The specific goals of the thesis are as follows:
 \begin{itemize}
     \item Provide an introduction to B-spline curves, covering the steps from mathematical representation to a practical implementation.
     \item Develop a B-Spline-based trajectory planning algorithm that is aware of the COLREGS rules.
@@ -48,8 +107,8 @@ Combining B-spline theory, mixed integer programming, and classical optimal cont
     The weights for the contributions of reference track error and control effort in the cost function are parameterized using a B-spline curve, allowing for a flexible way to shape the resulting trajectory and adapt it to the applicable governing COLREGS rules.
     \item \acrfull{MIP} is used to address the non-convexity of the problem to ensure passage on the COLREGs-compliant side of the target ships.
     The side to pass the target ships on are decided using one binary decision variable each, limiting the exponential growth of the number of sub-problems in the mixed integer programming formulation.
-    \item A B-spline optimization library is developed based on CasAdi \citep{casadi}, building on the work presented in \cite{mercy2016spline} to include the use of \acrshort{MIP} formulations in B-spline based optimization problems.
-    \item A thorough analysis of the algorithm's performance, including sensitivity to parameter variations. Multiple variations of the same scenario are compared against each other to catch potential local minima issues and to ensure the algorithm's robustness. The results are compared to \cite{Thyri2022-MPC} to ensure the algorithm's performance is on par with existing methods.
+    \item A B-spline optimization library is developed based on CasAdi \citep{casadi}, building on the work presented in \citet{mercy2016spline} to include the use of \gls{MIP} formulations in B-spline based optimization problems.
+    \item A thorough analysis of the algorithm's performance, including sensitivity to parameter variations. Multiple variations of the same scenario are compared against each other to catch potential local minima issues and to ensure the algorithm's robustness. The results are compared to \citet{Thyri2022-MPC} to ensure the algorithm's performance is on par with existing methods.
     \item Potential issues with the algorithm are identified, and suggestions for future work are provided to improve the algorithm's performance and robustness.
 \end{itemize}
 

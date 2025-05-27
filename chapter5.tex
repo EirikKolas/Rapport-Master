@@ -33,8 +33,6 @@ The specific direction of the normals is reasoned from the definition of $\mathb
 \renewcommand{\arraystretch}{1.2}
 \begin{table}[htbp]
     \centering
-    \caption{Simulation parameters.}
-    \label{tab:simulation-parameters}
     \begin{tabular}{|c|c|c|p{7cm}|}
         \hline
         \textbf{Parameter} & \textbf{Value} & \textbf{Unit} & \textbf{Description} \\
@@ -50,13 +48,14 @@ The specific direction of the normals is reasoned from the definition of $\mathb
         \rule{0pt}{2.5ex}$d_o$ & 100 & m & Minimum distance to target on the opposide side \\
         \hline
     \end{tabular}
+    \caption{Simulation parameters.}
+    \label{tab:simulation-parameters}
 \end{table}
 \renewcommand{\arraystretch}{1.0}
 
 \renewcommand{\arraystretch}{1.2}
 \begin{table}[htbp]
     \centering
-    \caption{Spline functions and their B-spline bases used for the simulations.}\label{tab:sim-spline-basis}
     \begin{tabular}{|p{2.5cm}||c|c|l|}
         \hline
         \rule{0pt}{2.5ex}
@@ -73,6 +72,7 @@ The specific direction of the normals is reasoned from the definition of $\mathb
         $w_\text{ref}$, $w_\text{mv}$ & 10 & 0 & $\{0, 0.1, 0.2, \ldots, 0.8, 0.9, 1\}$ \\
         \hline
     \end{tabular}
+    \caption{Spline functions and their B-spline bases used for the simulations.}\label{tab:sim-spline-basis}
 \end{table}
 \renewcommand{\arraystretch}{1.0}
 
@@ -88,8 +88,6 @@ All varying parameters for the scenarios are listed in \cref{tab:stationary-targ
 
 \begin{table}
     \centering
-    \caption{Simulation cases for stationary targets. The first column indicates the case number, the second column indicates the position of the TS, and the subsequent three columns indicate the weights used in the optimization problem.}
-    \label{tab:stationary-targets}
     \begin{tabular}{|c|c|c|c|c|c|c|}
         \hline
         Case & \multicolumn{2}{c|}{TS position} & $w_\text{time}$ & $w_\text{ref}$ & $w_\text{mv}$ & Plot \\
@@ -109,6 +107,8 @@ All varying parameters for the scenarios are listed in \cref{tab:stationary-targ
         1.6 & (10, 0) & (-10, 200) & 1 & 1 & $\mathbf{1/100}$ & \cref{fig:stationary-target-7} \\
         \hline
     \end{tabular}
+    \caption{Simulation cases for stationary targets. The first column indicates the case number, the second column indicates the position of the TS, and the subsequent three columns indicate the weights used in the optimization problem.}
+    \label{tab:stationary-targets}
 \end{table}
 
 
@@ -200,8 +200,6 @@ to facilitate course and speed corrections in the maneuver windows, as discussed
 
 \renewcommand{\arraystretch}{1.2}
 \begin{table}[htbp]
-    \centering
-    \caption{Simulation parameters for the head-on, crossing, and overtaking cases.}\label{tab:batch-params}
     \begin{tabular}{|c|d{-1}|c|c|}
         \hline
         \textbf{Case} & \multicolumn{1}{c|}{\textbf{TS Heading}} & \textbf{TS speed} & \textbf{Plot} \\
@@ -213,6 +211,8 @@ to facilitate course and speed corrections in the maneuver windows, as discussed
         4.0 & $75\degree$ & 4.0 m/s & \cref{fig:overtaking} \\
         \hline
     \end{tabular}
+    \centering
+    \caption{Simulation parameters for the head-on, crossing, and overtaking cases.}\label{tab:batch-params}
 \end{table}
 \renewcommand{\arraystretch}{1.0}
 
@@ -227,7 +227,7 @@ The 4th and 5th OS from the top in \cref{fig:head-on} are not able to return to 
     \item Increase the maneuver window to allow for more time to return to the reference trajectory.
     \item Increase the time horizon to allow for more time to return to the reference trajectory.
     \item Parameterize the time as a spline variable to allow for more flexibility in the trajectory, fixing the encounter and maneuver windows, but keeping the end time free.
-    \item Represent the reference trajectory as a PH-Spline, which allows for analytical distance calculations. This makes a cost more similar to the XTE feasible and the OS won't try to catch up to the parameterized reference trajectory.
+    \item Represent the reference trajectory as a PH B-Spline, which allows for analytical distance calculations. This makes a cost more similar to the XTE feasible and the OS won't try to catch up to the parameterized reference trajectory.
 \end{enumerate}
 
 

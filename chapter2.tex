@@ -4,7 +4,7 @@
 \chapter{Background Theory}\label{chap:background-theory}
 
 \section{The B-spline}
-\label{chap:b-spline-theory}
+\label{sec:b-spline-theory}
 This chapter will introduce B-splines, a type of spline function that is widely used in computer graphics, computer-aided design, and numerical optimization. B-splines are piecewise polynomial functions that are defined recursively in terms of a degree $p$ and a set of so-called knots. The chapter will cover the definition of B-splines, their properties, and common operations that can be performed on them. 
 
 Important properties and operations on B-splines are presented, providing discussion and intuition around results and theorems without going into the full mathematical details. The goal is to provide the reader with the necessary background to understand the subsequent chapters in addition to being able to implement B-splines in a numerical optimization context from scratch.
@@ -71,10 +71,18 @@ Together, \cref{b-prop:nonnegativity,b-prop:partitionofunity} imply that the B-s
 \end{property}
 
 The convex hull $\text{conv}(\mathbf{c})$ of a set of points $\mathbf{c} = \{c_1, c_2, \ldots, c_n\}$ is defined as the set of all convex combinations of the points. Mathematically, it is given by:
-
 \begin{equation}
     \text{conv}(\mathbf{c}) = \left\{ \sum_{i=1}^n \lambda_i c_i \mid \lambda_i \geq 0, \sum_{i=1}^n \lambda_i = 1 \right\}
 \end{equation}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{fig/illustrations/convex-hull.png}
+    \caption{A 3rd degree B-spline (full) with 4 control points (dots), control polygon (dashed) and convex hull (shaded area). The spline between the second and third control point (red) is always within the convex hull of the shaded area.}
+    \label{fig:b-spline-convex-hull} 
+\end{figure}
+\todo{lag ny figur}
+\todo{lag flere figurer}
 
 In the context of optimization, this property is useful for formulating constraints, as a constraint on a B-spline function can be enforced by imposing them on the control points \citep{mercy2017spline}. 
 \begin{equation}
@@ -736,14 +744,12 @@ is a degree-$q$ NURBS with weights $w_i$, knot vector $\boldsymbol{\tau}$ and co
 
 This chapter has introduced the concept of B-splines, their properties, and how they can be used to represent curves and surfaces. B-splines are piecewise polynomial functions defined over a knot vector, and they have several important properties, including local support, non-negativity, and the ability to represent complex shapes. The chapter also discussed the operations of addition, multiplication, and inner product for B-splines, as well as their generalization to Non-Uniform Rational B-splines (NURBS).
 
-Table of operations for B-splines and NURBS is given in \cref{tab:operations}, 
+Table of operations for B-splines is given in \cref{tab:operations}. A summary of operations on \acrshort{NURBS} can be found in \cite{piegl1997symbolic}.
 
 
 \renewcommand{\arraystretch}{1.5}
 \begin{table}
     \centering
-    \caption{Summary of B-spline operations and their properties. The symbols $f$ and $g$ denote B-spline functions, while $a$ denotes a scalar. Their corresponding bold-faced symbols denote vector-valued functions and vectors in $\mathbf R^n$ space respectively. The ``Coefficients'' column indicates the transformation type of the operation on the coefficients. The ``Space'' column indicates the space of the resulting B-spline. The knot vectors for these spaces are ommited for brevity and can be found in the references in the ``Algorithms'' column.}
-    \label{tab:operations}
     \begin{tabular}{|l|l|l|l|c|}
     \hline
     \textbf{Operation} 
@@ -827,6 +833,8 @@ Table of operations for B-splines and NURBS is given in \cref{tab:operations},
             & \Cref{alg:nurbs-conversion} \\[1.5ex]
     \hline
     \end{tabular}
+    \caption{Summary of B-spline operations and their properties. The symbols $f$ and $g$ denote B-spline functions, while $a$ denotes a scalar. Their corresponding bold-faced symbols denote vector-valued functions and vectors in $\mathbf R^n$ space respectively. The ``Coefficients'' column indicates the transformation type of the operation on the coefficients. The ``Space'' column indicates the space of the resulting B-spline. The knot vectors for these spaces are ommited for brevity and can be found in the references in the ``Algorithms'' column.}
+    \label{tab:operations}
 \end{table}
 \renewcommand{\arraystretch}{1}
     

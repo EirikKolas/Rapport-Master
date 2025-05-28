@@ -155,7 +155,9 @@ Cases 1.1-1.3 in \cref{fig:stationary-targets-subfigures} introduces a second TS
 Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of changing the weights of the cost function. In \cref{fig:stationary-target-5} $w_\text{time}$ is set to 100, which means that minimizing the total time of the trajectory is prioritized. This results in a trajectory that passes both TSs with a starboard maneuver, as this is the fastest route. Another effect of this is that the trajectory is more aggressive, yielding sharp turns between straight segments. With $w_\text{ref}$ set to 100 in case 1.5, (\cref{fig:stationary-target-6}), the solution trajectory passes between the two TSs, as this yields the lowest overall reference error. The same argument can be made for case 1.6 from \cref{fig:stationary-target-7}, where $w_\text{mv}$ is set to $1/100$, a port side maneuver is chosen to minimize the control effort. This is a result of how the TS at $(-10, 200)$ is positioned with a bias towards the south close to the end of the reference trajectory, and so a less agressive maneuver is possible on the northern side. \todo{endre kostfunksjonen igjen slik at dette faktisk skjer}
 
 In all cases, while being initialized with the reference, the B-MINMPC is able to find a solution that passes the TSs while respecting the constraints. In other words, using the mixed integer constraints presented in \cref{sec:collision-constraints} and a simple initialization scheme, a convex optimizer is able to more robustly find the optimal solution in a non-convex environment than a convex optimizer without these constraints. This is an improvement over the previous work in \citep{Thyri2022-MPC} where a carefully crafted initial guess had to be construced to facilitate a maneuver towards the desired passing side.
-
+\todo{diskuter at det er vanskelig med metrikker for tidlig manøver. Si hvorfor vi ikke bruker metrikker.}
+\todo{kan drøfte total bruk av hstighetsendring, vs total kursendring.}
+\todo[inline]{poengter at der er like høy kompleksitet i å lage metrikker for colregs compliance som en colregs compliant motion planner, fordi colregs er skrevet for mennesker. Bygger på kapteinens tolkning av situasjonen. lite vennlig for programmering. Kyle Vohler har lagd metrikker, men de er tuningavhengig.}
 \begin{figure}
     \centering
     \begin{subfigure}[b]{\textwidth}
@@ -222,15 +224,17 @@ Case 2 is a head-on situation where the TS is heading west at 4.5 m/s with a hea
 \Cref{fig:head-on} illustrates the trajectories of the OSs and TS in the head-on situation. At ~$t=100$ seconds, the relevant OSs start the starboard maneuver, and follows a course parallell to the reference trajectory from ~$t=150$ until the start of the second maneuver window at $t=350$ seconds where the OSs start to turn back towards their reference trajectories. 
 
 The 4th and 5th OS from the top in \cref{fig:head-on} are not able to return to the reference trajectory in this case, as the maneuver window is too short. The problem is even more evident in the crossing situation in \cref{fig:crossing}, where four out of the 5 maneuvering OSs are not able to return. Multiple solutions for this are possible, which will now be listed in order of complexity:
+\todo{Drøft colregs i forhold til batch simuleringer. metrikker er vanskelig}
 \begin{enumerate}
-    \item Decrease $w_\text{mv}$ after the encounter to prioritize convergence to the reference trajectory over the maneuvering effort.
+    \item Decrease $w_\text{mv}$ after the encounter to prioritize convergence to the reference trajectory over the maneuvering effort.\todo{implementer denne.}
     \item Increase the maneuver window to allow for more time to return to the reference trajectory.
     \item Increase the time horizon to allow for more time to return to the reference trajectory.
     \item Parameterize the time as a spline variable to allow for more flexibility in the trajectory, fixing the encounter and maneuver windows, but keeping the end time free.
     \item Represent the reference trajectory as a PH B-Spline, which allows for analytical distance calculations. This makes a cost more similar to the XTE feasible and the OS won't try to catch up to the parameterized reference trajectory.
 \end{enumerate}
 
-
+\todo[inline]{ikke passer 200m foran beamen + en hastighetsfaktor. Kan gå nærme bak dersom det har skjedd en manøver nærme CPA, men er vanskelig å vurdere om denne manøveren er stor nok. DNV}
+\todo{søk på litteratur (DNV) om colregs. Tom Arne Pedersen. 95280695}
 \begin{figure}[htbp]
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Head on scenario.svg}
@@ -246,7 +250,7 @@ The 4th and 5th OS from the top in \cref{fig:head-on} are not able to return to 
     \caption{\emph{Case 3}: Trajectory generation in a crossing situation.}
     \label{fig:crossing}
 \end{figure}
-
+\todo{flere vinkler for crossing. 20\degree bak beamen er vanskelig}
 
 
 \label{sec:case-4-overtaking}

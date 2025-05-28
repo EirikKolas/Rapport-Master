@@ -274,10 +274,9 @@ This optimization problem is then analyzied for different choices of degree $p$ 
 \begin{figure}
     \centering
     \includesvg[width=0.8\textwidth]{fig/illustrations/cross-track- and along-track- error.svg}
-    \caption{Cross-track error, along-track error and total track error for a vessel trying to follow a reference trajectory.}
+    \caption{Cross-track error, along-track error and total track error for a vessel trying to follow a reference trajectory. Figure adapted from \cite{prosjektoppgave}.}
     \label{fig:cross-track-along-track-error}
 \end{figure}
-\todo{ref prosjektoppgave}
 
 Both of these objectives consider the total track error (TTE), which is defined as the distance between the OS and the expected position on the time-varying reference trajectory. The TTE is a combination of the cross-track error (XTE) and the along-track error (ATE) \citep{Fossen2011-Handbook}, as shown in \cref{fig:cross-track-along-track-error}. The XTE is the distance between the OS and the reference trajectory, while the ATE is the distance between the OS and the expected position along the path tangent. Defining a cost function that penalizes the XTE is a common approach if the goal is path following rather than trajectory following. It has advantages over the TTE, in that when the OS lags behind the reference trajectory around a corner, the cost in the TTE will make the OS try to cut the corner, which is not necessarily desired behaviour. The XTE cost on the other hand will not penalize this behaviour, as it only considers the closest distance to the reference trajectory. 
 With the B-spline framework, however, finding the XTE is not straightforward, and generally involves a search algorithm to find a numerical rather than an algebraic solution \citep{johnson2005distance,hu2005second,chen2009computing}. The TTE is therefore used as the cost function in this work, as it is the more straightforward approach. The rest of this section serves to analyze the cost functions in \cref{eq:conservativeness-objective}.

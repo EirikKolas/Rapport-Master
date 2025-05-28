@@ -350,6 +350,26 @@ To summarize, the discrete cost function is the best choice for the final implem
 For a more in depth analysis of the conservativeness of B-splines, see \citet{Grimstad2016}.
 
 
+\begin{figure}
+    \centering
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_integral_degree_2_N_3.svg}
+        \caption{$\mathbf H = \mathbf G$}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_coeffs_degree_2_N_3.svg}
+        \caption{$\mathbf H = \mathbb{I}$}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_3.svg}
+        \caption{$\mathbf H = \mathbf G^{-1}$}
+    \end{subfigure}
+    \caption{Eigenvectors of the Hessian of the cost function for the continuous cost function (top), discrete cost function (middle) and the inverse Gramian matrix (bottom) for $N=3$ and $p=2$.}
+\end{figure}
+
 \subsection{COLREGS Objectives}\label{sec:colregs-objectives}
 Rule 8b) of the COLREGS states that any alteration of course should be large enough to be readily apparent to another vessel. This is impractical in an optimization context as penalizing low turn rates while keeping the cost on high and no turn rates low leads to a non-convex cost. See \cref{fig:turn-rate-cost} for an illustration of the problem. 
 

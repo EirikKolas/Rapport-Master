@@ -226,10 +226,9 @@ The following section will examine the behavior of the B-spline method when appl
 
 \subsection{Reference Following}
 \label{sec:oscillations}
-Finding a reference-following trajectory using B-splines can be viewed as a penalized regression problem where the reference trajectory is the data to be fitted and the B-spline is the model used to fit data. In the literature, there are two common ways of fitting a B-Spline to data: 1) O'Sullivan splines \citep{OSullivan1986} or smoothing splines, which balances smoothness and fidelity to the data by penalizing the second derivative of the spline\footnote{More specifically the integral over the square of the second derivative.}, and 2) the P-Spline \citep{Eilers1996}, which penalizes the difference of coefficients directly. The second approach achieves more flexibility, as the penalty function is independent of the degree of the B-spline \citep{Eilers2021}. This section applies these two approaches to a constrained optimal control problem, comparing using the discrete and continuous squared reference error as the cost function. 
 
-% Using the definite integral over the squared reference error as a cost function, gives oscillations in the trajectory. This is due to the fact that the integral is less sensitive to high frequency oscillations than the sum of squared coefficients of the reference error spline. The integral puts more emphasis on the overall global shape of the trajectory, while the sum of squared coefficients puts more emphasis on the local shape. The oscillations can be damped by penalizing acceleration, but this is does not remove the oscillations completely. Further increasing the penalty on acceleration will lead to very slow convergence.
-% The oscillations can be removed by using the sum of squared coefficients of the reference error as a cost function.
+This section applies these two approaches to a simple constrained optimal control problem, comparing using the discrete and continuous squared reference error as the cost function. 
+
 
 More concretely, consider the problem of following a reference trajectory, while ensuring that the OS does not exceed a maximum speed:
 \begin{equation}\label{eq:conservativeness-optimization}
@@ -253,7 +252,7 @@ where the $\text{ctrlPts}(\cdot)$ function extracts the control points $\mathbf 
 \begin{equation}
     \|\mathbf A\|_\text{F}^2 = \sum_{i,j} a_{ij}^2,
 \end{equation}
-where $\mathbf A$ is a matrix and $a_{ij}$ is the element in the $i$-th row and $j$-th column of $\mathbf A$. All other operations on the B-spline functions are done using the algorithms in \cref{chap:b-spline-theory}. 
+where $\mathbf A$ is a matrix and $a_{ij}$ is the element in the $i$-th row and $j$-th column of $\mathbf A$. All other operations on the B-spline functions are done using the algorithms in \cref{sec:b-spline-theory}. 
 This optimization problem is then analyzied for different choices of degree $p$ and number $N$ of uniform B-spline basis functions $\mathbf B$. The resulting trajectories are shown in \cref{fig:conservativeness} with the parameters for the optimization problem set to
 \begin{equation}\label{eq:conservativeness-parameters}
     \begin{aligned}
@@ -308,24 +307,6 @@ for a low $N$, the trajectory using the discrete cost function is much more cons
 
 There are multiple ways to interpret the oscillations in the continuous cost function case. Qualitatively, the oscillations are a result of the fact that the integral is less sensitive to high frequency oscillations than the sum of squared coefficients of the reference error spline. The integral over the dot product puts more emphasis on the overall global shape of the trajectory, while the sum of squared coefficients puts more emphasis on the local shape. The oscillations can also be attributed to the definition of the B-spline dot product, which naturaly introduces cross-terms between the B-spline coefficients through the Kronecker product in \cref{alg:multiplication}. This is opposed to the purely square terms in the sum of squared coefficients objective.
 
-The oscillations can be damped by penalizing acceleration, but this is does not remove the oscillations completely, as can be seen in \cref{fig:conservativeness-oscillation-damping}. Here the continuous cost function is used with a penalty $P$ on the second order difference of the optimization coefficients $\mathbf c$ of the B-spline function. The penalty is given by
-\begin{equation}\label{eq:conservativeness-oscillation-damping}
-    \begin{aligned}
-        \mathbf c &= [\mathbf c_i]_{i=0}^{N-1} =
-        \text{ctrlPts}\left(\mathbf{p}_\text{os}\right), \\
-        \Delta \mathbf c &= [\Delta\mathbf c_i]_{i=0}^{N-2} =
-        [\mathbf c_i - \mathbf c_{i-1}]_{i=1}^{N-1}, \\
-        \Delta^2 \mathbf c &= [\Delta \mathbf c_i - \Delta \mathbf c_{i-1}]_{i=1}^{N-2}, \\
-        P &= \lambda \|\Delta^2 \mathbf c\|_\text{F}^2,
-    \end{aligned}
-\end{equation}
-where $\lambda$ is a parameter that controls the strength of the penalty. This is analogous to the P-spline construction \citep{Eilers1996} as the penalty is applied directly to the coefficients of the B-spline function. For small penalties e.g. $\lambda=0.01$, the trajectory approaches that of \cref{fig:conservativeness-traj-integral}. Increasing the penalty to $\lambda=100$ gives a trajectory that only reaches about half the distance to the end of the reference. For no $\lambda$ in between does the trajectory not overshoot the North = 0m axis. As neither oscillations nor overshooting is desirable behaviour, using the integral over the squared reference error as a cost function is not a good choice. Adding the penalty term still leads to overshooting the reference. These two methods are therefore not suitible for the final implementation. The discrete cost function on the other hand, has none of these issues and will be further analyzed in the remainder of this section. 
-
-\begin{figure}
-    \centering
-    \includesvg[width=\textwidth]{fig/conservativeness/p_spline_degree_3_n_10.svg}
-    \caption{Continuous cost with $N=10$, $p=3$ and a penalty on the second order difference of the optimization coefficients. The trajectory approaches that of \cref{fig:conservativeness-traj-integral} as $\lambda$ is decreased.}\label{fig:conservativeness-oscillation-damping}
-\end{figure}
 
 
 Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the discrete cost function is much more conservative than the continuous cost function for low $N$. As $N$ increases, the trajectory using the discrete cost function approaches that of the continuous cost function. This can be seen more clearly in \cref{fig:conservativeness}, where the integral of the square error is plotted against the number $N$ of B-spline basis functions up to $N=40$ for both cost functions. For these values of $N$, the plot shows an exponential convergence to the same value, with the degree of the B-spline basis functions $p$ having a small effect on the convergence.
@@ -345,31 +326,60 @@ Reviewing the results in \cref{fig:conservativeness-traj}, it is clear that the 
     \label{fig:conservativeness-coeffs}
 \end{figure}
 
-\FloatBarrier
-To summarize, the discrete cost function is the best choice for the final implementation. The continuous cost function gives oscillations in the trajectory and is not able to follow the reference trajectory, even with a penalty on the second order difference of the optimization coefficients. The discrete cost function on the other hand, is able to follow the reference trajectory and does not give oscillations in the trajectory. As a drawback, the discrete cost function is more conservative than the continuous cost function for low $N$. Higher $N$, yeild diminishing returns in closing the optimality gap as the knot insertion becomes increasingly local as more knots are added.
-For a more in depth analysis of the conservativeness of B-splines, see \citet{Grimstad2016}.
+% To summarize, the discrete cost function is the best choice for the final implementation. The continuous cost function gives oscillations in the trajectory and is not able to follow the reference trajectory, even with a penalty on the second order difference of the optimization coefficients. The discrete cost function on the other hand, is able to follow the reference trajectory and does not give oscillations in the trajectory. As a drawback, the discrete cost function is more conservative than the continuous cost function for low $N$. Higher $N$, yeild diminishing returns in closing the optimality gap as the knot insertion becomes increasingly local as more knots are added.
+% For a more in depth analysis of the conservativeness of B-splines, see \citet{Grimstad2016}.
+
+
+% \begin{figure}
+%     \centering
+%     \begin{subfigure}{\textwidth}
+%         \centering
+%         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_integral_degree_2_N_3.svg}
+%         \caption{$\mathbf H = \mathbf G$}
+%     \end{subfigure}
+%     \begin{subfigure}{\textwidth}
+%         \centering
+%         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_coeffs_degree_2_N_3.svg}
+%         \caption{$\mathbf H = \mathbb{I}$}
+%     \end{subfigure}
+%     \begin{subfigure}{\textwidth}
+%         \centering
+%         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_3.svg}
+%         \caption{$\mathbf H = \mathbf G^{-1}$}
+%     \end{subfigure}
+%     \caption{Eigenvectors of the Hessian of the cost function for the continuous cost function (top), discrete cost function (middle) and the inverse Gramian matrix (bottom) for $N=3$ and $p=2$.}
+% \end{figure}
 
 
 \begin{figure}
     \centering
     \begin{subfigure}{\textwidth}
         \centering
-        \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_integral_degree_2_N_3.svg}
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_integral_degree_2_N_4.svg}
         \caption{$\mathbf H = \mathbf G$}
     \end{subfigure}
     \begin{subfigure}{\textwidth}
         \centering
-        \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_coeffs_degree_2_N_3.svg}
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_coeffs_degree_2_N_4.svg}
         \caption{$\mathbf H = \mathbb{I}$}
     \end{subfigure}
     \begin{subfigure}{\textwidth}
         \centering
-        \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_3.svg}
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_4.svg}
         \caption{$\mathbf H = \mathbf G^{-1}$}
     \end{subfigure}
-    \caption{Eigenvectors of the Hessian of the cost function for the continuous cost function (top), discrete cost function (middle) and the inverse Gramian matrix (bottom) for $N=3$ and $p=2$.}
+    \caption{Eigenvectors of the Hessian of the cost function for the continuous cost function (top), discrete cost function (middle) and the inverse Gramian matrix (bottom) for $N=4$ and $p=2$.}
+\label{fig:conservativeness-eigenvectors}
 \end{figure}
 
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_9.svg}
+    \caption{Eigenvectors of the inverse Gramian matrix for $N=9$ and $p=2$.}
+\end{figure}
+
+\FloatBarrier
 \subsection{COLREGS Objectives}\label{sec:colregs-objectives}
 Rule 8b) of the COLREGS states that any alteration of course should be large enough to be readily apparent to another vessel. This is impractical in an optimization context as penalizing low turn rates while keeping the cost on high and no turn rates low leads to a non-convex cost. See \cref{fig:turn-rate-cost} for an illustration of the problem. 
 

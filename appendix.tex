@@ -269,3 +269,41 @@ The speed constraint in \cref{eq:app-dubins-V} can similarly be expressed in ter
 The full model is implemented by letting $r(t)$ and $\tilde v(t)$ be spline functions on a chosen B-spline basis under the constraints in \cref{eq:rdot-omega-r-constraints,eq:V-r}, using the expressions in \cref{eq:app-dubins-xy} to calculate $\dot x$ and $\dot y$ using the algorithms in \cref{chap:b-spline-theory}. Notice that $V$, $\chi$, and $\omega$ are now entirely removed from the model, which is fully described by $r$ and $\tilde v$. The coefficients of the B-spline representation of $\dot r$ are simply linear combinations of the coefficients of $r$, as explained in \cref{sec:derivative} and the position can be found by integrating the expressions in \cref{eq:app-dubins-xy}.
 
 To implement the inequality constraint $f(t) \le g(t)$, for two spline functions $f(t)$ and $g(t)$, the constraint is enforced by ensuring the coefficients of the B-spline representation of $f(t) - g(t)$ are non-positive, exploiting the convex hull property of B-splines. 
+
+
+
+\chapter{Failed Attempts at Reference Following}\label{app:failed-reference-following}
+
+Finding a reference-following trajectory using B-splines can be viewed as a penalized regression problem where the reference trajectory is the data to be fitted and the B-spline is the model used to fit data. In the literature, there are two common ways of fitting a B-Spline to data: 1) O'Sullivan splines \citep{OSullivan1986} or smoothing splines, which balances smoothness and fidelity to the data by penalizing the second derivative of the spline\footnote{More specifically the integral over the square of the second derivative.}, and 2) the P-Spline \citep{Eilers1996}, which penalizes the difference of coefficients directly. The second approach achieves more flexibility, as the penalty function is independent of the degree of the B-spline \citep{Eilers2021}. Variations of the first approach is used in optimal control problem literature, to penalize the acceleration of a vehicle. Examples of this are found in \cite{mercy2017spline, van2015b}. P-Splines on the other hand heve not to the author's knowledge been used in optimal control problems, but are widely used in statistics and econometrics \citep{Eilers2021}.
+
+During the course of this work, it was found that neither approach is suitable for the task of reference following. The O'Sullivan spline approach leads to oscillations in the trajectory, as the integral over the squared second derivative is less sensitive to high frequency oscillations than low frequency oscillations. This is due to the fact that the integral puts more emphasis on the overall global shape of the trajectory, which means that high frequency oscillations around this shape are not penalized as much. This is apparent from the same eigenvalue analysis as was done in \cref{sec:oscillations}.
+
+The P-spline approach on the other hand is better at handling high frequency oscillations, but still has problems with overshooting the reference trajectory, as the cost on the second difference of the coefficients scale poorly with the integral cost on position error. I.e. increasing the cost on the second derivative of the spline coefficients hinders the convergence to the reference before the overshooting is removed. This can be seen in \cref{fig:conservativeness-oscillation-damping}. Here the continuous cost function is used with a penalty $P$ on the second order difference of the optimization coefficients $\mathbf c$ of the B-spline function. The penalty is given by
+\begin{equation}\label{eq:conservativeness-oscillation-damping}
+    \begin{aligned}
+        \mathbf c &= [\mathbf c_i]_{i=0}^{N-1} =
+        \text{ctrlPts}\left(\mathbf{p}_\text{os}\right), \\
+        \Delta \mathbf c &= [\Delta\mathbf c_i]_{i=0}^{N-2} =
+        [\mathbf c_i - \mathbf c_{i-1}]_{i=1}^{N-1}, \\
+        \Delta^2 \mathbf c &= [\Delta \mathbf c_i - \Delta \mathbf c_{i-1}]_{i=1}^{N-2}, \\
+        P &= \lambda \|\Delta^2 \mathbf c\|_\text{F}^2,
+    \end{aligned}
+\end{equation}
+where $\lambda$ is a parameter that controls the strength of the penalty. The complete optimization problem is then a modified version of \cref{eq:conservativeness-optimization} and is given by
+\begin{equation}\label{eq:conservativeness-optimization-penalty}
+    \begin{aligned}
+        \min_{\mathbf c} \quad & \int_0^1 \mathbf e(x)^\top \mathbf e(x) dx + \lambda \|\Delta^2 \mathbf c\|_\text{F}^2 \\
+        \text{subject to} \quad &\mathbf p_\text{os}(0) = \mathbf p_0, \\
+                     &\mathbf p_\text{os} = \mathbf B^\top(x) \mathbf c, \\
+                     &\mathbf p_\text{ref} = \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
+                     &\langle p_\text{os}', p_\text{os}' \rangle \le v_\text{max}^2.
+    \end{aligned}
+\end{equation}
+where the symbols are as defined in \cref{eq:conservativeness-objective}.
+For small penalties e.g. $\lambda=0.01$, the trajectory approaches that of \cref{fig:conservativeness-traj-integral}. Increasing the penalty to $\lambda=100$ gives a trajectory that only reaches about half the distance to the end of the reference. For no $\lambda$ in between does the trajectory not overshoot the North = 0m axis. As neither oscillations nor overshooting is desirable behaviour, using the integral over the squared reference error as a cost function is not a good choice. Adding the penalty term still leads to overshooting the reference. These two methods are therefore not suitible for the final implementation.
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth]{fig/conservativeness/p_spline_degree_3_n_10.svg}
+    \caption{Continuous cost with $N=10$, $p=3$ and a penalty on the second order difference of the optimization coefficients. The trajectory approaches that of \cref{fig:conservativeness-traj-integral} as $\lambda$ is decreased.}\label{fig:conservativeness-oscillation-damping}
+\end{figure}

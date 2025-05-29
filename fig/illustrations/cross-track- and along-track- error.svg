@@ -25,8 +25,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.5597022"
-     inkscape:cx="295.88982"
-     inkscape:cy="650.76526"
+     inkscape:cx="357.44003"
+     inkscape:cy="684.7461"
      inkscape:window-width="2880"
      inkscape:window-height="1496"
      inkscape:window-x="-12"
@@ -111,14 +111,14 @@
          id="circle22"
          cx="-260.01096"
          cy="27.675863"
-         r="2.8258007"
+         r="3.0282125"
          transform="rotate(-130.75739)" />
       <circle
          style="fill:#000000;stroke:none;stroke-width:1.28635;stroke-dasharray:none;stroke-dashoffset:0"
          id="circle8"
          cx="-215.36542"
          cy="-14.989892"
-         r="1.6972972"
+         r="2.0367568"
          transform="rotate(-130.75739)" />
       <path
          style="fill:none;stroke:#000000;stroke-width:1.54362127;stroke-dasharray:12.34897015,1.54362127;stroke-dashoffset:0"
@@ -173,84 +173,83 @@
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;text-anchor:start;stroke-width:1.28635"
            x="-22.22015"
            y="-18.771317">$TTE$</tspan></text>
-      <text
-         xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;display:inline;fill:#000000;stroke-width:1.28635"
-         x="-49.165825"
-         y="-63.009533"
-         id="text27"
-         transform="rotate(-130.75739)"><tspan
-           sodipodi:role="line"
-           id="tspan27"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;stroke-width:1.28635"
-           x="-49.165825"
-           y="-63.009533">$ATE$</tspan></text>
       <use
          x="0"
          y="0"
          xlink:href="#circle22"
          id="use2"
-         transform="translate(-92.494705,-48.893222)" />
+         transform="matrix(1.07163,0,0,1.07163,-106.15555,-61.706749)"
+         style="stroke-width:0.960286" />
       <use
          x="0"
          y="0"
          xlink:href="#circle22"
          id="use3"
-         transform="translate(-114.08187,-138.9871)" />
+         transform="matrix(1.07163,0,0,1.07163,-127.74273,-151.80063)"
+         style="stroke-width:0.960286" />
       <use
          x="0"
          y="0"
          xlink:href="#circle22"
          id="use4"
-         transform="translate(-172.56842,-198.3737)" />
+         transform="matrix(1.07163,0,0,1.07163,-186.22928,-211.18723)"
+         style="stroke-width:0.960286" />
       <use
          x="0"
          y="0"
          xlink:href="#circle22"
          id="use5"
-         transform="translate(-248.14225,-159.35047)" />
+         transform="matrix(1.07163,0,0,1.07163,-261.80311,-172.164)"
+         style="stroke-width:0.960286" />
       <use
          x="0"
          y="0"
          xlink:href="#circle22"
          id="use6"
-         transform="translate(-185.81976,-104.23269)" />
+         transform="matrix(1.07163,0,0,1.07163,-199.48062,-117.04622)"
+         style="stroke-width:0.960286" />
       <use
          x="0"
          y="0"
          xlink:href="#circle22"
          id="use1"
-         transform="translate(-122.61743,-29.513607)" />
+         transform="matrix(1.07163,0,0,1.07163,-136.27829,-42.327134)"
+         style="stroke-width:0.960286" />
       <use
          x="0"
          y="0"
          xlink:href="#circle8"
          id="use8"
-         transform="translate(-6.2982449,8.1463538)" />
+         transform="matrix(1.2,0,0,1.2,-32.147918,-26.437932)"
+         style="stroke-width:0.857567" />
       <use
          x="0"
          y="0"
          xlink:href="#circle8"
          id="use9"
-         transform="translate(-89.994943,-64.548825)" />
+         transform="matrix(1.2,0,0,1.2,-115.84462,-99.133111)"
+         style="stroke-width:0.857567" />
       <use
          x="0"
          y="0"
          xlink:href="#circle8"
          id="use10"
-         transform="translate(-158.78484,-120.75881)" />
+         transform="matrix(1.2,0,0,1.2,-184.63451,-155.3431)"
+         style="stroke-width:0.857567" />
       <use
          x="0"
          y="0"
          xlink:href="#circle8"
          id="use11"
-         transform="translate(-80.014589,-169.14108)" />
+         transform="matrix(1.2,0,0,1.2,-105.86426,-203.72537)"
+         style="stroke-width:0.857567" />
       <use
          x="0"
          y="0"
          xlink:href="#circle8"
          id="use7"
-         transform="translate(-42.934103,-87.54822)" />
+         transform="matrix(1.2,0,0,1.2,-68.783776,-122.13251)"
+         style="stroke-width:0.857567" />
       <path
          style="fill:none;stroke:#000000;stroke-width:1.02908;stroke-linejoin:round;stroke-miterlimit:2;stroke-dasharray:none"
          d="m 49.178282,3.8144349 c 0,0 -22.331275,-10.7286101 -32.15078,-3.78934776"
@@ -261,10 +260,27 @@
          d="m -28.120066,53.092861 c 0,0 -21.231891,-24.187897 -13.764907,-37.044821"
          id="path7"
          sodipodi:nodetypes="cc" />
-      <path
-         style="fill:none;stroke:#000000;stroke-width:0.771811;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:2;stroke-dasharray:none;marker-start:url(#Stop);marker-end:url(#Stop)"
-         d="M 0.1731661,83.188193 -33.59124,59.936322"
-         id="path9" />
+      <g
+         id="g1"
+         inkscape:label="ATE"
+         style="display:none">
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;display:inline;fill:#000000;stroke-width:1.28635"
+           x="-49.165825"
+           y="-63.009533"
+           id="text27"
+           transform="rotate(-130.75739)"><tspan
+             sodipodi:role="line"
+             id="tspan27"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;stroke-width:1.28635"
+             x="-49.165825"
+             y="-63.009533">$ATE$</tspan></text>
+        <path
+           style="fill:none;stroke:#000000;stroke-width:0.771811;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:2;stroke-dasharray:none;marker-start:url(#Stop);marker-end:url(#Stop)"
+           d="M 0.1731661,83.188193 -33.59124,59.936322"
+           id="path9" />
+      </g>
     </g>
   </g>
 </svg>

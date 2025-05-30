@@ -245,14 +245,15 @@ The \acrfull{TTE} will now be defined as the distance between a time parameteriz
 \end{equation}
 
 In classical optimal control with time grids, the simplest way to design an objective function is to minimize the sum of the squared TTE at each time step, i.e., to minimize
-\begin{equation*}
+\begin{equation}\label{eq:total-track-error-time-grid}
+    J_\text{ref} = \sum_{t=0}^{T} \|\mathbf e(t)\|_2^2,
     \sum_{k=0}^{N_t} \|\mathbf e(t_k)\|_2^2,
-\end{equation*}
+\end{equation}
 where $t_k$ is the time at the $k$-th time step and $N_t$ is the number of time steps. 
 
 A similar approach can be used in the B-spline framework, where both the OS and the reference trajectory are represented as B-spline functions. The TTE cost function can then be expressed as the integral over the squared TTE, i.e., to minimize
 \begin{equation}\label{eq:total-track-error-b-spline}
-J_\text{ref} = \int_\mathbb R \mathbf e(x) \cdot \mathbf e(x) \, dx =  \|\mathbf e(x)\|_G^2,
+J_\text{ref} = \int_\mathbb R \mathbf e(x) \cdot \mathbf e(x) \, dx,
 \end{equation}
 where $\mathbf e(x) = \mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)$ represents the TTE at parameter $x$, and the integral is evaluated across the B-spline functions' parameter domain. However, this work revealed that the overlapping support of B-spline basis functions can induce oscillations in the resulting trajectory when employing this cost function directly (see \cref{fig:conservativeness-traj-integral}). Therefore, careful consideration is required when designing this cost within the B-spline framework.
 
@@ -300,8 +301,8 @@ where $\mathbf u(p,n) = \{\{0\}^{(p)}, \{i/N\}_{i=0}^{N}, \{1\}^{(p)}\}$ is a fu
     % \hfill
     % \begin{subfigure}[b]{\textwidth}
     %     \centering
-        \includesvg[width=\textwidth]{fig/conservativeness/conservativeness_traj_integral_degree_3.svg}
-        \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $N\in\{4,\ldots,20\}$.}
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_integral_degree_2.svg}
+        \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $p=2$,$N\in\{3,\ldots,20\}$.}
         \label{fig:conservativeness-traj-integral}
     % \end{subfigure}
     % \caption{Comparison of optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $N\in\{4,\ldots,20\}$.}
@@ -313,7 +314,7 @@ The oscillatory behavior observed in \cref{fig:conservativeness-traj-integral} c
 To find the Hessian of the cost function, one can observe that the integral of the squared error can be expressed as a quadratic form in the coefficients of the B-spline functions. The cost function can be rewritten as
 \begin{equation}
     \begin{aligned}
-        J_\text{ref} &= \|\mathbf e(x)\|_G^2 \\
+        J_\text{ref} &= \int_\mathbb R \mathbf e(x) \cdot \mathbf e(x) \, dx \\
         &= \int_\mathbb R \sum_i \mathbf c_{\mathbf e,i}^\top \mathbf B(x) \mathbf B^\top(x) \mathbf c_{\mathbf e,i}  dx \\
         &= \sum_i \mathbf c_{\mathbf e,i}^\top \underbrace{\int_\mathbb R \mathbf B(x) \mathbf B^\top(x) dx}_{\mathbf G} \;\mathbf c_{\mathbf e,i},
     \end{aligned}
@@ -321,9 +322,13 @@ To find the Hessian of the cost function, one can observe that the integral of t
 where $\mathbf c_{\mathbf e,i}$ are the coefficients of the B-spline function $\mathbf e(x)$, which represents the TTE. The subscript $i\in\{N,E\}$ denotes the North and East components of the position error, respectively.
 The basis $\mathbf B(x)$ is the same as for $\mathbf p_\text{os}(x)$ as $\mathbf B_\text{ref} \subseteq \mathbf B$ using the parameters in \cref{eq:conservativeness-parameters}. 
 The integral $\int_\mathbb R \mathbf B(x) \mathbf B^\top(x) dx$ results in a matrix $\mathbf G$, known in the literature as the Gramian of the B-spline basis, and hereafter referred to simply as the Gramian (see \citet{Chu2022} for a more detailed description).
-The Gramian matrix is an important mathematical object in the literature with one of its defining properties being that it is always positive semi-definite \citep{horn2013positive}. However, with our choice of basis functions with restrictions on knot multiplicality, the Gramians considered in this work will always be symmetric and strictly positive definite, i.e., all eigenvalues real and positive. 
+The Gramian matrix is an important mathematical object in the literature with one of its defining properties being that it is always positive semi-definite \citep{horn2013positive}. However, with our choice of basis functions with restrictions on knot multiplicality, the Gramians considered in this work will always be symmetric and strictly positive definite, i.e., all eigenvalues real and positive. Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. Herafter, the B-spline norm $\|\mathbf e(x)\|_\mathbf H$ will refer to computing the bilinear form
+\begin{equation}\label{eq:b-spline-norm}
+    \|\mathbf e(x)\|_\mathbf H^2 = \sum_i \mathbf c_{\mathbf e,i}^\top \mathbf H \mathbf c_{\mathbf e,i},
+\end{equation}
+where $\mathbf H$ is a suitible symmetric positive definite matrix. 
 
-Using the spectral (eigenvalue) decomposition of the Gramian $\mathbf G = \mathbf U \mathbf \Lambda \mathbf U^\top$, the cost function can be expressed differently. Here, $\mathbf U$ is a matrix whose columns are the unit-normalized eigenvectors of $\mathbf G$, and $\mathbf \Lambda$ is a diagonal matrix with the eigenvalues of $\mathbf G$ on the diagonal. Thus, the cost function can be rewritten as
+Using the spectral (eigenvalue) decomposition of the Gramian $\mathbf G = \mathbf U \mathbf \Lambda \mathbf U^\top$ \citep{horn2013positive}, the cost function can be expressed differently. Here, $\mathbf U$ is a matrix whose columns are the unit-normalized eigenvectors of $\mathbf G$, and $\mathbf \Lambda$ is a diagonal matrix with the eigenvalues of $\mathbf G$ on the diagonal. Thus, the cost function can be rewritten as
 \begin{equation}\label{eq:cost-function-spectral-decomposition}
     J_\text{ref} = \sum_i \mathbf c_{\mathbf e,i}^\top \mathbf G \mathbf c_{\mathbf e,i} = \sum_i \mathbf c_{\mathbf e,i}^\top \mathbf U \mathbf \Lambda \mathbf U^\top \mathbf c_{\mathbf e,i} = \sum_i \sum_{j=1}^{N} \lambda_j (\mathbf u_j^\top \mathbf c_{\mathbf e,i})^2,
 \end{equation}
@@ -347,7 +352,7 @@ This matrix has the eigenvectors
             0.23 \\  0.67 \\  0.67 \\  0.23 
         \end{bmatrix}, &
         \mathbf u_2 &\approx \begin{bmatrix}         
-            0.57 \\  0.41, \\ -0.41 \\  -0.57 
+            0.57 \\  0.41 \\ -0.41 \\  -0.57 
         \end{bmatrix}, &
         \mathbf u_3 &\approx \begin{bmatrix}         
             0.67 \\  -0.23 \\  -0.23 \\  0.67 
@@ -367,10 +372,9 @@ with corresponding eigenvalues
     \end{aligned}
 \end{equation}
 The $u_1$ direction can be interpreted as a direction where all the coefficients have the same sign, while the $u_4$ direction can be interpreted as a direction where subsequent coefficients alternate in sign. 
-As the cost in the $u_1$ direction compared to the $u_4$ direction is $\frac{\lambda_1}{\lambda_4} \approx 10$ times smaller, the cost function will amplify high frequency oscillations in the coefficients, which explains the behaviour in \cref{fig:conservativeness-traj-integral}. In \cref{fig:conservativeness-eigenvectors}, each eigenvector is shown as a weight on each B-spline coefficient where \cref{fig:conservativeness-eigenvectors-integral} shows the situation for the above example.
-\Cref{fig:conservativeness-eigenvectors-coeffs,fig:conservativeness-eigenvectors-inv-gramian} show the eigenvectors for when the cost is set to $\mathbf c^T \mathbf H \mathbf c$ with $\mathbf H = \mathbb I$ and $\mathbf H = \mathbf G^{-1}$, respectively.
-
-
+As the cost in the $u_1$ direction compared to the $u_4$ direction is $\frac{\lambda_1}{\lambda_4} \approx 10$ times smaller, the cost function will amplify high frequency oscillations in the coefficients, which explains the behaviour in \cref{fig:conservativeness-traj-integral}. In \cref{fig:conservativeness-eigenvectors}, each eigenvector is shown as a weight on each B-spline coefficient where \cref{fig:conservativeness-eigenvectors-integral} shows the situation for the above example. Here, the relative eigenvalues $\hat\lambda_i = \lambda_i/\sum_{i=1}^{N} \lambda_i$ are shown, which will be used to better compare the costs between different cost functions. That the high frequency components of the eigenvectors are penalized less is appearent when increasing the number of B-spline basis functions $N$. This is shown in \cref{fig:integral-basis-eigenvectors-9} in \cref{app:reference-cost-plots} for $N=9$.
+\Cref{fig:conservativeness-eigenvectors-coeffs} show the eigenvectors for when the cost has the form $\|\mathbf e(x)\|_\mathbf I^2$, where $\mathbf I$ is the identity matrix. 
+So, in the pursuit of finding a more suitible cost function, these Hessians and how they interact with B-spline functions are now the subject of analysis.
 
 
 \begin{figure}
@@ -378,71 +382,138 @@ As the cost in the $u_1$ direction compared to the $u_4$ direction is $\frac{\la
     \begin{subfigure}{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_integral_degree_2_N_4.svg}
-        \caption{$\mathbf H = \mathbf G$}\label{fig:conservativeness-eigenvectors-integral}
+        \caption{$\mathbf H = \mathbf G$}
+        \label{fig:conservativeness-eigenvectors-integral}
     \end{subfigure}
     \begin{subfigure}{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_coeffs_degree_2_N_4.svg}
-        \caption{$\mathbf H = \mathbb{I}$}\label{fig:conservativeness-eigenvectors-coeffs}
+        \caption{$\mathbf H = \mathbf I$}
+        \label{fig:conservativeness-eigenvectors-coeffs}
     \end{subfigure}
-    \begin{subfigure}{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_4.svg}
-        \caption{$\mathbf H = \mathbf G^{-1}$}\label{fig:conservativeness-eigenvectors-inv-gramian}
-    \end{subfigure}
-    \caption{Eigenvectors of the Hessian $H$ of the cost function for the continuous cost function (top), discrete cost function (middle) and the inverse Gramian matrix (bottom) for $N=4$ and $p=2$. Note that $\hat\lambda$ is a scaled version of the eigenvalues $\lambda$ such that $\hat\lambda_i = \lambda_i/\sum_{i=1}^{N} \lambda_i$}
+    \caption{Eigenvectors of the Hessian $\mathbf H$ of the cost function $\|\mathbf e(x)\|_\mathbf H^2$ for $N=4$ and $p=2$. Note that $\hat\lambda_i$ is a scaled version of the eigenvalue $\lambda_i$ such that $\hat\lambda_i = \lambda_i/\sum_{i=1}^{N} \lambda_i$. Marks on the vertical axis are ommited as it is the relative size between the eigenvector components that are of interest.}
 \label{fig:conservativeness-eigenvectors}
 \end{figure}
 
 
-Reviewing the results in \cref{fig:conservativeness-traj-integral}, it is clear that the discrete cost function is much more conservative than the continuous cost function for low $N$. As $N$ increases, the trajectory using the discrete cost function approaches that of the continuous cost function. This can be seen more clearly in \cref{fig:conservativeness}, where the integral of the square error is plotted against the number $N$ of B-spline basis functions up to $N=40$ for both cost functions. For these values of $N$, the plot shows an exponential convergence to the same value, with the degree of the B-spline basis functions $p$ having a small effect on the convergence.
+
+Setting $\mathbf H = \mathbf I$ results in a cost function that penalizes all coefficients in the relevant basis equally. This is analogous to treating the coefficients as time-discretized points in the time-grid formulation in \cref{eq:total-track-error-time-grid}, where the cost is simply the sum of the squared TTE at each time step. \cref{fig:conservativeness-traj-coeffs} shows the resulting trajectory when using this cost function in \cref{eq:conservativeness-optimization} with the parameters in \cref{eq:conservativeness-parameters}. 
 
 \begin{figure}
     \centering
-    \includesvg[width=\textwidth]{fig/conservativeness/compare_conservativeness_degree_3.svg}
-    \caption{Comparison of the performance using the discrete and continuous cost functions. The integral of the square error is plotted against the number $N$ of B-spline basis functions for $p=3$.}
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_coeffs_degree_2.svg}
+    \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $p=2$, $N\in\{3,\ldots,20\}$ and where the cost is changed to $J_\text{ref} = \|\mathbf e(x)\|_{\mathbf I}^2$.}
+    \label{fig:conservativeness-traj-coeffs}
+\end{figure}
+
+
+It may be desirable to weigh the cost $J_\text{ref}$ against other objectives, such as the COLREGS objectives in the next section.
+Using $J_\text{ref}=\| w_\text{ref}\;\mathbf e(x)\|_{\mathbf I}^2$ as the cost term works well when $w_\text{ref}$ is a scalar. If however, $w_\text{ref}(x)$ is a spline function itself, the oscillatory behavior of the cost function may return. This was discovered during the work for this thesis. The reason for wanting to use a spline function for $w_\text{ref}(x)$ is to allow for the cost to be weighted differently at different times, e.g., to allow for a higher cost on the TTE during transit and a lower cost during an encounter with a \acrshort{TS}. Again, this will be discussed in more detail in \cref{sec:colregs-objectives}.
+
+The intuition for this comes from that while the cost yields independent directions for the eigenvectors in the Gramian $\mathbf{\tilde G}$ for the $\mathbf{\tilde B}$ basis, the Hessian of the cost function is ultimately expressed in the basis $\mathbf B$ of the original coefficients $\mathbf c_\mathbf e$. In mathematical terms, the cost function is expressed as
+\begin{equation}\label{eq:cost-function-w-ref}
+    J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf I}^2 = \sum_i \mathbf{\tilde c}_{w \mathbf{e},i}^\top \mathbf I \mathbf{\tilde c}_{w \mathbf{e},i},
+\end{equation}
+where $\mathbf{\tilde c}_{w \mathbf{e}}$ are the coefficients of the spline function $w_\text{ref}(x)\;\mathbf e(x)$ in the $\mathbf{\tilde B}$ basis.  Using the transform $\mathbf T$ from $\mathbf B$ to $\mathbf{\tilde B}$ (see \cref{alg:basis-transformation}), the shape of the cost in the original basis can be approximated. Starting from \cref{eq:cost-function-w-ref}, the Hessian for the cost can be translated to the original basis as follows:
+\begin{equation}\label{eq:cost-function-w-ref-derivation}
+        J_\text{ref} = \sum_i \mathbf{\tilde c}_{w \mathbf{e},i}^\top \mathbf I \mathbf{\tilde c}_{w \mathbf{e},i} 
+        = \sum_i \mathbf c_{w,\mathbf e,i}^\top \underbrace{\mathbf T^\top \mathbf I \mathbf T}_{\mathbf H} \mathbf c_{w,\mathbf e,i} 
+        = \sum_i \mathbf c_{w,\mathbf e,i}^\top \mathbf H \mathbf c_{w,\mathbf e,i},
+\end{equation}
+where $\mathbf c_{w,\mathbf e}$ are the approximated coefficients of $w_\text{ref}(x)\;\mathbf e(x)$ in the unrefined original basis $\mathbf B$. It should now be clear that by altering the basis the cost function with $\mathbf H=\mathbf I$ is expressed in, the shape of the cost function will change as well.
+
+As a simple example, consider the case where $w_\text{ref}(x)$ is a piecewise constant spline with its basis $\mathbf B_w$ sharing the same knot values as $\mathbf B$. I.e. for $N=4$ and $p=2$, the knot vector for $\mathbf B$ and $\mathbf B_w$ is $\mathbf u(2,4) = \left\{0, 0, 0, \frac{1}{2}, 1, 1, 1\right\}$ and $\left\{0, \frac{1}{2}, 1\right\}$ respectively. Multiplying $w_\text{ref}(x)$ with $\mathbf e(x)$ results in a new spline function which is minimally represented in $\mathbf{\tilde B}$ with $p=2$ and knot vector $\left\{0, 0, 0, \frac{1}{2}, \frac{1}{2}, \frac{1}{2}, 1, 1, 1\right\}$.  The transformation matrix $\mathbf T$ from $\mathbf B$ to $\mathbf{\tilde B}$ and the corresponding Hessian $\mathbf H$ is then:
+\begin{equation*}
+    \mathbf T = \begin{bmatrix}
+        1 & 0 & 0 & 0 \\
+        0 & 1 & 0 & 0 \\
+        0 & \frac{1}{2} & \frac{1}{2} & 0 \\
+        0 & \frac{1}{2} & \frac{1}{2} & 0 \\
+        0 & 0 & 1 & 0 \\
+        0 & 0 & 0 & 1
+    \end{bmatrix},
+    \quad
+    \mathbf H = \mathbf T^\top \mathbf T =
+    \begin{bmatrix}
+        1 & 0 & 0 & 0 \\
+        0 & \frac{3}{2} & \frac{1}{2} & 0 \\
+        0 & \frac{1}{2} & \frac{3}{2} & 0 \\
+        0 & 0 & 0 & 1 \\
+    \end{bmatrix}.
+\end{equation*}
+This Hessian reveals that the first and last basis functions remain unchanged, while the middle basis functions are now linear combinations. This is reflected in \Cref{fig:conservativeness-eigenvectors-full}, which shows the Hessian before and after multiplying the error with the weight function. The figure shows that the cost for consecutive coefficients being aligned is once again higher than for alternating coefficients. For a visualization with a higher number of basis functions the reader is referred to \cref{fig:refined-basis-eigenvectors-9} in \cref{app:reference-cost-plots}.
+
+    
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_coeffs_degree_2_N_4.svg}
+        \caption{$J_\text{ref} = \|\mathbf e(x)\|_\mathbf I^2$}
+        \label{fig:conservativeness-eigenvectors-coeffs-unrefined}
+    \end{subfigure}
+    \begin{subfigure}[t]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_refined_basis_degree_2_N_4.svg}
+        \caption{$J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_\mathbf I^2$}
+        \label{fig:conservativeness-eigenvectors-weight-refined}
+    \end{subfigure}
+    \caption{Eigenvectors of the Hessian $\mathbf H = \mathbf I$ of the cost function for $N=4$ and $p=2$ before (top) and after (bottom) weighing $\mathbf e(x)$ with $w_\text{ref}(x)$. The eigenvectors are shown in the original basis $\mathbf B$.}
+    \label{fig:conservativeness-eigenvectors-full}
+\end{figure}
+
+With this analysis in mind, it is clear that the Hessian of the cost function should be chosen such that 1), high frequency oscillations in the coefficients are penalized more heavily than low frequency oscillations and 2), that the cost function should not be too sensitive to basis transformations. Choosing $\mathbf H = \mathbf G^{-1}$, the inverse Gramian, has been found during the course of this work to acheive these criteria. The inverse Gramian has the same eigenvectors as the Gramian, but the eigenvalues are now inversely proportional to the original eigenvalues \citep{horn2013positive}, so the eigen decomposition of the inverse Gramian is given by
+\begin{equation}
+    \mathbf G^{-1} = \left(\mathbf U \mathbf \Lambda \mathbf U^\top\right)^{-1} = \mathbf U \mathbf \Lambda^{-1} \mathbf U^\top.
+\end{equation}
+
+The eigenvectors are shown in \cref{fig:conservativeness-eigenvectors-inv-gramian-full} for $N=4$ and $p=2$ and in \cref{fig:refined-basis-inverse-gramian-eigenvectors-9} for $N=9$ and $p=2$. These figures show that the change in cost after the basis change induced by the weight function $w_\text{ref}(x)$ is now much less pronounced, and high frequency oscillations are damped by the high eigenvalues. 
+
+\begin{figure}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_4.svg}
+        \caption{$J_\text{ref} = \|\mathbf e(x)\|_{\mathbf G^{-1}}^2$}
+        \label{fig:conservativeness-eigenvectors-inv-gramian}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_refined_inv_gramian_degree_2_N_4.svg}
+        \caption{$J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf G^{-1}}^2$}
+        \label{fig:conservativeness-eigenvectors-weight-inv-gramian}
+    \end{subfigure}
+    \caption{Eigenvectors of the Hessian $\mathbf H = \mathbf G^{-1}$ of the cost function for $N=4$ and $p=2$ before (top) and after (bottom) weighing $\mathbf e(x)$ with $w_\text{ref}(x)$. The eigenvectors are shown in the original basis $\mathbf B$.}
+    \label{fig:conservativeness-eigenvectors-inv-gramian-full}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_refined_inv_gramian_degree_2_N_9.svg}
+    \caption{Eigenvectors of the inverse Gramian matrix $\mathbf H = \mathbf T^\top \mathbf{\tilde G}^{-1} \mathbf T$ where $\mathbf T$ is the transformation matrix from a uniform quadratic B-spline with 9 basis functions to a refined basis with maximally repeated knots, and $\mathbf{\tilde G}$ is the Gramian matrix of the refined B-spline basis.}
+    \label{fig:refined-basis-inverse-gramian-eigenvectors-9}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_inv_gramian_degree_2.svg}
+    \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $N\in\{3,\ldots,20\}$ and where the cost is changed to $J_\text{ref} = \|\mathbf e(x)\|_{\mathbf G^{-1}}^2$.}
+    \label{fig:conservativeness-traj-inv-gramian}
+\end{figure}
+
+
+
+The trajectory is much smoother than the one in \cref{fig:conservativeness-traj-integral}, but at the disadvantage of converging slower to the reference trajectory for low $N$. For higher $N$, the  cost functions converge to the same trajectory, as the B-spline basis functions become more localized as does the oscillatory effects from the Gramian. This convergence can be seen in \cref{fig:conservativeness}, where $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=3$ and for each of the cost functions mentioned in this section.
+
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_3.svg}
+    \caption{Convergence of the different cost functions. The integral of the square error $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=3$.}
     \label{fig:conservativeness}
 \end{figure}
 
 
-\begin{figure}
-    \centering
-    \includesvg[width=\textwidth]{fig/conservativeness/compare_conservativeness_coeffs_all_degrees.svg}
-    \caption{Logaritmic plot of the Integral of the square error using the discrete cost function. The value of the cost at $N=50$ is subtracted from all values in this plot to highlight the convergence.}
-    \label{fig:conservativeness-coeffs}
-\end{figure}
 
-% To summarize, the discrete cost function is the best choice for the final implementation. The continuous cost function gives oscillations in the trajectory and is not able to follow the reference trajectory, even with a penalty on the second order difference of the optimization coefficients. The discrete cost function on the other hand, is able to follow the reference trajectory and does not give oscillations in the trajectory. As a drawback, the discrete cost function is more conservative than the continuous cost function for low $N$. Higher $N$, yeild diminishing returns in closing the optimality gap as the knot insertion becomes increasingly local as more knots are added.
-% For a more in depth analysis of the conservativeness of B-splines, see \citet{Grimstad2016}.
-
-
-% \begin{figure}
-%     \centering
-%     \begin{subfigure}{\textwidth}
-%         \centering
-%         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_integral_degree_2_N_3.svg}
-%         \caption{$\mathbf H = \mathbf G$}
-%     \end{subfigure}
-%     \begin{subfigure}{\textwidth}
-%         \centering
-%         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_coeffs_degree_2_N_3.svg}
-%         \caption{$\mathbf H = \mathbb{I}$}
-%     \end{subfigure}
-%     \begin{subfigure}{\textwidth}
-%         \centering
-%         \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_3.svg}
-%         \caption{$\mathbf H = \mathbf G^{-1}$}
-%     \end{subfigure}
-%     \caption{Eigenvectors of the Hessian of the cost function for the continuous cost function (top), discrete cost function (middle) and the inverse Gramian matrix (bottom) for $N=3$ and $p=2$.}
-% \end{figure}
-
-
-
-\begin{figure}
-    \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_9.svg}
-    \caption{Eigenvectors of the inverse Gramian matrix for $N=9$ and $p=2$.}
-\end{figure}
 
 \FloatBarrier
 \subsection{COLREGS Objectives}\label{sec:colregs-objectives}
@@ -455,7 +526,7 @@ Rule 8b) of the COLREGS states that any alteration of course should be large eno
     \label{fig:turn-rate-cost}
 \end{figure}
 
-\cite{Thyri2022-MPC} proposes a solution to improve the compliance of rule 8 by introducing a time window where the cost for altering course is lowered. The goal of this is to control when the OS should alter course, and with manipulation of the length and position of the time window, the cost function can facilitate a more COLREGS compliant trajectory. This idea is adapted to the B-spline MINMPC framework as follows:
+\cite{Thyri2022-MPC} propose a solution to improve the compliance of rule 8 by introducing a time window where the cost for altering course is lowered. The goal of this is to control when the OS should alter course, and with manipulation of the length and position of the time window, the cost function can facilitate a more COLREGS compliant trajectory. This idea is adapted to the B-spline MINMPC framework as follows:
 An encounter window $W_\text e$ is defined, during which the OS should ensure safe passage. Within $W_\text e$, the cost for reference trajectory following is reduced, while the cost for altering course remains high, except at the start and end of $W_\text e$, denoted as maneuver windows $W_\text{mv}$. 
 The reason for the second maneuver window as opposed to the singular one in \cite{Thyri2022-MPC} is to facilitate a clear maneuver back to the reference trajectory after the encounter window.
 

@@ -307,3 +307,46 @@ For small penalties e.g. $\lambda=0.01$, the trajectory approaches that of \cref
     \includesvg[width=\textwidth]{fig/conservativeness/p_spline_degree_3_n_10.svg}
     \caption{Continuous cost with $N=10$, $p=3$ and a penalty on the second order difference of the optimization coefficients. The trajectory approaches that of \cref{fig:conservativeness-traj-integral} as $\lambda$ is decreased.}\label{fig:conservativeness-oscillation-damping}
 \end{figure}
+
+
+\chapter{Reference Cost Function Plots}\label{app:reference-cost-plots}
+
+
+This appendix contains additional plots of different choices of the Hessian for the reference cost functions explored in \cref{sec:oscillations}. The eigenvalues shown are scaled by the sum of the eigenvalues.
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_integral_degree_2_N_9.svg}
+    \caption{Eigenvectors of the Gramian matrix $\mathbf H = \mathbf G$ where $\mathbf G$ is the Gramian matrix of a uniform quadratic B-spline with 9 basis functions. The eigenvectors of $\mathbf G^{-1}$ are the same as for $\mathbf G$, but with inverted eigenvalues.}
+    \label{fig:integral-basis-eigenvectors-9}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_refined_basis_degree_2_N_9.svg}
+    \caption{Eigenvectors of $\mathbf H = \mathbf T^\top \mathbf T$ where $\mathbf T$ is the transformation matrix from a uniform quadratic B-spline with 9 basis functions to a refined basis with maximally repeated knots.}
+    \label{fig:refined-basis-eigenvectors-9}
+\end{figure} 
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_9.svg}
+    \caption{Eigenvectors of the inverse Gramian matrix $\mathbf H = \mathbf{G}^{-1}$for a uniform quadratic B-spline with 9 basis functions. Each point in a sequence along the x-axis corresponds to a basis function.}
+    \label{fig:basis-inverse-gramian-eigenvectors-9}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_20.svg}
+    \caption{Eigenvectors of the inverse Gramian matrix $\mathbf H = \mathbf{G}^{-1}$for a uniform quadratic B-spline with 20 basis functions. Each point in a sequence along the x-axis corresponds to a basis function.}
+    \label{fig:basis-inverse-gramian-eigenvectors-20}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_refined_inv_gramian_degree_2_N_20.svg}
+    \caption{Eigenvectors of the inverse Gramian matrix $\mathbf H = \mathbf T^\top \mathbf{\tilde G}^{-1} \mathbf T$ where $\mathbf T$ is the transformation matrix from a uniform quadratic B-spline with 20 basis functions to a refined basis with maximally repeated knots, and $\mathbf{\tilde G}$ is the Gramian matrix of the refined B-spline basis. Each point in a sequence along the x-axis corresponds to a basis function.}
+    \label{fig:refined-basis-inverse-gramian-eigenvectors-20}
+\end{figure}
+

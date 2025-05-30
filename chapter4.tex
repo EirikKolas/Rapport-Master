@@ -488,31 +488,28 @@ The eigenvectors are shown in \cref{fig:conservativeness-eigenvectors-inv-gramia
 
 \begin{figure}
     \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_refined_inv_gramian_degree_2_N_9.svg}
-    \caption{Eigenvectors of the inverse Gramian matrix $\mathbf H = \mathbf T^\top \mathbf{\tilde G}^{-1} \mathbf T$ where $\mathbf T$ is the transformation matrix from a uniform quadratic B-spline with 9 basis functions to a refined basis with maximally repeated knots, and $\mathbf{\tilde G}$ is the Gramian matrix of the refined B-spline basis.}
-    \label{fig:refined-basis-inverse-gramian-eigenvectors-9}
-\end{figure}
-
-\begin{figure}
-    \centering
     \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_inv_gramian_degree_2.svg}
     \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $N\in\{3,\ldots,20\}$ and where the cost is changed to $J_\text{ref} = \|\mathbf e(x)\|_{\mathbf G^{-1}}^2$.}
     \label{fig:conservativeness-traj-inv-gramian}
 \end{figure}
 
+The trajectories resulting from using the inverse Gramian as the Hessian in \cref{eq:conservativeness-optimization} are shown in \cref{fig:conservativeness-traj-inv-gramian}. The trajectories are much smoother than those in \cref{fig:conservativeness-traj-integral}, but converge slower to the reference trajectory for low $N$. This is also the case for using the cost function with $\mathbf H = \mathbf I$ in \cref{fig:conservativeness-traj-coeffs}. For higher $N$, all cost functions converge to the same trajectory, as the B-spline basis functions become more localized and the oscillatory effects from the Gramian are damped. This convergence can be seen in \cref{fig:conservativeness}, where $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=2$ and for each of the cost functions $\|\mathbf e(x)\|_\mathbf I^2$, $\|\mathbf e(x)\|_\mathbf G^2$ and $\|\mathbf e(x)\|_{\mathbf G^{-1}}^2$.
 
 
-The trajectory is much smoother than the one in \cref{fig:conservativeness-traj-integral}, but at the disadvantage of converging slower to the reference trajectory for low $N$. For higher $N$, the  cost functions converge to the same trajectory, as the B-spline basis functions become more localized as does the oscillatory effects from the Gramian. This convergence can be seen in \cref{fig:conservativeness}, where $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=3$ and for each of the cost functions mentioned in this section.
+The final cost function for the reference trajectory following is thus chosen as
+\begin{equation}\label{eq:cost-reference-following}
+    J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})},
+\end{equation}
+where $w_\text{ref}(x)$ is a B-spline function that can be used to weight the cost function at different times, and $\mathbf G^{-1}$ is the inverse Gramian in the given expressions' basis. The trace term is included to ensure that the total cost of all the directions is normalized to 1, as the trace of a matrix is the sum of its eigenvalues.
 
+To the authors knowledge, this is the first time that the inverse Gramian has been used as a Hessian in a B-spline-based optimization problem, or that a similar analysis of the eigenvectors and eigenvalues of the Gramian has been performed in this context. Other cost functions have also been considered, but with poor results in terms of feasibility for the optimization problem in question. A brief overview of the other cost functions considered is given in \cref{app:failed-reference-following}.
 
 \begin{figure}
     \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_3.svg}
-    \caption{Convergence of the different cost functions. The integral of the square error $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=3$.}
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_2.svg}
+    \caption{Convergence of the different cost functions. The integral of the square error $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=2$.}
     \label{fig:conservativeness}
 \end{figure}
-
-
 
 
 \FloatBarrier

@@ -338,6 +338,14 @@ This appendix contains additional plots of different choices of the Hessian for 
 
 \begin{figure}
     \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_refined_inv_gramian_degree_2_N_9.svg}
+    \caption{Eigenvectors of the inverse Gramian matrix $\mathbf H = \mathbf T^\top \mathbf{\tilde G}^{-1} \mathbf T$ where $\mathbf T$ is the transformation matrix from a uniform quadratic B-spline with 9 basis functions to a refined basis with maximally repeated knots, and $\mathbf{\tilde G}$ is the Gramian matrix of the refined B-spline basis.}
+    \label{fig:refined-basis-inverse-gramian-eigenvectors-9}
+\end{figure}
+
+
+\begin{figure}
+    \centering
     \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_20.svg}
     \caption{Eigenvectors of the inverse Gramian matrix $\mathbf H = \mathbf{G}^{-1}$for a uniform quadratic B-spline with 20 basis functions. Each point in a sequence along the x-axis corresponds to a basis function.}
     \label{fig:basis-inverse-gramian-eigenvectors-20}

@@ -502,7 +502,7 @@ The final cost function for the reference trajectory following is thus chosen as
 \end{equation}
 where $w_\text{ref}(x)$ is a B-spline function that can be used to weight the cost function at different times, and $\mathbf G^{-1}$ is the inverse Gramian in the given expressions' basis. The trace term is included to ensure that the total cost of all the directions is normalized to 1, as the trace of a matrix is the sum of its eigenvalues.
 
-To the authors knowledge, this is the first time that the inverse Gramian has been used as a Hessian in a B-spline-based optimization problem, or that a similar analysis of the eigenvectors and eigenvalues of the Gramian has been performed in this context. Other cost functions have also been considered, but with poor results in terms of feasibility for the optimization problem in question. A brief overview of the other cost functions considered is given in \cref{app:failed-reference-following}.
+To the authors knowledge, this is the first time that the inverse Gramian has been used as a Hessian in a B-spline-based optimization problem, or that a similar analysis of the eigenvectors and eigenvalues of the Gramian has been performed in the context of B-spline trajectory following. Other cost functions have also been considered, but with poor results in terms of feasibility for the optimization problem in question. A brief overview of the other cost functions considered is given in \cref{app:failed-reference-following}.
 
 \begin{figure}
     \centering
@@ -514,7 +514,10 @@ To the authors knowledge, this is the first time that the inverse Gramian has be
 
 \FloatBarrier
 \subsection{COLREGS Objectives}\label{sec:colregs-objectives}
-Rule 8b) of the COLREGS states that any alteration of course should be large enough to be readily apparent to another vessel. This is impractical in an optimization context as penalizing low turn rates while keeping the cost on high and no turn rates low leads to a non-convex cost. See \cref{fig:turn-rate-cost} for an illustration of the problem. 
+Rule 8b) of the COLREGS states that any alteration of course should be large enough to be readily apparent to another vessel. 
+This can be interpreted as a cost function that penalizes small alterations of course, but not large ones. 
+Implementing this directly in an optimization context, by penalizing low turn rates without penalizing straight line motion, results in a cost function that is not convex. 
+See \cref{fig:turn-rate-cost} for an illustration of the problem.
 
 \begin{figure}
     \centering

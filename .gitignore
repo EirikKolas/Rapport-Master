@@ -317,3 +317,8 @@ TSWLatexianTemp*
 main.pdf
 .vscode/
 main.loalgorithm
+
+
+# Python
+# Data
+*.pkl

@@ -13,9 +13,11 @@
 
 The B-spline MINMPC is implemented in Python using the library presented in \cref{sec:python-implementation}. The simulation is run on a laptop with an AMD Ryzen 7 5000 Series CPU and 16 GB of RAM. The simulation parameters are summarized in \cref{tab:simulation-parameters}. 
 
-Unless otherwise specified the bases for the spline functions in the optimization problem are given in \cref{tab:sim-spline-basis}.
 The double integrator model in \cref{sec:double-integrator} is used to represent the OS, which has a maximum speed of 6 m/s. In the different simulation scenarios, the TS heading and speed will vary to force the situations described by the COLREGS rules 8 and 13-17.
 
+Unless otherwise specified, the bases for the spline functions in the optimization problem are given in \cref{tab:sim-spline-basis}. Note that the basis for the OS position $\mathbf p_\text{OS}$ is defined on finer knot vector as the normal and offset vectors for the TS hyperplanes, $\mathbf n_{s,j}$, $\mathbf n_{p,j}$, $b_{s,j}$, and $b_{p,j}$. This is done to reduce the number of optimization variables and constraints in the optimization problem, and is justified by the fact that this constraint is only active during a small time window at the closest point of approach (CPA) to the TS. For the given bases in \cref{tab:sim-spline-basis}, the OS position is represented by 12 B-spline basis functions of degree 2, so if the the TS hyperplane variables had the same basis, this would result in 72 optimization variables and 184 constraints
+\footnote{The vector valued splines $\mathbf n_{s,j}$ and $\mathbf n_{p,j}$ give 12 $\times$ 2 = 24 coefficients each, and the scalar splines $b_{s,j}$ and $b_{p,j}$ give 12 $\times$ 1 = 12 coefficients each for a total of 72 optimization variables. The number of constraints are attributed to the following: 32 basis functions in the degree 4 basis of $\mathbf p_\text{OS}\cdot\mathbf{n}_{s,j}$, 4 $\times$ 22 = 88 from the 4 points defining the TS in the basis of $\mathbf p_\text{TS}\cdot\mathbf n_j$, and another 2 $\times$ 32 for the normalization of the normal vectors.}, 
+as opposed to 36 optimization variables and 98 constraints per TS with the bases in \cref{tab:sim-spline-basis}.
 The optimization problem in \cref{eq:minmpc-compact} is solved using Bonmin \citep{bonmin2008}, which combines existing open source libraries such as Ipopt \citep{ipopt2006} for NLPs, and Cbc \citep{cbc2005} for MIPs, to solve MINLPs. Bonmin is accessed through the CasADi framework as described in \cref{sec:python-implementation}. 
 For all cases going forward, the solver is initialized as follows:
 \begin{algorithmic}
@@ -37,10 +39,10 @@ The specific direction of the normals is reasoned from the definition of $\mathb
         \hline
         \textbf{Parameter} & \textbf{Value} & \textbf{Unit} & \textbf{Description} \\
         \hline
-        \rule{0pt}{2.5ex}$k$ & 3 & - & Degree of the B-spline basis \\
-        \hline
-        \rule{0pt}{2.5ex}$N$ & 10 & - & Number of basis functions in the B-spline basis \\
-        \hline
+        % \rule{0pt}{2.5ex}$k$ & 3 & - & Degree of the B-spline basis \\
+        % \hline
+        % \rule{0pt}{2.5ex}$N$ & 10 & - & Number of basis functions in the B-spline basis \\
+        % \hline
         \rule{0pt}{2.5ex}$v_\text{max}$ & 6 & m/s & Own ship maximum speed \\
         \hline
         \rule{0pt}{2.5ex}$d_p$ & 50 & m & Minimum distance to target on the passing side \\
@@ -58,19 +60,27 @@ The specific direction of the normals is reasoned from the definition of $\mathb
     \centering
     \begin{tabular}{|p{2.5cm}||c|c|l|}
         \hline
-        \rule{0pt}{2.5ex}
-        \textbf{Spline Variable} & \multicolumn{3}{c|}{\textbf{B-spline Basis} $\mathbf{B}_{p, \mathbf t} = [B_{i, p, \mathbf t}(x)]_{i=0}^{N-1}$} \\[0.4ex]
-        \hline
-        & $N$ & $p$ & $\mathbf{t}$ \\
-        \hline
-        \hline
-        $\mathbf{p}_\text{OS}$, $\mathbf{n}_{s, j}$, $\mathbf{n}_{p, j}$, $b_{p,j}$, $b_{s,j}$ 
-        & 14 & 2 & $\{0, 0, 0, 0.1, 0.2, \ldots, 0.8, 0.9, 1, 1, 1\}$ \\
-        \hline
-        $\mathbf{p}_\text{ref}$, $\mathbf{p}_\text{TS}$ & 2 & 1 & $\{0, 0, 1, 1\}$ \\
-        \hline
-        $w_\text{ref}$, $w_\text{mv}$ & 10 & 0 & $\{0, 0.1, 0.2, \ldots, 0.8, 0.9, 1\}$ \\
-        \hline
+            \rule{0pt}{2.5ex}
+            \textbf{Spline Variable} & \multicolumn{3}{c|}{\textbf{B-spline Basis} $\mathbf{B}_{p, \mathbf t} = [B_{i, p, \mathbf t}(x)]_{i=0}^{N-1}$} \\[0.4ex]
+            \hline
+            & $N$ & $p$ & $\mathbf{t}$ \\
+            \hline
+            \hline
+            \rule{0pt}{2.5ex}
+            $\mathbf{p}_\text{OS}$
+            & 12 & 2 & $\mathbf u(2,12)=\left\{0, 0, 0, \frac{1}{10}, \frac{2}{10}, \ldots, \frac{8}{10}, \frac{9}{10}, 1, 1, 1\right\}$ \\[1ex]
+            \hline
+            \parbox{2.5cm}{%
+                $\mathbf{n}_{s, j}$, $\mathbf{n}_{p, j}$, \\
+                $b_{s,j}$, $b_{p,j}$
+            }
+            & 6 & 1 & \rule{0pt}{3.5ex}$\mathbf u(6, 1) = \left\{0, 0, \frac{2}{10}, \frac{4}{10}, \frac{6}{10}, \frac{8}{10}, 1, 1\right\}$ \\[1ex]
+            \hline
+            $\mathbf{p}_\text{ref}$, $\mathbf{p}_\text{TS}$ & 2 & 1 & $\{0, 0, 1, 1\}$ \\
+            \hline
+            \rule{0pt}{2.5ex}
+            $w_\text{ref}$, $w_\text{mv}$ & 10 & 0 & $\left\{0, \frac{1}{10}, \frac{2}{10}, \ldots, \frac{8}{10}, \frac{9}{10}, 1\right\}$ \\[1ex]
+            \hline
     \end{tabular}
     \caption{Spline functions and their B-spline bases used for the simulations.}\label{tab:sim-spline-basis}
 \end{table}
@@ -243,39 +253,39 @@ The 4th and 5th OS from the top in \cref{fig:head-on} are not able to return to 
 \end{figure}
 
 
-\label{sec:case-3-crossing}
-\begin{figure}[htbp]
-    \centering
-    \includesvg[width=1.05\textwidth,pretex=\footnotesize]{fig/scenarios/Crossing scenario.svg}
-    \caption{\emph{Case 3}: Trajectory generation in a crossing situation.}
-    \label{fig:crossing}
-\end{figure}
-\todo{flere vinkler for crossing. 20\degree bak beamen er vanskelig}
+% \label{sec:case-3-crossing}
+% \begin{figure}[htbp]
+%     \centering
+%     \includesvg[width=1.05\textwidth,pretex=\footnotesize]{fig/scenarios/Crossing scenario.svg}
+%     \caption{\emph{Case 3}: Trajectory generation in a crossing situation.}
+%     \label{fig:crossing}
+% \end{figure}
+% \todo{flere vinkler for crossing. 20\degree bak beamen er vanskelig}
 
 
 \begin{figure}[htbp]
     \centering
 \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/crossing_advanced/crossing_advanced_scenario_10_2.svg}
-    \caption{\emph{Case 3.1}: Trajectory generation in a crossing situation with a more complex reference trajectory.}
-    \label{fig:crossing-advanced}
+    \caption{\emph{Case 3.0}: Trajectory generation in a crossing situation where the TS has a course, from top to bottom, of -70\degree, -40\degree, 20\degree, and 40\degree with respect to the North axis.}
+    \label{fig:crossing}
 \end{figure}
 
 
 \begin{figure}
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_10_2_course_40.svg}
-    \caption{\emph{Case 3.2}: Trajectory generation in a crossing situation with a more complex reference trajectory and a 10\degree course change.}
-    \label{fig:crossing-advanced-course-10}
+    \caption{\emph{Case 3.0}: Speed, change in course, and distance to the reference trajectory for the OSs in \cref{fig:crossing} in the 40\degree course case.}
+    \label{fig:crossing-metrics}
 \end{figure}
 
 
 \begin{figure}
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_20_2_course_40.svg}
-    \caption{\emph{Case 3.2}: Trajectory generation in a crossing situation with a more complex reference trajectory and a 20\degree course change.}
+    \caption{\emph{Case 3.1}: Speed, change in course, and distance to the reference trajectory for the OSs in \cref{fig:crossing} in the 40\degree course case, where the OS spline $\mathbf p_\text{OS}$ is represented in a finer basis.}
 \end{figure}
 
-\label{sec:case-4-overtaking}
+
 \begin{figure}[htbp]
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Overtaking scenario.svg}

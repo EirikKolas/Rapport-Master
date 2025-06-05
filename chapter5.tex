@@ -13,7 +13,9 @@
 
 The B-spline MINMPC is implemented in Python using the library presented in \cref{sec:python-implementation}. The simulation is run on a laptop with an AMD Ryzen 7 5000 Series CPU and 16 GB of RAM. The simulation parameters are summarized in \cref{tab:simulation-parameters}. 
 
-The double integrator model in \cref{sec:double-integrator} is used to represent the OS, which has a maximum speed of 6 m/s. In the different simulation scenarios, the TS heading and speed will vary to force the situations described by the COLREGS rules 8 and 13-17.
+The double integrator model in \cref{sec:double-integrator} is used to represent the OS, which has a maximum speed of 6 m/s. The spline representing the time $\mathbf t(x)$ is defined in the simplest way possible, as a linear function $\mathbf t(x) = Tx$, where $T$ is the total time of the simulation. As all functions in the optimization problem involving this variable only uses its derivative $\mathbf t'(x)$, $\mathbf t(x)$ can be represented by a single scalar variable $T$ in the optimization problem. 
+More complex time splines are possible, giving more flexibility to the length and shapes of e.g. the maneuver windows, but this is not necessary for the simulation scenarios presented in this chapter.
+In the different simulation scenarios, the TS heading and speed will vary to force the situations described by the COLREGS rules 8 and 13-17.
 
 Unless otherwise specified, the bases for the spline functions in the optimization problem are given in \cref{tab:sim-spline-basis}. Note that the basis for the OS position $\mathbf p_\text{OS}$ is defined on finer knot vector as the normal and offset vectors for the TS hyperplanes, $\mathbf n_{s,j}$, $\mathbf n_{p,j}$, $b_{s,j}$, and $b_{p,j}$. This is done to reduce the number of optimization variables and constraints in the optimization problem, and is justified by the fact that this constraint is only active during a small time window at the closest point of approach (CPA) to the TS. For the given bases in \cref{tab:sim-spline-basis}, the OS position is represented by 12 B-spline basis functions of degree 2, so if the the TS hyperplane variables had the same basis, this would result in 72 optimization variables and 184 constraints
 \footnote{The vector valued splines $\mathbf n_{s,j}$ and $\mathbf n_{p,j}$ give 12 $\times$ 2 = 24 coefficients each, and the scalar splines $b_{s,j}$ and $b_{p,j}$ give 12 $\times$ 1 = 12 coefficients each for a total of 72 optimization variables. The number of constraints are attributed to the following: 32 basis functions in the degree 4 basis of $\mathbf p_\text{OS}\cdot\mathbf{n}_{s,j}$, 4 $\times$ 22 = 88 from the 4 points defining the TS in the basis of $\mathbf p_\text{TS}\cdot\mathbf n_j$, and another 2 $\times$ 32 for the normalization of the normal vectors.}, 
@@ -76,10 +78,12 @@ The specific direction of the normals is reasoned from the definition of $\mathb
             }
             & 6 & 1 & \rule{0pt}{3.5ex}$\mathbf u(6, 1) = \left\{0, 0, \frac{2}{10}, \frac{4}{10}, \frac{6}{10}, \frac{8}{10}, 1, 1\right\}$ \\[1ex]
             \hline
-            $\mathbf{p}_\text{ref}$, $\mathbf{p}_\text{TS}$ & 2 & 1 & $\{0, 0, 1, 1\}$ \\
+            $\mathbf{p}_\text{ref}$, $\mathbf{p}_\text{TS}$, & 2 & 1 & $\{0, 0, 1, 1\}$ \\
             \hline
             \rule{0pt}{2.5ex}
             $w_\text{ref}$, $w_\text{mv}$ & 10 & 0 & $\left\{0, \frac{1}{10}, \frac{2}{10}, \ldots, \frac{8}{10}, \frac{9}{10}, 1\right\}$ \\[1ex]
+            \hline
+            $\mathbf t'=T$ & 1 & 0 & $\{0, 1\}$ (or equivalently a constant) \\
             \hline
     \end{tabular}
     \caption{Spline functions and their B-spline bases used for the simulations.}\label{tab:sim-spline-basis}
@@ -164,7 +168,7 @@ Cases 1.1-1.3 in \cref{fig:stationary-targets-subfigures} introduces a second TS
 
 Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of changing the weights of the cost function. In \cref{fig:stationary-target-5} $w_\text{time}$ is set to 100, which means that minimizing the total time of the trajectory is prioritized. This results in a trajectory that passes both TSs with a starboard maneuver, as this is the fastest route. Another effect of this is that the trajectory is more aggressive, yielding sharp turns between straight segments. With $w_\text{ref}$ set to 100 in case 1.5, (\cref{fig:stationary-target-6}), the solution trajectory passes between the two TSs, as this yields the lowest overall reference error. The same argument can be made for case 1.6 from \cref{fig:stationary-target-7}, where $w_\text{mv}$ is set to $1/100$, a port side maneuver is chosen to minimize the control effort. This is a result of how the TS at $(-10, 200)$ is positioned with a bias towards the south close to the end of the reference trajectory, and so a less agressive maneuver is possible on the northern side. \todo{endre kostfunksjonen igjen slik at dette faktisk skjer}
 
-In all cases, while being initialized with the reference, the B-MINMPC is able to find a solution that passes the TSs while respecting the constraints. In other words, using the mixed integer constraints presented in \cref{sec:collision-constraints} and a simple initialization scheme, a convex optimizer is able to more robustly find the optimal solution in a non-convex environment than a convex optimizer without these constraints. This is an improvement over the previous work in \citep{Thyri2022-MPC} where a carefully crafted initial guess had to be construced to facilitate a maneuver towards the desired passing side.
+In all cases, while being initialized with the reference, the B-MINMPC is able to find a solution that passes the TSs while respecting the constraints. In other words, using the mixed integer constraints presented in \cref{sec:collision-constraints} and a simple initialization scheme, a convex optimizer is able to more robustly find the optimal solution in a non-convex environment than a convex optimizer without these constraints. This is an improvement over the previous work in \cite{Thyri2022-MPC,prosjektoppgave} where a carefully crafted initial guess had to be construced to facilitate a maneuver towards the desired passing side.
 \todo{diskuter at det er vanskelig med metrikker for tidlig manøver. Si hvorfor vi ikke bruker metrikker.}
 \todo{kan drøfte total bruk av hstighetsendring, vs total kursendring.}
 \todo[inline]{poengter at der er like høy kompleksitet i å lage metrikker for colregs compliance som en colregs compliant motion planner, fordi colregs er skrevet for mennesker. Bygger på kapteinens tolkning av situasjonen. lite vennlig for programmering. Kyle Vohler har lagd metrikker, men de er tuningavhengig.}
@@ -199,28 +203,28 @@ In all cases, while being initialized with the reference, the B-MINMPC is able t
 \subsection{Head-on, Crossing, and Overtaking Situations}
 \label{sec:case-2-head-on}
 
-The next three cases serve to evaluate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. These are constructed such that an OS following an eastwards reference trajectory at $N=0$ is on a collision course with a TS at $(0, 0)$, 250 seconds into the simulation. For each scenario, eight additional simulations are run where the starting points and reference trajectories for the OS are shifted both north and south by an appropriate distance. The speed and heading of the TS varied to create head-on, crossing, and overtaking situations. In these scenarios, the end position and velocity are not constrained, but the max time is set to $T=500$ seconds. 
+The next three cases serve to illustrate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. These are constructed such that an OS following an eastwards reference trajectory at $N=0$ is on a collision course with a TS at $(0, 0)$, 250 seconds into the simulation. For each scenario, eight additional simulations are run where the starting points and reference trajectories for the OS are shifted both north and south by an appropriate distance. The speed and course of the TS are varied to create head-on, crossing, and overtaking situations. In these scenarios the simulation time is set to $T=500$ seconds. 
 \Cref{tab:batch-params} summarizes the parameters used in the different cases. The weights in \cref{tab:sim-spline-basis} are set to
 \begin{align}
     w_\text{time} &= 0 \quad \text{(\emph{time is fixed})}      \\
-    \coeffs(w_\text{ref}) &= \{1, 1, 0, 0, 0, 0, 0, 0, 1, 1\}   \\
+    \coeffs(w_\text{ref}) &= \{100, 10, 0, 0, 0, 0, 0, 0, 100, 10\}   \\
     \coeffs(w_\text{mv}) &= \{1, 1, 0, 0, 10, 10, 0, 0, 1, 1\}
 \end{align}
-to facilitate course and speed corrections in the maneuver windows, as discussed in \cref{sec:colregs-objectives}. These weights correspond to an encounter window of $(t_8-t_2)T=(0.8-0.2)500=300$ seconds, and a maneuver window of $(t_3-t_2)T=(t_7-t_6)T=(0.3-0.2)500=50$ seconds. The encounter window is centered at the time of collision, which again, is set to 250 seconds into the simulation.
+to facilitate course and speed corrections in the maneuver windows, as discussed in \cref{sec:colregs-objectives}. These weights correspond to an encounter window of $(t_8-t_2)T=(0.8-0.2)500=300$ seconds, and a maneuver window of $(t_3-t_2)T=(t_7-t_6)T=(0.3-0.2)500=100$ seconds. The encounter window is centered at the time of collision, which again, is set to 250 seconds into the simulation.
 
 
 
 \renewcommand{\arraystretch}{1.2}
 \begin{table}[htbp]
-    \begin{tabular}{|c|d{-1}|c|c|}
+    \begin{tabular}{|c|c|c|c|}
         \hline
-        \textbf{Case} & \multicolumn{1}{c|}{\textbf{TS Heading}} & \textbf{TS speed} & \textbf{Plot} \\
+        \textbf{Case} & \multicolumn{1}{c|}{\textbf{TS course}} & \textbf{TS speed} & \textbf{Plot} \\
         \hline
-        2.0 & $-90\degree$ & 4.5 m/s & \cref{fig:head-on} \\
+        2.0 & -70\degree, -40\degree, 20\degree, 40\degree & 4.5 m/s & \cref{fig:crossing} \\
         \hline
-        3.0 & $-10\degree$ & 4.5 m/s & \cref{fig:crossing} \\
+        3.0 & -90\degree & 4.5 m/s & \cref{fig:head-on} \\
         \hline
-        4.0 & $75\degree$ & 4.0 m/s & \cref{fig:overtaking} \\
+        4.0 & 75\degree & 4.0 m/s & \cref{fig:overtaking} \\
         \hline
     \end{tabular}
     \centering
@@ -229,29 +233,16 @@ to facilitate course and speed corrections in the maneuver windows, as discussed
 \renewcommand{\arraystretch}{1.0}
 
 
-Case 2 is a head-on situation where the TS is heading west at 4.5 m/s with a heading $-90\degree$. Using the encounter classification algorithm from \cite{Thyri2022-Confined-Waters} the OSs starting south of $N=100$ are considered to be in a head-on situation, and has according to COLREGS rule 14 pass the TS with a starboard maneuver. The OSs starting north of $N=100$ are admitted safe passage, and so no COLREGS rules are applicable. The OSs in the head-on situation have the passing distance for the starboard maneuver set to $d_p=50$ m, and the passing distance for the port maneuver set to $d_o=100$ m, as seen in \cref{tab:simulation-parameters}.  
+Case 2 is a crossing situation where the TS is heading west at 4.5 m/s with a heading $-90\degree$. For the sake of simplicity, the OSs starting above the $N=250$ axis are considered to be too far away to be in a situation requiring a COLREGS compliant maneuver, and so only the OSs starting south of the $N=250$ axis are considered. In a crossing situation, COLREGS rule 15 applies, which states that the OSs must pass the TS with a starboard maneuver. The passing distance for the starboard maneuver is set to $d_p=50$ m, and the passing distance for the port maneuver is set to $d_o=100$ m, as in \cref{tab:simulation-parameters}. 
 
-\Cref{fig:head-on} illustrates the trajectories of the OSs and TS in the head-on situation. At ~$t=100$ seconds, the relevant OSs start the starboard maneuver, and follows a course parallell to the reference trajectory from ~$t=150$ until the start of the second maneuver window at $t=350$ seconds where the OSs start to turn back towards their reference trajectories. 
+\Cref{fig:crossing} illustrates the trajectories of the OSs and TS in a crossing situation. At $t=50$ seconds, the five OSs closest to $N=150$ start the starboard maneuver, and follows a course parallell to the reference trajectory from $t=200$ until the start of the second maneuver window at $t=300$ seconds where the OSs start to turn back towards their reference trajectories. This is illustrated more clearly in \cref{fig:crossing-metrics}, where the speed, change in course, and distance to the reference trajectory for the OSs are plotted for the case where the TS has a course of 40\degree. 
+Similar results are seen for the crossing and overtaking cases, where the only differences are number of OSs that have to maneuver and the distances they have to travel to avoid the TS.
 
-The 4th and 5th OS from the top in \cref{fig:head-on} are not able to return to the reference trajectory in this case, as the maneuver window is too short. The problem is even more evident in the crossing situation in \cref{fig:crossing}, where four out of the 5 maneuvering OSs are not able to return. Multiple solutions for this are possible, which will now be listed in order of complexity:
-\todo{Drøft colregs i forhold til batch simuleringer. metrikker er vanskelig}
-\begin{enumerate}
-    \item Decrease $w_\text{mv}$ after the encounter to prioritize convergence to the reference trajectory over the maneuvering effort.\todo{implementer denne.}
-    \item Increase the maneuver window to allow for more time to return to the reference trajectory.
-    \item Increase the time horizon to allow for more time to return to the reference trajectory.
-    \item Parameterize the time as a spline variable to allow for more flexibility in the trajectory, fixing the encounter and maneuver windows, but keeping the end time free.
-    \item Represent the reference trajectory as a PH B-Spline, which allows for analytical distance calculations. This makes a cost more similar to the XTE feasible and the OS won't try to catch up to the parameterized reference trajectory.
-\end{enumerate}
+It is in general a difficult task to evaluate the COLREGS compliance of motion planners. 
+
 
 \todo[inline]{ikke passer 200m foran beamen + en hastighetsfaktor. Kan gå nærme bak dersom det har skjedd en manøver nærme CPA, men er vanskelig å vurdere om denne manøveren er stor nok. DNV}
 \todo{søk på litteratur (DNV) om colregs. Tom Arne Pedersen. 95280695}
-\begin{figure}[htbp]
-    \centering
-    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Head on scenario.svg}
-    \caption{\emph{Case 2}: Trajectory generation in a head-on situation.}
-    \label{fig:head-on}
-\end{figure}
-
 
 % \label{sec:case-3-crossing}
 % \begin{figure}[htbp]
@@ -266,7 +257,7 @@ The 4th and 5th OS from the top in \cref{fig:head-on} are not able to return to 
 \begin{figure}[htbp]
     \centering
 \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/crossing_advanced/crossing_advanced_scenario_10_2.svg}
-    \caption{\emph{Case 3.0}: Trajectory generation in a crossing situation where the TS has a course, from top to bottom, of -70\degree, -40\degree, 20\degree, and 40\degree with respect to the North axis.}
+    \caption{\emph{Case 2.0}: Trajectory generation in a crossing situation where the TS has a course, from top to bottom, of -70\degree, -40\degree, 20\degree, and 40\degree with respect to the North axis.}
     \label{fig:crossing}
 \end{figure}
 
@@ -274,7 +265,7 @@ The 4th and 5th OS from the top in \cref{fig:head-on} are not able to return to 
 \begin{figure}
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_10_2_course_40.svg}
-    \caption{\emph{Case 3.0}: Speed, change in course, and distance to the reference trajectory for the OSs in \cref{fig:crossing} in the 40\degree course case.}
+    \caption{\emph{Case 2.0}: Speed, change in course, and distance to the reference trajectory for the OSs in \cref{fig:crossing} in the 40\degree course case.}
     \label{fig:crossing-metrics}
 \end{figure}
 
@@ -282,13 +273,43 @@ The 4th and 5th OS from the top in \cref{fig:head-on} are not able to return to 
 \begin{figure}
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_20_2_course_40.svg}
-    \caption{\emph{Case 3.1}: Speed, change in course, and distance to the reference trajectory for the OSs in \cref{fig:crossing} in the 40\degree course case, where the OS spline $\mathbf p_\text{OS}$ is represented in a finer basis.}
+    \caption{\emph{Case 2.1}: Speed, change in course, and distance to the reference trajectory for the OSs in \cref{fig:crossing} in the 40\degree course case, where the OS spline $\mathbf p_\text{OS}$ is represented in a finer basis.}
 \end{figure}
 
 
 \begin{figure}[htbp]
     \centering
-    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Overtaking scenario.svg}
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Head on scenario.svg}
+        \caption{Axes are to scale.}
+        \label{fig:head-on-scenario-a}
+    \end{subfigure}
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Head on scenario free scale.svg}
+        \caption{North axis stretced for better visualization of maneuver timings.}
+        \label{fig:head-on-scenario-b}
+    \end{subfigure}
+    \caption{\emph{Case 3}: Trajectory generation in a head-on situation.}
+    \label{fig:head-on}
+\end{figure}
+
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Overtaking scenario.svg}
+        \caption{Axes are to scale.}
+        \label{fig:overtaking-scenario-a}
+    \end{subfigure}
+    \begin{subfigure}[b]{\textwidth}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Overtaking scenario free scale.svg}
+        \caption{North axis stretced for better visualization of maneuver timings.}
+        \label{fig:overtaking-scenario-b}
+    \end{subfigure}
     \caption{\emph{Case 4}: Trajectory generation in an overtaking situation.}
     \label{fig:overtaking}
 \end{figure}

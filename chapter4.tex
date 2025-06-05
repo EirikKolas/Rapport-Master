@@ -537,11 +537,13 @@ The reason for the second maneuver window as opposed to the singular one in \cit
     \label{fig:maneuver-window}
 \end{figure}
 
-The encounter window and maneuver windows enter the cost function as weights $w_\text e(x)$ and $w_\text{mv}(x)$, respectively on the reference trajectory following cost and the cost for altering course. The weights enter the cost function $O$ as
+The encounter and maneuver windows are incorporated into the cost function as weights $w_\text{ref}(x)$ and $w_\text{mv}(x)$, which are applied to the reference trajectory following cost and the cost for altering course, respectively. The resulting cost function is:
 \begin{subequations}\label{eq:cost-maneuver-window}
     \begin{align}
-        J_\text{mv} &= \|\text{ctrlPts}\big(w_\text{mv}(x)(\mathbf p'_\text{os}(x) - \mathbf p'_\text{ref}(x))\big)\|_\text{F}^2, \label{eq:cost-maneuver-window-mv}\\
-        J_\text{ref} &= \|\text{ctrlPts}\big(w_\text e(x)(\mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x))\big)\|_\text{F}^2, \label{eq:cost-maneuver-window-ref}\\
+        J_\text{ref} &= \|w_\text{mv}(x)\;\mathbf e(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, 
+        \label{eq:cost-maneuver-window-ref}\\
+        J_\text{mv} &= \|w_\text{ref}(x)\;\mathbf e'(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})},
+        \label{eq:cost-maneuver-window-mv}\\
         J &= J_\text{ref} + J_\text{mv}, \label{eq:cost-maneuver-window-total}
     \end{align}
 \end{subequations}
@@ -612,7 +614,7 @@ The complete B-spline MINMPC problem can be written compactly as
 \label{eq:minmpc-compact}
     \begin{aligned}
         \min
-        \quad & J_\text{ref}(\mathbf{p}_\text{OS}) + J_\text{mv}(\mathbf{p}_\text{OS}) + w_\text{time}\,t(1)
+        \quad & J_\text{ref}(\mathbf{p}_\text{OS}) + J_\text{mv}(\mathbf{p}_\text{OS}) + w_\text{time}\, \mathbf t(1)
         \\
         \text{subject to}\quad
         & \mathcal{D}_{DI}(\mathbf{p}_\text{OS})
@@ -628,11 +630,11 @@ The complete B-spline MINMPC problem can be written compactly as
 
 In this formulation:
 \begin{itemize}
-    \item $J_{\mathrm{mw}}$ penalizes maneuvers outside the desired time window via weights $w_k$ on derivative norms (\cref{eq:cost-maneuver-window-mv}).
-    \item $J_{\mathrm{ref}}$ penalizes deviation from the reference trajectory via the squared Frobenius norm of the B-spline coefficients (\cref{eq:cost-maneuver-window-ref}).
+    \item $J_{\mathrm{ref}}$ penalizes deviation from the reference trajectory outside the encounter window (\cref{eq:cost-maneuver-window-ref}).
+    \item $J_{\mathrm{mw}}$ penalizes deviation from the reference velocity outside the maneuver windows (\cref{eq:cost-maneuver-window-mv}).
     \item $\mathcal{D}_{DI}$ and $\mathcal{D}_{PH}$ denote the double‐integrator and PH‐spline Dubins model constraints, respectively.
     \item $\mathcal{O}_j$ is the Big-M collision‐avoidance constraint set from \eqref{eq:colregs-bigM} for each target ship $j$ in the encounter.
-    \item $w_\text{time}$ is a weight on the final time of the variable $t(x)$, which is a B-spline variable representing the time of the OS.
+    \item $w_\text{time}$ is a weight on the final time of the variable $\mathbf t(x)$, which is a B-spline variable representing the time of the OS.
 \end{itemize}
 The optimization variables are the B-spline coefficients of the spline functions
-$\mathbf{p}_\text{OS}(t)$, $t(x)$, $\mathbf{n}_{p,j}(x)$, $\mathbf{n}_{s,j}(x)$, $b_{p,j}(x)$, $b_{s,j}(x)$ defined over a suitable knot vector $\mathbf{t}\in[0,1]$, and the binary variables $z_j$.
+$\mathbf{p}_\text{OS}(t)$, $\mathbf t(x)$, $\mathbf{n}_{p,j}(x)$, $\mathbf{n}_{s,j}(x)$, $b_{p,j}(x)$, $b_{s,j}(x)$ defined over a suitable knot vector $\mathbf{t}\in[0,1]$, and the binary variables $z_j$.

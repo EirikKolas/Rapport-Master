@@ -613,14 +613,14 @@ As for the regular product, the PW inner product can be made more efficient by n
 
 
 \subsection{Pythogerean-Hodograph B-splines (PH B-Splines)}\label{sec:pythogerean-hodograph}
-The Pythogerean-Hodograph (PH) B-spline is utilized to leverage exact geometric quantities in CAD/CAM. Pythagorean‐Hodograph (PH) B‐splines \cite{Albrecht2016}, a natural extension of PH Bézier curves \cite{Farouki1990}, are employed. In this framework, the hodograph (derivative) of a planar B‐spline
-
+The Pythogerean-Hodograph (PH) B-spline is utilized to leverage exact geometric quantities in CAD/CAM. Pythagorean‐Hodograph (PH) B‐splines \cite{Albrecht2016}, a natural extension of PH Bézier curves \cite{Farouki1990}, are employed. In this framework, the hodograph (derivative) 
 \begin{equation*}
-\mathbf r(x) = [a(x), b(x)],
-\qquad
-\mathbf r'(x) = [a'(x), b'(x)]
+    \mathbf r'(x) = [a'(x), b'(x)]
 \end{equation*}
-
+of a planar B‐spline
+\begin{equation*}
+    \mathbf r(x) = [a(x), b(x)],
+\end{equation*}
 satisfies the Pythagorean condition
 \begin{equation}\label{eq:pythagorean-condition}
 a'(x)^2 + b'(x)^2 = \sigma(x)^2,

@@ -174,7 +174,7 @@ class BSplineBasis:
 \end{algorithm}
 
 
-The B-spline basis class is implemented as a dataclass with the degree and knots as datafields. It has methods from \cref{chap:b-spline-theory}. Some of which are listed below:
+The B-spline basis class is implemented as a dataclass with the degree and knots as datafields. It has methods from \cref{sec:b-spline-theory}. Some of which are listed below:
 \begin{itemize}
     \item 
     The \texttt{\_\_call\_\_} method is implemented to evaluate the B-spline basis functions at a given point $x$ using the Cox-de Boor recursion formula. This lets the user call the B-spline basis object as a function, e.g. \texttt{basis(x)}. The B-spline basis functions are evaluated using the Cox-de Boor recursion formula from \cref{eq:b-spline-recurrence} as shown in \cref{alg:cox-de-boor}. The algorithm is implemented using memoization to avoid recomputing the same values multiple times. The memoiziation is done over the minimal set of knots needed to evaluate the B-spline basis function, which is the $k+1$ knots surrounding the knot $t_i$ where the basis function is evaluated. This minimizes the number of function evaluations needed to be stored in memory and maximizes cache hits. The memoization is implemented using the \texttt{@cache} decorator from the functools library.
@@ -185,8 +185,8 @@ The B-spline basis class is implemented as a dataclass with the degree and knots
 \end{itemize}
 
 
-\FloatBarrier
-\subsection{B-spline Class}
+% \FloatBarrier
+% \subsection{B-spline Class}
 
 
 
@@ -266,7 +266,7 @@ The speed constraint in \cref{eq:app-dubins-V} can similarly be expressed in ter
     \end{align}
 \end{subequations}
 
-The full model is implemented by letting $r(t)$ and $\tilde v(t)$ be spline functions on a chosen B-spline basis under the constraints in \cref{eq:rdot-omega-r-constraints,eq:V-r}, using the expressions in \cref{eq:app-dubins-xy} to calculate $\dot x$ and $\dot y$ using the algorithms in \cref{chap:b-spline-theory}. Notice that $V$, $\chi$, and $\omega$ are now entirely removed from the model, which is fully described by $r$ and $\tilde v$. The coefficients of the B-spline representation of $\dot r$ are simply linear combinations of the coefficients of $r$, as explained in \cref{sec:derivative} and the position can be found by integrating the expressions in \cref{eq:app-dubins-xy}.
+The full model is implemented by letting $r(t)$ and $\tilde v(t)$ be spline functions on a chosen B-spline basis under the constraints in \cref{eq:rdot-omega-r-constraints,eq:V-r}, using the expressions in \cref{eq:app-dubins-xy} to calculate $\dot x$ and $\dot y$ using the algorithms in \cref{sec:b-spline-theory}. Notice that $V$, $\chi$, and $\omega$ are now entirely removed from the model, which is fully described by $r$ and $\tilde v$. The coefficients of the B-spline representation of $\dot r$ are simply linear combinations of the coefficients of $r$, as explained in \cref{sec:derivative} and the position can be found by integrating the expressions in \cref{eq:app-dubins-xy}.
 
 To implement the inequality constraint $f(t) \le g(t)$, for two spline functions $f(t)$ and $g(t)$, the constraint is enforced by ensuring the coefficients of the B-spline representation of $f(t) - g(t)$ are non-positive, exploiting the convex hull property of B-splines. 
 
@@ -360,5 +360,10 @@ For small penalties e.g. $\lambda=0.01$, the trajectory approaches that of \cref
     \includesvg[width=\textwidth]{fig/conservativeness/p_spline_degree_3_n_10.svg}
     \caption{Continuous cost with $N=10$, $p=3$ and a penalty on the second order difference of the optimization coefficients. The trajectory approaches that of \cref{fig:conservativeness-traj-integral} as $\lambda$ is decreased.}\label{fig:conservativeness-oscillation-damping}
 \end{figure}
+
+
+\chapter{Additional Simulation Plots}\label{app:additional-simulation-plots}
+
+This appendix contains additional simulation plots for the scenarios in \cref{sec:simulation-results}.
 
 

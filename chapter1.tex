@@ -90,7 +90,7 @@ This thesis builds upon \citet{Thyri2022-MPC} and \citet{zhang2021real}, combini
 Building on, and exploring different aspects of the work presented in the project thesis \citet{prosjektoppgave}, this thesis aims to develop a robust and real-time capable \acrshort{COLREGS} aware motion planning algorithm for autonomous sea vessels. The algorithm should produce safe and predictable trajectories for the vessel, ensuring compliance with \acrshort{COLREGS} while navigating in the presence of other vessels. The algorithm should be able to handle multiple target ships and provide a stable solution that can adapt to dynamic environments. The specific goals of the thesis are as follows:
 \begin{itemize}
     \item Provide an introduction to B-spline curves, covering the steps from mathematical representation to a practical implementation.
-    \item Develop a B-Spline-based trajectory planning algorithm that is aware of the COLREGS rules.
+    \item Develop a B-Spline-based trajectory planning algorithm that is aware of COLREGS.
     \item Ensure the algorithm finds the optimal solution by exploring options that pass vessels on either side, avoiding local minima issues, and ensuring the solution is stable.
     \item Create a library for B-spline optimization to make the implementation of general B-spline optimization problems easier and more efficient.
     \item Test the algorithm in various COLREGS relevant scenarios, and verify the solutions through simulations. Use these results to provide a detailed analysis of the algorithm's performance, including metrics such as reference path tracking, energy consumption, and computational efficiency.
@@ -105,7 +105,7 @@ Combining B-spline theory, mixed integer programming, and classical optimal cont
 \begin{itemize}
     \item A comprehensive introduction to B-spline curves and their application in trajectory planning, ensuring the material is accessible to readers without prior knowledge of piecewise polynomial curves, thereby making the thesis self-contained on this topic.
     \item A COLREGs-aware optimal control problem formulation for path following in a dynamic environment using B-splines. The B-spline representation provides a sparse parameterization of the trajectory with built-in smoothness and constraint satisfaction.
-    A novel method for constructing the reference tracking objective is presented and discussed in detail. The result is that weights in the cost function terms can be parameterized by B-spline curves, allowing for an easily adaptable objective function for the governing COLREGS rules.
+    A novel method for constructing the reference tracking objective is presented and discussed in detail. The result is that weights in the cost function terms can be parameterized by B-spline curves, allowing for an easily adaptable objective function for the governing COLREGS.
     \item \acrfull{MIP} is used to address the non-convexity of the problem to ensure passage on the COLREGs-compliant side of the target ships.
     The side to pass the target ships on are decided using one binary decision variable each, limiting the exponential growth of the number of sub-problems in the mixed integer programming formulation.
     \item A B-spline optimization library is developed based on CasAdi \citep{casadi}, building on the work presented in \citet{mercy2016spline} to include the use of \gls{MIP} formulations in B-spline based optimization problems.

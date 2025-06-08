@@ -18,7 +18,7 @@ More complex time splines are possible, giving more flexibility to the length an
 In the different simulation scenarios, the TS heading and speed will vary to force the situations described by the COLREGS rules 8 and 13-17.
 
 Unless otherwise specified, the bases for the spline functions in the optimization problem are given in \cref{tab:sim-spline-basis}. Note that the basis for the OS position $\mathbf p_\text{OS}$ is defined on finer knot vector as the normal and offset vectors for the TS hyperplanes, $\mathbf n_{s,j}$, $\mathbf n_{p,j}$, $b_{s,j}$, and $b_{p,j}$. This is done to reduce the number of optimization variables and constraints in the optimization problem, and is justified by the fact that this constraint is only active during a small time window at the closest point of approach (CPA) to the TS. For the given bases in \cref{tab:sim-spline-basis}, the OS position is represented by 12 B-spline basis functions of degree 2, so if the the TS hyperplane variables had the same basis, this would result in 72 optimization variables and 184 constraints
-\footnote{The vector valued splines $\mathbf n_{s,j}$ and $\mathbf n_{p,j}$ give 12 $\times$ 2 = 24 coefficients each, and the scalar splines $b_{s,j}$ and $b_{p,j}$ give 12 $\times$ 1 = 12 coefficients each for a total of 72 optimization variables. The number of constraints are attributed to the following: 32 basis functions in the degree 4 basis of $\mathbf p_\text{OS}\cdot\mathbf{n}_{s,j}$, 4 $\times$ 22 = 88 from the 4 points defining the TS in the basis of $\mathbf p_\text{TS}\cdot\mathbf n_j$, and another 2 $\times$ 32 for the normalization of the normal vectors.}, 
+\footnote{The vector valued splines $\mathbf n_{s,j}$ and $\mathbf n_{p,j}$ give 12 $\times$ 2 = 24 coefficients each, and the scalar splines $b_{s,j}$ and $b_{p,j}$ give 12 $\times$ 1 = 12 coefficients each for a total of 72 optimization variables (73 if the binary variable is counted). The number of constraints are attributed to the following: 32 basis functions in the degree 4 basis of $\mathbf p_\text{OS}\cdot\mathbf{n}_{s,j}$, 4 $\times$ 22 = 88 from the 4 points defining the TS in the basis of $\mathbf p_\text{TS}\cdot\mathbf n_j$, and another 2 $\times$ 32 for the normalization of the normal vectors.}, 
 as opposed to 36 optimization variables and 98 constraints per TS with the bases in \cref{tab:sim-spline-basis}.
 The optimization problem in \cref{eq:minmpc-compact} is solved using Bonmin \citep{bonmin2008}, which combines existing open source libraries such as Ipopt \citep{ipopt2006} for NLPs, and Cbc \citep{cbc2005} for MIPs, to solve MINLPs. Bonmin is accessed through the CasADi framework as described in \cref{sec:python-implementation}. 
 For all cases going forward, the solver is initialized as follows:
@@ -50,6 +50,12 @@ The specific direction of the normals is reasoned from the definition of $\mathb
         \rule{0pt}{2.5ex}$d_p$ & 50 & m & Minimum distance to target on the passing side \\
         \hline
         \rule{0pt}{2.5ex}$d_o$ & 100 & m & Minimum distance to target on the opposide side \\
+        \hline
+        \rule{0pt}{2.5ex}$w_\text{ref}$ & - & - & Weighting coefficients for the reference error in the cost function, see \cref{eq:minmpc-compact} \\
+        \hline
+        \rule{0pt}{2.5ex}$w_\text{mv}$ & - & - & Weighting coefficients for the control effort in the cost function, see \cref{eq:minmpc-compact} \\
+        \hline
+        \rule{0pt}{2.5ex}$w_\text{time}$ & - & - & Weighting coefficient for the time in the cost function, see \cref{eq:minmpc-compact} \\
         \hline
     \end{tabular}
     \caption{Simulation parameters.}
@@ -203,15 +209,27 @@ In all cases, while being initialized with the reference, the B-MINMPC is able t
 \subsection{Head-on, Crossing, and Overtaking Situations}
 \label{sec:case-2-head-on}
 
-The next three cases serve to illustrate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. These are constructed such that an OS following an eastwards reference trajectory at $N=0$ is on a collision course with a TS at $(0, 0)$, 250 seconds into the simulation. For each scenario, eight additional simulations are run where the starting points and reference trajectories for the OS are shifted both north and south by an appropriate distance. The speed and course of the TS are varied to create head-on, crossing, and overtaking situations. In these scenarios the simulation time is set to $T=500$ seconds. 
-\Cref{tab:batch-params} summarizes the parameters used in the different cases. The weights in \cref{tab:sim-spline-basis} are set to
+
+Evaluating the compliance of autonomous vessels with the COLREGS through formal, quantifiable metrics presents substantial challenges. The COLREGS were originally formulated to guide human mariners, yielding a set of rules that invite subjective interpretation, resist quantification, and complicate systematic evaluation \citep{Woerner2018}.  For example, the customary practice of smaller craft yielding to larger intercontinental vessels often prevails even when protocols can assign right-of-way to the smaller vessel, underscoring the human-centric nature of these rules. \citet{Woerner2018} propose several compliance‐assessment techniques---such as computing an optimal vessel pose at the \acrshort{CPA} and defining safety functions based on inter-vessel range and relative bearing---but these methods introduce numerous scenario-specific parameters that must be manually tuned according to human evaluators' judgments, thereby limiting their robustness and general applicability.
+
+
+Assessing COLREGS compliance in motion planners via post hoc metrics inevitably introduces circularity: each metric must be tailored to the specific scenario it evaluates, and a good planner should be designed to optimize the same metric. 
+As a result, metric design becomes as bespoke and complex as developing a COLREGS-compliant motion planner itself, precluding truly objective assessment.  As an example, take the simple case of a minimum distance requirement: When a distance constraint is correctly encoded in the optimization problem, the passing distance is guaranteed to hold by the constrained optimization, while if the distance requirement in the optimization problem is too small, it may lead to a dangerous situation in the real world.  If the minimum distance requirement is known through the metric, it may as well be encoded in the optimization problem, rendering the metric redundant. 
+Instead of relying on such tuning-dependent measures, the intrinsic geometric and kinematic properties of the optimized trajectories are analyzed.  Given a set of metrics and requirements, the B-MINMPC can---by only tuning the parameters in \cref{tab:simulation-parameters}---be configured to reliably generate trajectories that are compliant with COLREGS 
+parameterized to generate trajectories
+
+% In particular, the cumulative ratio of speed change to course change is introduced, a parameter-free indicator that depends solely on the trajectory’s shape and can be computed directly from the solution.
+
+
+
+The next cases serve to illustrate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. These are constructed such that an OS following an eastwards reference trajectory at $N=0$ is on a collision course with a TS at $(0, 0)$, 250 seconds into the simulation. For each scenario, eight additional simulations are run where the starting points and reference trajectories for the OS are shifted both north and south by an appropriate distance. The shifted scenarios will all be referred to as belonging to the same \emph{batch simulation}.
+In these scenarios, the simulation time is fixed to $T=500$ seconds to precisely control the timing of maneuver and encounter windows. \Cref{tab:batch-params} summarizes the parameters for each case. The weights in \cref{tab:sim-spline-basis} are configured as follows:
 \begin{align}
-    w_\text{time} &= 0 \quad \text{(\emph{time is fixed})}      \\
+    w_\text{time} &= 0 \quad \text{(\emph{fixed simulation time})}      \\
     \coeffs(w_\text{ref}) &= \{100, 10, 0, 0, 0, 0, 0, 0, 100, 10\}   \\
     \coeffs(w_\text{mv}) &= \{1, 1, 0, 0, 10, 10, 0, 0, 1, 1\}
 \end{align}
-to facilitate course and speed corrections in the maneuver windows, as discussed in \cref{sec:colregs-objectives}. These weights correspond to an encounter window of $(t_8-t_2)T=(0.8-0.2)500=300$ seconds, and a maneuver window of $(t_3-t_2)T=(t_7-t_6)T=(0.3-0.2)500=100$ seconds. The encounter window is centered at the time of collision, which again, is set to 250 seconds into the simulation.
-
+These settings promote course corrections within the maneuver windows, as detailed in \cref{sec:colregs-objectives}.  Specifically, they define an encounter window of duration $(t_8-t_2)T=(0.8-0.2)500=300$ seconds and maneuver windows of duration $(t_3-t_2)T=(t_7-t_6)T=(0.3-0.2)500=50$ seconds. The increased weight on $w_\text{mv}$ within the central portion of the encounter window encourages the OS to maintain its reference speed, facilitating course alterations during the maneuver windows in accordance with COLREGS rule 8c), which states that if there is sufficient sea room, alteration of course alone may be the most effective action to avoid collision \citep{COLREGS}.
 
 
 \renewcommand{\arraystretch}{1.2}
@@ -220,7 +238,7 @@ to facilitate course and speed corrections in the maneuver windows, as discussed
         \hline
         \textbf{Case} & \multicolumn{1}{c|}{\textbf{TS course}} & \textbf{TS speed} & \textbf{Plot} \\
         \hline
-        2.0 & -70\degree, -40\degree, 20\degree, 40\degree & 4.5 m/s & \cref{fig:crossing} \\
+        2.0 & -40\degree, 20\degree, 40\degree & 4.5 m/s & \cref{fig:crossing} \\
         \hline
         3.0 & -90\degree & 4.5 m/s & \cref{fig:head-on} \\
         \hline
@@ -233,12 +251,41 @@ to facilitate course and speed corrections in the maneuver windows, as discussed
 \renewcommand{\arraystretch}{1.0}
 
 
-Case 2 is a crossing situation where the TS is heading west at 4.5 m/s with a heading $-90\degree$. For the sake of simplicity, the OSs starting above the $N=250$ axis are considered to be too far away to be in a situation requiring a COLREGS compliant maneuver, and so only the OSs starting south of the $N=250$ axis are considered. In a crossing situation, COLREGS rule 15 applies, which states that the OSs must pass the TS with a starboard maneuver. The passing distance for the starboard maneuver is set to $d_p=50$ m, and the passing distance for the port maneuver is set to $d_o=100$ m, as in \cref{tab:simulation-parameters}. 
+\begin{figure}[htbp]
+    \centering
+\includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/crossing_advanced/crossing_advanced_scenario_10_2.svg}
+    \caption{\emph{Case 2.0}: Trajectory generation in a crossing situation where the TS has a course, from top to bottom, of -40\degree, 20\degree, and 40\degree with respect to the North axis.}
+    \label{fig:crossing}
+\end{figure}
 
-\Cref{fig:crossing} illustrates the trajectories of the OSs and TS in a crossing situation. At $t=50$ seconds, the five OSs closest to $N=150$ start the starboard maneuver, and follows a course parallell to the reference trajectory from $t=200$ until the start of the second maneuver window at $t=300$ seconds where the OSs start to turn back towards their reference trajectories. This is illustrated more clearly in \cref{fig:crossing-metrics}, where the speed, change in course, and distance to the reference trajectory for the OSs are plotted for the case where the TS has a course of 40\degree. 
+
+
+Case 2 is a crossing situation where the TS is heading west at 4.5 m/s with a heading $-90\degree$. For the sake of simplicity, the OSs starting above the $N=250$ axis are considered to be too far away to be in a situation requiring a COLREGS compliant maneuver, and so only the OSs starting south of the $N=250$ axis are considered. In a crossing situation, COLREGS rule 15 applies, which states that the OSs must pass the TS with a starboard maneuver. To encourage this behaviour the minimum passing distances for the port and starboard maneuver are enforced by setting $d_p=50$ m and $d_o=100$ m respectively. The specific distances are not important, as they are heavily dependent on the environment and the speeds and sizes of the OS and TSs, and have to be tuned specifically for each scenario. The important part is that the port side passing distance is larger than the starboard side passing distance, and that the port side passing distance is not so large that no solution to the optimization problem can be found given that the starboard side solution is deemed infeasible by the optimizer.
+
+
+
+\Cref{fig:crossing} illustrates the trajectories of the OSs and TS in the crossing situation. At $t=50$ seconds, the five OSs closest to $N=150$ start the starboard maneuver, and follows a course parallell to the reference trajectory from $t=200$ until the start of the second maneuver window at $t=300$ seconds where the OSs start to turn back towards their reference trajectories. This is illustrated more clearly in \cref{fig:crossing-metrics}, where the speed, change in course, and distance to the reference trajectory for the OSs are plotted for the case where the TS has a course of 40\degree in \gls{NED} coordinates.
+
+The change in course is concentrated at the beginning and end of each maneuver window. This behavior aligns with COLREGS rule 8b), which advises that any alteration of course or speed should be substantial enough to be readily apparent to another vessel, as opposed to a gradual and subtle change. The course change happens over a period of 50 seconds, which is the shortest possible duration any speed or course change can take in this simulation, as the OS position $\mathbf p_\text{OS}$ is represented by a B-spline with a  parameter interval of 0.1 between the knots and the total simulation time is 500 seconds. As per \cref{tab:sim-spline-basis}, the basis for $\mathbf p_\text{OS}$ is degree 2, which gives a continuous function for position, speed and course, but is discontinuous at the knots for acceleration and course change (also seen in \cref{fig:crossing-metrics}). 
+If these discontinuities are undesirable, the basis degree can be increased to ensure higher-order continuity of the spline functions at the cost of a higher number of constraints.  Furthermore, a higher number of optimization variables will be required to achieve the same maneuver window locality because the continuity conditions introduce dependencies between neighboring control points. 
+This is illustrated in \cref{fig:crossing-scenario-degree-3-metrics}, which depicts the same scenario but with a degree 3 B-spline basis for the OS position $\mathbf p_\text{OS}$. While the course change $\dot\chi$ is now continuous, the maneuver duration is extended. This is because a full knot window is needed for the course change to transition continuously from 0 to the desired value. The dip in speed during the course change is also more pronounced, with the trajectory for $N=250$ dropping to $\approx 5.4$ m/s, during the first maneuver window as opposed to $\approx 5.8$ m/s in \cref{fig:crossing-metrics}. 
+
+The speed is kept close to the reference speed of 6 m/s during the segments where the OSs are not maneuvering, but dips below the reference speed during course change.  This is undesirable in context of COLREGS rule 8c) if there is sufficient sea room, as the OSs should prioritize altering course alone over altering speed.  This however, is a result of the B-Spline parameterization. For a constant speed trajectory, the equation
+\begin{equation*}
+    u^2(x) + v^2(x) = C
+\end{equation*}
+must hold, where $u(x)$ and $v(x)$ are the speeds of a vessel in two orthogonal directions, and $C$ is a constant. By taking the derivative the differential equation
+\begin{equation*}
+    u(x)u'(x) + v(x)v'(x) = 0,
+\end{equation*}
+is obtained, which is only satisfied for a family of functions of the form
+\begin{equation*}
+    u(x) = \cos(x) \quad \text{and} \quad v(x) = \sin(x),
+\end{equation*}
+or if $u(x)$ and $v(x)$ are both constant.  B-Splines are piecewise polynomials and can only approximate sines and cosines, not represent them exactly.  This explains the small dips in speed during the course change segments, as well as why the speed is able to be kept exactly constant during the straight line segments of the trajectory.
+
+
 Similar results are seen for the crossing and overtaking cases, where the only differences are number of OSs that have to maneuver and the distances they have to travel to avoid the TS.
-
-It is in general a difficult task to evaluate the COLREGS compliance of motion planners. 
 
 
 \todo[inline]{ikke passer 200m foran beamen + en hastighetsfaktor. Kan gå nærme bak dersom det har skjedd en manøver nærme CPA, men er vanskelig å vurdere om denne manøveren er stor nok. DNV}
@@ -254,26 +301,29 @@ It is in general a difficult task to evaluate the COLREGS compliance of motion p
 % \todo{flere vinkler for crossing. 20\degree bak beamen er vanskelig}
 
 
-\begin{figure}[htbp]
-    \centering
-\includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/crossing_advanced/crossing_advanced_scenario_10_2.svg}
-    \caption{\emph{Case 2.0}: Trajectory generation in a crossing situation where the TS has a course, from top to bottom, of -70\degree, -40\degree, 20\degree, and 40\degree with respect to the North axis.}
-    \label{fig:crossing}
-\end{figure}
-
 
 \begin{figure}
     \centering
-    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_10_2_course_40.svg}
-    \caption{\emph{Case 2.0}: Speed, change in course, and distance to the reference trajectory for the OSs in \cref{fig:crossing} in the 40\degree course case.}
-    \label{fig:crossing-metrics}
+    \begin{subfigure}[b]{\textwidth}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_10_2_course_40.svg}
+        \caption{\emph{Case 2.0:} B-Spline basis as given in \cref{tab:sim-spline-basis}. Trajectory shown in \cref{fig:crossing} in the $40\degree$ course case.}
+        \label{fig:crossing-metrics}
+    \end{subfigure}
+    \begin{subfigure}[b]{\textwidth}
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_10_3_course_40.svg}
+        \caption{\emph{Case 2.1:} Same scenario as above, but with a B-spline basis of degree 3 for the OS position $\mathbf p_\text{OS}$.}
+        \label{fig:crossing-scenario-degree-3-metrics}
+    \end{subfigure}
+    \caption{Speed, change in course, and distance to the reference trajectory for the OSs in crossing scenario. The dotted lines represent the knots in the B-spline basis for the OS position $\mathbf p_\text{OS}$, and the colored solid lines each represent a single OS starting at the corresponding North coordinate given in the legend.}
+    \label{fig:crossing-scenario-metrics}
 \end{figure}
+
 
 
 \begin{figure}
     \centering
     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_20_2_course_40.svg}
-    \caption{\emph{Case 2.1}: Speed, change in course, and distance to the reference trajectory for the OSs in \cref{fig:crossing} in the 40\degree course case, where the OS spline $\mathbf p_\text{OS}$ is represented in a finer basis.}
+    \caption{\emph{Case 2.2}: Speed, change in course, and distance to the reference trajectory for the OSs in \cref{fig:crossing} in the 40\degree course case, where the OS spline $\mathbf p_\text{OS}$ is represented in a finer basis.}
 \end{figure}
 
 
@@ -282,7 +332,7 @@ It is in general a difficult task to evaluate the COLREGS compliance of motion p
     \begin{subfigure}[b]{\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Head on scenario.svg}
-        \caption{Axes are to scale.}
+        \caption{Axes are scaled proportionally to each other.}
         \label{fig:head-on-scenario-a}
     \end{subfigure}
     \begin{subfigure}[b]{\textwidth}
@@ -302,7 +352,7 @@ It is in general a difficult task to evaluate the COLREGS compliance of motion p
     \centering
     \begin{subfigure}[b]{\textwidth}
         \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/Overtaking scenario.svg}
-        \caption{Axes are to scale.}
+        \caption{Axes are scaled proportionally to each other.}
         \label{fig:overtaking-scenario-a}
     \end{subfigure}
     \begin{subfigure}[b]{\textwidth}

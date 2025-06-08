@@ -224,8 +224,8 @@ Thus a careful choice of the objective function is important to ensure robust an
 The following section will examine the behavior of the B-spline method when applied to a basic reference-following task. The subsequent section will then address COLREGS considerations.
 
 
-\subsection{Reference Following}
-\label{sec:oscillations}
+\subsection{Reference Following Metric}
+\label{sec:reference-following-metric}
 
 
 \begin{figure}
@@ -243,19 +243,41 @@ The \acrfull{TTE} will now be defined as the distance between a time parameteriz
 \begin{equation}\label{eq:total-track-error}
     \mathbf e(t) = \mathbf p_\text{os}(t) - \mathbf p_\text{ref}(t).
 \end{equation}
+A limitation of employing the TTE as a cost function arises when the OS lags the reference trajectory, such as during collision avoidance maneuvers. In such instances, the OS tends to converge towards a point ahead of the geometrically closest point on the reference trajectory, resulting in prolonged convergence times. 
 
-In classical optimal control with time grids, the simplest way to design an objective function is to minimize the sum of the squared TTE at each time step, i.e., to minimize
+A reference‐following metric that balances geometric and temporal alignment is the pseudo cross–track error (PXTE), defined by
+\begin{equation}\label{eq:pxte}
+  \bar e(t)
+  = \mathbf e(t)^\top
+    \mathbf{\hat n}_{\mathrm{ref}}(t),
+\end{equation}
+where
+\begin{equation}\label{eq:reference-normal-pxte}
+  \mathbf{\hat n}_{\mathrm{ref}}(t)
+  = \mathbf R\,\frac{\mathbf p_{\mathrm{ref}}'(t)}{\sqrt{\mathbf p_{\mathrm{ref}}'(t) \cdot \mathbf p_{\mathrm{ref}}'(t)}}
+\end{equation}
+is the unit normal to the reference path (with $\mathbf R$ a $+\pi/2$ rotation).  On straight segments \cref{eq:pxte} reduces to the standard XTE; on curved sections it approximates the TTE, yet---unlike the XTE---remains closed‐form and differentiable.
+
+
+In classical optimal control with time grids, a straightforward approach to design an objective function based on the PXTE is to minimize the sum of the squared PXTE at each time step, i.e., to minimize
 \begin{equation}\label{eq:total-track-error-time-grid}
-    J_\text{ref} = \sum_{t=0}^{T} \|\mathbf e(t)\|_2^2,
-    \sum_{k=0}^{N_t} \|\mathbf e(t_k)\|_2^2,
+    J_\text{ref} = \sum_{k=0}^{n} \bar e(t_k)^2,
 \end{equation}
-where $t_k$ is the time at the $k$-th time step and $N_t$ is the number of time steps. 
+where $t_k$ is the time at the $k$-th time step and $n$ is the number of time steps.
 
-A similar approach can be used in the B-spline framework, where both the OS and the reference trajectory are represented as B-spline functions. The TTE cost function can then be expressed as the integral over the squared TTE, i.e., to minimize
+A similar approach can be used in the B-spline framework, where both the OS and the reference trajectory are represented as B-spline functions. The resulting PXTE is a NURBS, as it is a rational function of two B-splines. The natural extension of \cref{eq:total-track-error-time-grid} to the B-spline framework is then to minimize the integral of the squared PXTE over the parameter domain of the B-spline functions, i.e., to minimize
 \begin{equation}\label{eq:total-track-error-b-spline}
-J_\text{ref} = \int_\mathbb R \mathbf e(x) \cdot \mathbf e(x) \, dx,
+J_\text{ref} = \int_\mathbb R \bar e(x)^2 \, dx.
 \end{equation}
-where $\mathbf e(x) = \mathbf p_\text{os}(x) - \mathbf p_\text{ref}(x)$ represents the TTE at parameter $x$, and the integral is evaluated across the B-spline functions' parameter domain. However, this work revealed that the overlapping support of B-spline basis functions can induce oscillations in the resulting trajectory when employing this cost function directly (see \cref{fig:conservativeness-traj-integral}). Therefore, careful consideration is required when designing this cost within the B-spline framework.
+This integral, however, does not yield a rational function, as the integral of a rational polynomial function includes $\log$ and $\arctan$ functions in its solution. Instead, this integral can be approximated by dividing each coefficient of $\mathbf p'_\text{ref}(x)$ by the average speed over each basis function's support. This gives an approximate normalized normal vector of the reference trajectory at parameter $x$:
+\begin{equation}\label{eq:approx-reference-normal-pxte}
+    \mathbf{\tilde n}_{\mathrm{ref}}(x) = \sum_{i=0}^{N} \frac{\mathbf c_\text{ref,i} }{\sqrt{\mathbf p_\text{ref}'(\xi_i)^\top \mathbf p_\text{ref}'(\xi_i)}}B_{\mathrm{ref},i}^\top(x).
+\end{equation}
+Here $\mathbf c_\text{ref,i}$ are the control points of the reference trajectory B-spline, $B_{\mathrm{ref},i}(x)$ is the $i$-th basis function in the $N$-element basis, and $\xi_i$ is the greville abscissa of the $i$-th basis function. Replacing $\mathbf{\hat n}_{\mathrm{ref}}(t)$ in \cref{eq:pxte} with $\mathbf{\tilde n}_{\mathrm{ref}}(x)$, the integral in \cref{eq:total-track-error-b-spline} reduces to a B-spline function, which can easily be used as a cost function in the B-spline optimization framework. This approximiation has the advantage that it retains the property of being equivalent to the XTE on straight segments and while approximating the TTE on curved segments, albeit with an overestimation of the error compared to the actual PXTE. 
+
+
+\subsection{Reference Following Weighting}\label{sec:oscillations}
+During the development of the B-spline framework, it was discovered that the choice of cost function for reference following has a significant impact on the resulting trajectory. Overlapping support of B-spline basis functions can induce oscillations in the resulting optimized trajectory when employing an integral function over the spline parameter $x$ like the one in \cref{eq:total-track-error-b-spline} as a cost. (see \cref{fig:conservativeness-traj-integral} for a solution to an optimization problem using this cost). Similar results have been found for other integral-based costs as well. Therefore, careful consideration is required when designing the cost within the B-spline framework.
 
 To illustrate this, consider the following optimization problem, which is a simple reference-following problem where the OS is constrained to a maximum velocity $v_\text{max}$:
 \begin{equation}\label{eq:conservativeness-optimization}

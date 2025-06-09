@@ -554,6 +554,7 @@ This algorithm can be made more efficient by exploiting the local support proper
 
 
     \centering
+    \small
     \begin{tabular}{c|c||c|c|c|c|c|c}
         \textbf{Basis} &  & $B_{0, p_2, \mathbf{t}_2}$ & $B_{1, p_2, \mathbf{t}_2}$ & $B_{2, p_2, \mathbf{t}_2}$ & $B_{3, p_2, \mathbf{t}_2}$ & $B_{4, p_2, \mathbf{t}_2}$ & $B_{5, p_2, \mathbf{t}_2}$ \\[5pt]
         \hline
@@ -606,7 +607,7 @@ As for the regular product, the PW inner product can be made more efficient by n
 
 \begin{figure}
     \centering
-    \includesvg[width=.8\textwidth,pretex=\scriptsize]{fig/b-spline/overlapping-bases.svg}
+    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/b-spline/overlapping-bases.svg}
     \caption{The overlapping supports of the B-splines. Each rectangle represents the support of a basis function, so counting the number of basis functions withing each knot interval gives the number of multiplications for that interval. The total number of multiplications then the area of all the rectangles, which is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline.}
     \label{fig:overlapping-bases}
 \end{figure}
@@ -747,9 +748,10 @@ This chapter has introduced the concept of B-splines, their properties, and how 
 Table of operations for B-splines is given in \cref{tab:operations}. A summary of operations on \acrshort{NURBS} can be found in \cite{piegl1997symbolic}.
 
 
-\renewcommand{\arraystretch}{1.5}
+\renewcommand{\arraystretch}{1.2}
 \begin{table}
     \centering
+    \small
     \begin{tabular}{|l|l|l|l|c|}
     \hline
     \textbf{Operation} 

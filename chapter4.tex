@@ -256,7 +256,7 @@ where
   \mathbf{\hat n}_{\mathrm{ref}}(t)
   = \mathbf R\,\frac{\mathbf p_{\mathrm{ref}}'(t)}{\sqrt{\mathbf p_{\mathrm{ref}}'(t) \cdot \mathbf p_{\mathrm{ref}}'(t)}}
 \end{equation}
-is the unit normal to the reference path (with $\mathbf R$ a $+\pi/2$ rotation).  On straight segments \cref{eq:pxte} reduces to the standard XTE; on curved sections it approximates the TTE, yet---unlike the XTE---remains closed‐form and differentiable.
+is the unit normal to the reference path (with $\mathbf R$ a $+\pi/2$ rotation).  On straight segments \cref{eq:pxte} reduces to the standard XTE, yet---unlike the XTE---remains closed‐form and differentiable.
 
 
 In classical optimal control with time grids, a straightforward approach to design an objective function based on the PXTE is to minimize the sum of the squared PXTE at each time step, i.e., to minimize
@@ -273,7 +273,8 @@ This integral, however, does not yield a rational function, as the integral of a
 \begin{equation}\label{eq:approx-reference-normal-pxte}
     \mathbf{\tilde n}_{\mathrm{ref}}(x) = \sum_{i=0}^{N} \frac{\mathbf c_\text{ref,i} }{\sqrt{\mathbf p_\text{ref}'(\xi_i)^\top \mathbf p_\text{ref}'(\xi_i)}}B_{\mathrm{ref},i}^\top(x).
 \end{equation}
-Here $\mathbf c_\text{ref,i}$ are the control points of the reference trajectory B-spline, $B_{\mathrm{ref},i}(x)$ is the $i$-th basis function in the $N$-element basis, and $\xi_i$ is the greville abscissa of the $i$-th basis function. Replacing $\mathbf{\hat n}_{\mathrm{ref}}(t)$ in \cref{eq:pxte} with $\mathbf{\tilde n}_{\mathrm{ref}}(x)$, the integral in \cref{eq:total-track-error-b-spline} reduces to a B-spline function, which can easily be used as a cost function in the B-spline optimization framework. This approximiation has the advantage that it retains the property of being equivalent to the XTE on straight segments and while approximating the TTE on curved segments, albeit with an overestimation of the error compared to the actual PXTE. 
+Here $\mathbf c_\text{ref,i}$ are the control points of the reference trajectory B-spline, $B_{\mathrm{ref},i}(x)$ is the $i$-th basis function in the $N$-element basis, and $\xi_i$ is the greville abscissa of the $i$-th basis function. Replacing $\mathbf{\hat n}_{\mathrm{ref}}(t)$ in \cref{eq:pxte} with $\mathbf{\tilde n}_{\mathrm{ref}}(x)$, the integral in \cref{eq:total-track-error-b-spline} reduces to a B-spline function, which can easily be used as a cost function in the B-spline optimization framework. 
+This approximiation has the advantage that it retains the property of being equivalent to the XTE on straight segments, while the accuracy on curved segments depends on the change in the curvature of the reference trajectory over the supports of the basis functions in that particular segment.
 
 
 \subsection{Reference Following Weighting}\label{sec:oscillations}
@@ -432,7 +433,7 @@ Setting $\mathbf H = \mathbf I$ results in a cost function that penalizes all co
 It may be desirable to weigh the cost $J_\text{ref}$ against other objectives, such as the COLREGS objectives in the next section.
 Using $J_\text{ref}=\| w_\text{ref}\;\mathbf e(x)\|_{\mathbf I}^2$ as the cost term works well when $w_\text{ref}$ is a scalar. If however, $w_\text{ref}(x)$ is a spline function itself, the oscillatory behavior of the cost function may return. This was discovered during the work for this thesis. The reason for wanting to use a spline function for $w_\text{ref}(x)$ is to allow for the cost to be weighted differently at different times, e.g., to allow for a higher cost on the TTE during transit and a lower cost during an encounter with a \acrshort{TS}. Again, this will be discussed in more detail in \cref{sec:colregs-objectives}.
 
-The intuition for this comes from that while the cost yields independent directions for the eigenvectors in the Gramian $\mathbf{\tilde G}$ for the $\mathbf{\tilde B}$ basis, the Hessian of the cost function is ultimately expressed in the basis $\mathbf B$ of the original coefficients $\mathbf c_\mathbf e$. In mathematical terms, the cost function is expressed as
+The intuition for this comes from that while the cost yields independent directions for the eigenvectors in the Gramian $\mathbf{\tilde G}$ for the $\mathbf{\tilde B}$ basis, the Hessian of the cost function is ultimately expressed in the basis $\mathbf B$ of the original coefficients $\mathbf c_\mathbf e$. In vector notation, the cost function is expressed as
 \begin{equation}\label{eq:cost-function-w-ref}
     J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf I}^2 = \sum_i \mathbf{\tilde c}_{w \mathbf{e},i}^\top \mathbf I \mathbf{\tilde c}_{w \mathbf{e},i},
 \end{equation}
@@ -442,7 +443,7 @@ where $\mathbf{\tilde c}_{w \mathbf{e}}$ are the coefficients of the spline func
         = \sum_i \mathbf c_{w,\mathbf e,i}^\top \underbrace{\mathbf T^\top \mathbf I \mathbf T}_{\mathbf H} \mathbf c_{w,\mathbf e,i} 
         = \sum_i \mathbf c_{w,\mathbf e,i}^\top \mathbf H \mathbf c_{w,\mathbf e,i},
 \end{equation}
-where $\mathbf c_{w,\mathbf e}$ are the approximated coefficients of $w_\text{ref}(x)\;\mathbf e(x)$ in the unrefined original basis $\mathbf B$. It should now be clear that by altering the basis the cost function with $\mathbf H=\mathbf I$ is expressed in, the shape of the cost function will change as well.
+where $\mathbf c_{w,\mathbf e}$ represents the approximated coefficients of the product $w_\text{ref}(x)\;\mathbf e(x)$ when expressed within the original, unrefined basis $\mathbf B$. This highlights a critical insight: modifying the basis in which the cost function is formulated inherently alters the cost function's characteristics and behavior.
 
 As a simple example, consider the case where $w_\text{ref}(x)$ is a piecewise constant spline with its basis $\mathbf B_w$ sharing the same knot values as $\mathbf B$. I.e. for $N=4$ and $p=2$, the knot vector for $\mathbf B$ and $\mathbf B_w$ is $\mathbf u(2,4) = \left\{0, 0, 0, \frac{1}{2}, 1, 1, 1\right\}$ and $\left\{0, \frac{1}{2}, 1\right\}$ respectively. Multiplying $w_\text{ref}(x)$ with $\mathbf e(x)$ results in a new spline function which is minimally represented in $\mathbf{\tilde B}$ with $p=2$ and knot vector $\left\{0, 0, 0, \frac{1}{2}, \frac{1}{2}, \frac{1}{2}, 1, 1, 1\right\}$.  The transformation matrix $\mathbf T$ from $\mathbf B$ to $\mathbf{\tilde B}$ and the corresponding Hessian $\mathbf H$ is then:
 \begin{equation*}
@@ -524,7 +525,7 @@ The final cost function for the reference trajectory following is thus chosen as
 \end{equation}
 where $w_\text{ref}(x)$ is a B-spline function that can be used to weight the cost function at different times, and $\mathbf G^{-1}$ is the inverse Gramian in the given expressions' basis. The trace term is included to ensure that the total cost of all the directions is normalized to 1, as the trace of a matrix is the sum of its eigenvalues.
 
-To the authors knowledge, this is the first time that the inverse Gramian has been used as a Hessian in a B-spline-based optimization problem, or that a similar analysis of the eigenvectors and eigenvalues of the Gramian has been performed in the context of B-spline trajectory following. Other cost functions have also been considered, but with poor results in terms of feasibility for the optimization problem in question. A brief overview of the other cost functions considered is given in \cref{app:failed-reference-following}.
+To the authors knowledge, this is the first time that the inverse Gramian has been used as a Hessian in a B-spline-based optimization problem, or that a similar analysis of the eigenvectors and eigenvalues of the Gramian has been performed in the context of B-spline trajectory following. Other cost functions have also been considered, but with poor results in terms of feasibility for the optimization problem in question. A brief overview of these costs is given in \cref{app:failed-reference-following}.
 
 \begin{figure}
     \centering
@@ -562,14 +563,17 @@ The reason for the second maneuver window as opposed to the singular one in \cit
 The encounter and maneuver windows are incorporated into the cost function as weights $w_\text{ref}(x)$ and $w_\text{mv}(x)$, which are applied to the reference trajectory following cost and the cost for altering course, respectively. The resulting cost function is:
 \begin{subequations}\label{eq:cost-maneuver-window}
     \begin{align}
-        J_\text{ref} &= \|w_\text{mv}(x)\;\mathbf e(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, 
+        J_\text{ref} &= \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, 
         \label{eq:cost-maneuver-window-ref}\\
-        J_\text{mv} &= \|w_\text{ref}(x)\;\mathbf e'(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})},
+        J_\text{mv} &= \|w_\text{mv}(x)\;\mathbf e'(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})},
         \label{eq:cost-maneuver-window-mv}\\
-        J &= J_\text{ref} + J_\text{mv}, \label{eq:cost-maneuver-window-total}
+        J_\mathrm{acc} &= \|w_\text{acc}(x)\;\mathbf p''_\text{os}(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, \label{eq:cost-maneuver-window-acc}\\
+        J_\mathrm{end} &= \|w_\text{end}(x)\;(\mathbf p_\text{os}(x)-\mathbf p_\text{ref}(1))\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, \label{eq:cost-maneuver-window-end}\\
+        J &= J_\text{ref} + J_\text{mv} + J_\mathrm{acc} + J_\mathrm{end},
+        \label{eq:cost-maneuver-window-total}
     \end{align}
 \end{subequations}
-where $J_\text{mv}$ is the cost for altering course, $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text{mv}(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. Notice that $J_\text{mv}$ is defined using the Frobenius norm over the control points of the B-spline function as opposed to the definite integral over the squared reference error for the same reason as in \cref{sec:oscillations}.
+where $J_\text{mv}$ is the cost for altering course, $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text{mv}(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. An additional cost $J_\mathrm{acc}$ is included to penalize course and speed alterations where desired. To provide a driving force in the direction of the reference trajectory, a cost $J_\mathrm{end}$ is included as the PXTE alone does not penalize moving in the opposing direction of the reference course. 
 
 The advantage of the B-spline framework in this case is that the weights can be defined as B-spline functions themselves. This allows for great flexibility in shaping the desired encounter trajectory. The function shape shown in \cref{fig:maneuver-window}, can be represented using a zero-degree B-spline. If smoother transitions are desired, higher degree B-splines can be used.
 If the weights are fixed as a function of time before the optimization problem is solved, then the costs are constant with respect to the optimization variables and the optimization problem is convex as opposed to that of \cref{fig:turn-rate-cost}.
@@ -636,7 +640,7 @@ The complete B-spline MINMPC problem can be written compactly as
 \label{eq:minmpc-compact}
     \begin{aligned}
         \min
-        \quad & J_\text{ref}(\mathbf{p}_\text{OS}) + J_\text{mv}(\mathbf{p}_\text{OS}) + w_\text{time}\, \mathbf t(1)
+        \quad & J(\mathbf p_\text{OS}) + w_\text{time}\, \mathbf t(1)
         \\
         \text{subject to}\quad
         & \mathcal{D}_{DI}(\mathbf{p}_\text{OS})
@@ -646,14 +650,13 @@ The complete B-spline MINMPC problem can be written compactly as
         & \mathcal{O}_j\bigl(
             \mathbf{n}_{p,j}, \mathbf{n}_{s,j}, b_{p,j}, b_{s,j}, z_j
         \bigr),
-        \quad &\forall j&\in \{1,\ldots,N_\text{TS}\},
+        \quad \forall j\in \{1,\ldots,N_\text{TS}\},
     \end{aligned}
 \end{equation}
 
-In this formulation:
+where:
 \begin{itemize}
-    \item $J_{\mathrm{ref}}$ penalizes deviation from the reference trajectory outside the encounter window (\cref{eq:cost-maneuver-window-ref}).
-    \item $J_{\mathrm{mw}}$ penalizes deviation from the reference velocity outside the maneuver windows (\cref{eq:cost-maneuver-window-mv}).
+    \item $J$ includes maneuver window costs, reference trajectory following costs, and acceleration costs as defined in \cref{eq:cost-maneuver-window-total}.
     \item $\mathcal{D}_{DI}$ and $\mathcal{D}_{PH}$ denote the double‐integrator and PH‐spline Dubins model constraints, respectively.
     \item $\mathcal{O}_j$ is the Big-M collision‐avoidance constraint set from \eqref{eq:colregs-bigM} for each target ship $j$ in the encounter.
     \item $w_\text{time}$ is a weight on the final time of the variable $\mathbf t(x)$, which is a B-spline variable representing the time of the OS.

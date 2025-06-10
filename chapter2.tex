@@ -5,20 +5,73 @@
 
 \section{The B-spline}
 \label{sec:b-spline-theory}
-This chapter will introduce B-splines, a type of spline function that is widely used in computer graphics, computer-aided design, and numerical optimization. B-splines are piecewise polynomial functions that are defined recursively in terms of a degree $p$ and a set of so-called knots. The chapter will cover the definition of B-splines, their properties, and common operations that can be performed on them. 
+This chapter introduces B-splines, piecewise polynomial functions prevalent in computer graphics, CAD, and numerical optimization. It covers their definition, properties, and common operations, emphasizing results and intuition over exhaustive mathematical detail. The aim is to equip the reader with the foundational knowledge required for subsequent chapters and for implementing B-splines in numerical optimization.
 
-Important properties and operations on B-splines are presented, providing discussion and intuition around results and theorems without going into the full mathematical details. The goal is to provide the reader with the necessary background to understand the subsequent chapters in addition to being able to implement B-splines in a numerical optimization context from scratch.
+
+\subsection{Why B-splines?}
+
+Trajectory planning requires representing a smooth curve through space, constrained by start and end points, and potentially some desired shape. B-splines are an ideal choice for this, offering a compact and flexible way to describe such curves with a small number of parameters.
+
+B-splines (basis splines) are piecewise polynomial functions defined by:
+\begin{itemize}
+    \item A \textbf{degree} \( p \)
+    \item A \textbf{knot vector} defining where each piece starts and ends
+    \item A set of \textbf{control points} (coefficients) that determine the shape
+\end{itemize}
+
+The resulting curve is smooth, local, and lies within the convex hull of the control points. This makes it ideal for optimization: constraints on the curve can be translated into constraints on the coefficients.
+
+
+\cref{fig:b-spline-geometric} illustrate the geometric interpretation of B-splines. In \cref{fig:b-spline-knots-control-points}, a cubic B-spline is shown along with its control polygon, which defines the overall shape of the curve. \Cref{fig:b-spline-convex-hull} emphasizes a key property: the B-spline is always contained within the convex hull of its control points. This property is particularly useful in optimization, as constraints on the curve can be imposed directly on the control points.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{fig/b-spline/knots + control points.svg}
+        \caption{Illustration of a cubic B-spline with control points and knot vector. The dashed line represents the control polygon.}
+        \label{fig:b-spline-knots-control-points}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includesvg[width=\textwidth]{fig/b-spline/convex hull.svg}
+        \caption{Convex hull of B-spline. The segment of the B-spline between the third and fourth control points (orange) lies within the convex hull of those points.}
+        \label{fig:b-spline-convex-hull} 
+    \end{subfigure}
+    \caption{Geometric interpretation of B-splines}
+    \label{fig:b-spline-geometric}
+\end{figure}
+
+Mathematically, a B-spline curve is written as:
+\[
+f(x) = \sum_{j=0}^{n-1} c_j B_{j,p}(x)
+\]
+where \( c_j \) are the control points and \( B_{j,p}(x) \) are the B-spline basis functions.
+
+In this thesis, B-splines are used to represent the trajectory of the vessel in a way that is:
+\begin{itemize}
+    \item \textbf{Differentiable} (for velocity and acceleration)
+    \item \textbf{Efficient} (sparse representation)
+    \item \textbf{Well-behaved} (satisfies constraints over time)
+\end{itemize}
+
+This allows trajectory optimization to be done in continuous time while ensuring global constraint satisfaction. 
+
+
+
+
 
 \subsection{Definition and Properties}\label{sec:b-spline-definition}
-The following definition is from \cite{Grimstad2016}:
-A B-spline $f: \mathbb R \rightarrow \mathbb R$ is given by $n$ \emph{B-spline coefficients} $\mathbf c = [c_j]_{j=0}^{n-1}$ and $n+p+1$ non-decreasing knots $\mathbf t = [t_j]_{j=0}^{n+p}$ as follows:
+While the previous section gave an intuitive overview of B-splines and their role in trajectory optimization, this section provides the formal mathematical definitions and properties that underlie their behavior.
+
+
+A B-spline function $f: \mathbb{R} \rightarrow \mathbb{R}$ is defined by $n$ \emph{B-spline coefficients} $\mathbf{c} = [c_j]_{j=0}^{n-1}$ and a non-decreasing sequence of $n+p+1$ \emph{knots} $\mathbf{t} = [t_j]_{j=0}^{n+p}$:
 
 \begin{equation}\label{eq:b-spline-def}
-    f(x ; \mathbf{c}, p, \mathbf{t})=\sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)=\mathbf{c}^{\top} \mathbf{B}_{\mathrm{p}, \mathrm{t}}(\mathrm{x})
+    f(x) = f(x ; \mathbf{c}, p, \mathbf{t})=\sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)=\mathbf{c}^{\top} \mathbf{B}_{\mathrm{p}, \mathrm{t}}(\mathrm{x})
 \end{equation}
-
-When the parameters $\mathbf{c}, p$, and $\mathbf{t}$ are given by the context, $f(x ; \mathbf{c}, p, \mathbf{t})$ is simply denoted $f(x)$. The sequence of coefficients $c_j$ control the shape of the B-spline, and the degree $p$ is a non-negative integer. The B-spline basis functions $B_{j, p, \mathbf{t}}(x)$ are defined recursively in terms of the degree $p$ and the knots $\mathbf t$ to form the column vector $\mathbf{B}_{p, \mathbf{t}}(x) = [B_{j, p, \mathbf{t}}(x)]_{j=0}^{n-1}$. 
-in \cref{eq:b-spline-def}. These B-spline basis functions are defined as
+Where appropriate, the shorter notation $f(x)$ is used when the parameters $\mathbf{c}, p$, and $\mathbf{t}$ are clear from the context. The coefficients $c_j$ determine the shape of the B-spline, and $p$ denotes its degree, a non-negative integer. The $B_{j, p, \mathbf{t}}(x)$ are the B-spline basis functions, defined recursively based on the degree $p$ and the knot vector $\mathbf{t}$. These basis functions form the vector $\mathbf{B}_{p, \mathbf{t}}(x) = [B_{j, p, \mathbf{t}}(x)]_{j=0}^{n-1}$ used in \cref{eq:b-spline-def}. The B-spline basis functions can be defined as \citep{deBoor1978practicalguide}:
 
 \begin{subequations}\label{eq:b-spline-recurrence}
     \begin{align}
@@ -27,7 +80,7 @@ in \cref{eq:b-spline-def}. These B-spline basis functions are defined as
         \mathbf 1_{[t_j, t_{j+1})} =
         \begin{cases}
             1, & t_j \leq x<t_{j+1} \\
-            0, & \text { otherwise }
+            0, & \text { otherwise. }
         \end{cases} \label{eq:b-spline-recurrence-0}
     \end{align}
 \end{subequations}
@@ -51,17 +104,9 @@ These properties are well-documented in the literature and are summarized as fol
 \begin{property}[Partition of unity]\label{b-prop:partitionofunity}
     $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1 \quad\forall x \in [t_i, t_{i+1})$.
 \end{property}
-
-So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by simply allowing the coefficients $c_j$ to be vectors. In this case the B-spline is a vector-valued function $f: \mathbb R \rightarrow \mathbb R^m$. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} still hold, as the basis functions themselves are still scalar-valued. 
-
+So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by creating a vector where each element is a B-spline sharing the same basis. In this case the B-spline is a vector-valued function $\mathbf{f}: \mathbb R \rightarrow \mathbb R^m$, where $\mathbf{f}(x) = [f_1(x), f_2(x), \dots, f_m(x)]^\top$ and each $f_i(x)$ is a B-spline. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} apply to each $f_i(x)$ individually.
 
 
-\begin{figure}
-    \centering
-    \includesvg[width=0.8\textwidth]{fig/b-spline/knots + control points.svg}
-    \caption{A 3rd degree B-spline (full) with 4 control points, knot vector \raggedright{$\mathbf t = [0, 0, 0, 0.5, 1, 1, 1]$} and corresponding control polygon (dashed).}
-    \label{fig:b-spline-knots-control-points}
-\end{figure}
 
 Together, \cref{b-prop:nonnegativity,b-prop:partitionofunity} imply that the B-spline in \cref{eq:b-spline-def} is a convex combination of the coefficients $\mathbf c$. This means that the B-spline is always within the convex hull of the control points $\mathbf c$.
 
@@ -75,22 +120,10 @@ The convex hull $\text{conv}(\mathbf{c})$ of a set of points $\mathbf{c} = \{c_1
     \text{conv}(\mathbf{c}) = \left\{ \sum_{i=1}^n \lambda_i c_i \mid \lambda_i \geq 0, \sum_{i=1}^n \lambda_i = 1 \right\}
 \end{equation}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\textwidth]{fig/illustrations/convex-hull.png}
-    \caption{A 3rd degree B-spline (full) with 4 control points (dots), control polygon (dashed) and convex hull (shaded area). The spline between the second and third control point (red) is always within the convex hull of the shaded area.}
-    \label{fig:b-spline-convex-hull} 
-\end{figure}
-\todo{lag ny figur}
-\todo{lag flere figurer}
+This also applies to the vector-valued B-spline, which is a powerful property in optimization, as it allows for constraints on the B-spline to be imposed directly on the control points.
 
-In the context of optimization, this property is useful for formulating constraints, as a constraint on a B-spline function can be enforced by imposing them on the control points \citep{mercy2017spline}. 
-\begin{equation}
-    a \leq c_i \leq b \quad \forall i\in\{1,2,\ldots,n\} \implies a \leq f(x) \leq b \quad \forall x.
-\end{equation}
-Here $a$ and $b$ are constants of appropriate dimensions and the $\leq$ operator is applied element-wise.
-
-The basis functions span a linear vector space (or spline space) denoted by $\mathcal{S}_{p, \mathbf{t}}$. This space contains all piecewise polynomials of degree $\le p$ on a given knot vector $\mathbf t$ \citep{Grimstad2016}. 
+The B-spline basis functions, for a given degree \(p\) and knot vector \(\mathbf{t}\), span a linear vector space denoted as \(\mathcal{S}_{p, \mathbf{t}}\). This space, referred to as the spline space, encompasses all piecewise polynomials of degree less than or equal to \(p\) defined over the knot vector \(\mathbf{t}\) \citep{Grimstad2016}. The property of splines spanning a linear vector space is crucial for using B-splines in optimization. 
+It allows the spline representation of functions to be converted between various bases by simply applying a matrix transform on its coefficients. This enables efficient computation and manipulation of the B-spline objects.
 
 \subsection{Operations on B-splines}
 From the recursive relation in \cref{eq:b-spline-recurrence} it follows that the B-spline basis functions are piecewise polynomial functions in $x$ of degree $p$. This property makes it clear that all polynomial operations on B-splines will result in a new B-spline.

@@ -312,13 +312,13 @@ Case 2 is a crossing situation where the TS is heading west at 4.5 m/s with a he
 \end{figure}
 
 
-
-\Cref{fig:crossing} illustrates the trajectories of the OSs and TS in the crossing situation. At $t=50$ seconds, the five OSs closest to $N=150$ start the starboard maneuver, and follows a course parallell to the reference trajectory from $t=200$ until the start of the second maneuver window at $t=300$ seconds where the OSs start to turn back towards their reference trajectories. This is illustrated more clearly in \cref{fig:crossing-metrics}, where the speed, change in course, and distance to the reference trajectory for the OSs are plotted for the case where the TS has a course of 40\degree in \gls{NED} coordinates.
+\subsubsection{Case 2.0: Crossing Scenario}
+\Cref{fig:crossing} shows the optimal trajectories under the settings in Case 2.0 of the OSs and TS in a crossing situation. At $t=50$ seconds, the five OSs closest to $N=150$ start the starboard maneuver, and follows a course parallell to the reference trajectory from $t=200$ until the start of the second maneuver window at $t=300$ seconds where the OSs start to turn back towards their reference trajectories. This is further emphasized in \cref{fig:crossing-metrics}, where the speed, change in course, and distance to the reference trajectory for the OSs are plotted for the case where the TS has a course of 40\degree in \gls{NED} coordinates. What follows is an analysis of the trajectory properties for Case 2.0 and how the speed and course changes relate to COLREGS 8b) and 8c).
 
 The change in course is concentrated at the beginning and end of each maneuver window. This behavior aligns with COLREGS 8b), which advises that any alteration of course or speed should be substantial enough to be readily apparent to another vessel, as opposed to a gradual and subtle change.  The course change happens over a period of 50 seconds, which is the shortest possible duration any speed or course change can take in this simulation. This is a result of the OS position $\mathbf p_\text{OS}$ being parameterized by a B-spline with a knot interval of 0.1 and the total simulation time being 500 seconds. A notable weakness with this sparse parameterization is that the course change is smaller for the cases where the OS doesn't have to maneuver as far off the reference trajectory to avoid the TS. 
-This is true for the southernmost OSs in \emph{Case 2.0} where these parameters result in only $\approx3\degree$ of heading change over $t=50$–100\,s for the OS starting at $N=-50\,$m, versus $\approx27\degree$ at $N=250\,$m. Refinement of the B-spline basis for $\mathbf p_\text{OS}$ (see \emph{Case 2.2}) increases control-point density, enabling more localized course and speed adjustments, addressing this issue.
+This is true for the southernmost OSs in Case 2.0 where these parameters result in only $\approx3\degree$ of course deviation from the reference over $t=50$–100\,s for the OS starting at $N=-50\,$m, versus $\approx27\degree$ at $N=250\,$m. Refinement of the B-spline basis for $\mathbf p_\text{OS}$ (see Case 2.2) increases control-point density, enabling more localized course and speed adjustments, addressing this issue.
 
-Under COLREGS 8b), a $3\degree$ alteration over 50\,s may not be sufficiently conspicuous. Formulating a cost that penalizes minimal yet nonzero course deviations without suppressing all maneuvers is nontrivial, as discussed in \cref{sec:colregs-objectives}. Some potential solutions include introducing a course reference in the maneuver windows, or adding a desired distance to the reference trajectory in middle of the encounter window. Both of these solutions would further complicate the cost function, and require more parameters to be tuned by the user in each specific scenario. Exploring these solutions is left for future work, as the current formulation is sufficient to demonstrate the frameworks ability to generate COLREGS compliant trajectories in a variety of scenarios.
+Under COLREGS 8b), a $3\degree$ alteration over 50\,s  may be insufficiently conspicuous. To remedy this, two obvious extensions to the cost functions are (i) imposing a temporary course reference during maneuver windows and (ii) specifying a target offset from the reference path at the encounter midpoint. Both require additional cost terms and user‐tuned parameters, increasing scenario‐specific complexity and undermining the planner’s flexibility. The current objective merely incentivizes---rather than enforces---course deviations, permitting an OS to maintain its heading when a maneuver is unnecessary (as seen for the extreme OSs in \cref{fig:crossing}). Unless maneuver necessity is known a priori, such constraints risk inducing spurious maneuvers. These refinements are deferred to future work; the present formulation already demonstrates robust COLREGS‐compliant trajectory generation for demonstration purposes.
 
 
 The speed is kept close to the reference speed of 6 m/s during the segments where the OSs are not maneuvering, but dips below the reference speed during course change.  This is undesirable in context of COLREGS 8c) if there is sufficient sea room, as the OSs should prioritize altering course alone over altering speed.  This however, is a result of the B-Spline parameterization. For a constant speed trajectory, the equation
@@ -333,7 +333,7 @@ is obtained, which is only satisfied for a family of functions of the form
 \begin{equation*}
     u(x) = \cos(x) \quad \text{and} \quad v(x) = \sin(x),
 \end{equation*}
-or if $u(x)$ and $v(x)$ are both constant.  B-Splines are piecewise polynomials and cannot represent trancendental functions such as sines and cosines.  This explains the small dips in speed during the course change segments, as well as how the speed is able to be kept exactly constant during the straight line segments of the trajectory.  Even PH B-splines, which has a piecewise polynomial representation of the speed, cannot represent a constant speed trajectory in a non-trivial way as they are still fundamentally B-splines.  The same is also true for NURBS, which while they can represent circular and elliptical arcs perfectly, cannot do so with a constant speed parameterization due to the same reasons as above.  This is a fundamental limitation of B-splines and NURBS, and not a limitation of the B-MINMPC itself.  The speed dips during the course change segments can be mitigated by refining the B-spline basis for the OS position $\mathbf p_\text{OS}$, which gives a finer resolution of the trajectory and allows for more control over the speed during the course change segments. This is discussed further in \emph{Case 2.2}.
+or if $u(x)$ and $v(x)$ are both constant.  B-Splines are piecewise polynomials and cannot represent trancendental functions such as sines and cosines.  This explains the small dips in speed during the course change segments, as well as how the speed is able to be kept exactly constant during the straight line segments of the trajectory.  Even PH B-splines, which has a piecewise polynomial representation of the speed, cannot represent a constant speed trajectory in a non-trivial way as they are still fundamentally B-splines.  The same is also true for NURBS, which while they can represent circular and elliptical arcs perfectly, cannot do so with a constant speed parameterization due to the same reasons as above.  This is a fundamental limitation of B-splines and NURBS, and not a limitation of the B-MINMPC itself.  The speed dips during the course change segments can be mitigated by refining the B-spline basis for the OS position $\mathbf p_\text{OS}$, which gives a finer resolution of the trajectory and allows for more control over the speed during the course change segments. This is discussed further in Case 2.2.
 
 
 
@@ -354,18 +354,54 @@ or if $u(x)$ and $v(x)$ are both constant.  B-Splines are piecewise polynomials 
 \end{figure}
 
 
-
+\subsubsection{Case 2.1: Degree 3 Basis for $\mathbf p_\text{OS}$}
 As per \cref{tab:sim-spline-basis}, the basis for $\mathbf p_\text{OS}$ is degree 2, which gives a continuous function for position, speed and course, but is discontinuous at the knots for acceleration and course change (also seen in \cref{fig:crossing-metrics}). 
 If such discontinuities are undesirable, increasing the B-spline basis degree enhances continuity at the expense of additional constraints. A higher basis degree necessitates a finer knot vector to maintain maneuver window locality, as continuity conditions introduce dependencies between neighboring control points. \Cref{fig:crossing-scenario-degree-3-metrics} illustrates this trade-off, showing a continuous course change $\dot\chi$ but extended maneuver duration with a degree 3 B-spline basis for $\mathbf p_\text{OS}$. 
 The initial maneuver in the first window results in a more significant speed reduction, dropping to approximately 4.2 m/s. Subsequently, the OSs maintain a course parallel to the reference trajectory without reconverging. After further inspection it was found that the acceleration cost in $t\in[350, 400]$ s inhibits trajectory convergence. 
 Comparing \cref{fig:crossing-metrics} and \cref{fig:crossing-scenario-degree-3-metrics} reveals that the discontinuous course change $\dot{\chi}$ in the former allows the OSs to sharply revert to $\dot{\chi}=0$ between maneuvers, where the acceleration cost is active, whereas the continuity constraints in the latter force a smoother transition. This creates conflicting objectives between minimizing acceleration and converging back to the reference trajectory, and in this case---with the given parameters---the acceleration cost is prioritized over the reference trajectory convergence. The basis is in other words too coarse to allow for a degree 3 parameterization of $\mathbf p_\text{OS}$ with these parameters.
 
-As mentioned, a finer knot vector for $\mathbf p_\text{OS}$ both mitigates the speed dips, localizes the course change, and allows for the degree 3 parameterization to be used without the acceleration cost conflicting with the reference trajectory convergence. This is demonstrated in Case 2.2, where the knot vector for $\mathbf p_\text{OS}$ is refined to 22 knots, while the degree of the B-spline basis is kept at 2. The results are shown in \cref{fig:crossing-advanced-scenario-20-2} where the speed, course change, and distance to the reference trajectory for the OSs are plotted. The trajectory is shown in \cref{fig:crossing-advanced-scenario-20-2-traj}. 
+\subsubsection{Case 2.2: Refined Degree 2 Basis for $\mathbf p_\text{OS}$}
+As mentioned, a finer knot vector for $\mathbf p_\text{OS}$ localizes the course change, and allows for the degree 3 parameterization to be used without the acceleration cost conflicting with the reference trajectory convergence. This is demonstrated in Case 2.2, where the knot vector for $\mathbf p_\text{OS}$ is refined to 22 knots, while the degree of the B-spline basis is kept at 2. The results are shown in \cref{fig:crossing-advanced-scenario-20-2} where the speed, course change, and distance to the reference trajectory for the OSs are plotted. The trajectory is shown in \cref{fig:crossing-advanced-scenario-20-2-traj}. 
+
 With the refined basis, the course change exhibits piecewise continuity over 25-second intervals. As depicted in \cref{fig:crossing-advanced-scenario-20-2}, the OS originating at $N=250$ m achieves a course alteration of $27\degree$, mirroring the result in \cref{fig:crossing-metrics}. However, this change now occurs over a compressed timeframe of $t=50-75$ seconds, effectively doubling the rate of course alteration. This observation encapsulates the trend associated with refining the B-spline basis for $\mathbf p_\text{OS}$: the localization of course changes intensifies until the acceleration constraints become active.
 
+The refined basis does not at all mitigate the speed reduction during maneuvers; the speed still decreases to approximately 4.8 m/s during course alterations. This phenomenon can be analyzed by examining the relationship between the speed and the consecutive control points of $\mathbf p_\text{OS}$, as well as the angle between these control points.
+
+Let $P_i,P_{i+1},P_{i+2}\in\mathbb R^2$ be the three consecutive control points affecting the $i$-th spline segment on a uniform quadratic B-spline with knot interval length $h$.  Over $t\in[t_{i+1}, t_{i+2}]$, the derivative of $\mathbf p_\text{OS}(t)$ is given by
+\begin{equation*}
+    \begin{aligned}
+        \mathbf p_\text{OS}'(t) 
+        &=\frac{t_{i+2}-t}{h^2}\;(P_{i+1}-P_i) 
+        +\frac{t - t_{i+1}}{h^2}\;(P_{i+2}-P_{i+1})\\
+        &=\frac{t_{i+2}-t}{h}\;P'_0
+        +\frac{t - t_{i+1}}{h}\;P'_1,
+    \end{aligned}
+\end{equation*}
+where
+\begin{equation*}
+P'_i = \tfrac1h (P_{i+1} - P_i),
+\qquad
+P'_{i+1} = \tfrac1h(P_{i+2} - P_{i+1}).
+\end{equation*}
+When the maximum speed constraint on $\mathbf p_\text{OS}$ is active: $\|P'_i\|=\|P'_{i+1}\|=v_{\max}$ .  Let $\theta\in[0,\pi]$ be the smallest angle between the three consecutive points $P_i,P_{i+1},P_{i+2}$ so that
+\begin{equation*}
+P'_i\cdot P'_{i+1} = v_{\max}^2\cos\theta.
+\end{equation*}
+Then one shows by differentiating $\|\mathbf p'_\text{OS}(t)\|_2^2$ that the minimal speed $v_{\min}$ occurs at $t^*=\tfrac12(t_{i+1}+t_{i+2})$ and is given by
+\begin{equation*}
+v_{\min}
+=\Bigl\|\tfrac12(P'_i+P'_{i+1})\Bigr\|
+=v_{\max}\sqrt{\frac{1+\cos\theta}{2}}
+=v_{\max}\cos\Bigl(\tfrac\theta2\Bigr).
+\end{equation*}
+As the derived expressions for $t^*$ and $v_{\min}$ are independent of $h$, the knot interval, the minimum achievable speed is solely dependent on the turning angle $\theta$ and the maximum speed $v_{\max}$. Consequently, mitigating speed reduction during maneuvers necessitates a reduction in $\theta$ between successive control points. While knot refinement alone is insufficient, it facilitates closer approximation of the spline by the control points. This, in turn, allows the constraint on the maximum acceleration of the OS to effectively limit the angle between consecutive control points, thereby reducing the speed reduction during maneuvers.
 
 
+\subsubsection{Case 2.3: Refined Degree 3 Basis for $\mathbf p_\text{OS}$}
+The situation in Case 2.1 for a 13 control point degree 3 basis for $\mathbf p_\text{OS}$ is remedied by refining the basis to 23 control points, as shown in \cref{fig:crossing-advanced-scenario-20-3}. The course change is still restricted to the maneuver windows by the weights on PXTE, reference speed, and acceleration, but in this case the refined basis allows the continuous course change to occur entirely within these windows, and the OS thus converges properly back to the reference as intended.
 
+
+\subsubsection{Cases 2 and 3: Head-on and Overtaking Situations}
 Similar results are seen for the crossing and overtaking cases, where the only differences are number of OSs that have to maneuver and the distances they have to travel to avoid the TS. These scenarios are run with the same weight parameters as Case 2.0 (see \cref{tab:batch-params}), but with different TS courses and speeds. For completeness' sake the results are shown in \cref{fig:head-on} and \cref{fig:overtaking} for the head-on and overtaking cases respectively. 
 
 
@@ -411,3 +447,21 @@ Similar results are seen for the crossing and overtaking cases, where the only d
     \caption{\emph{Case 4}: Trajectory generation in an overtaking situation.}
     \label{fig:overtaking}
 \end{figure}
+
+
+
+
+\section{Confined Waters}
+
+
+\section{Pure Reference Following}
+
+
+\section{PH B-Spline OS Model}
+Does not work well :(
+
+\section{Summary}
+
+mixed integer -reliable to find solutions in non-convex environments
+
+weight functions - a lot of control on the shape of the resulting trajectory, but also a lot of parameters to tune, and is situation dependent. Choice of basis allows arbitrary continuity of the trajectory, but care must be taken to match knot vector and basis degree so that the chosen fidelity of the trajectory is sufficient to allow for the desired maneuvers.

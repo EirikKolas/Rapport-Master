@@ -239,9 +239,9 @@ Literature on motion planning distinguishes between path following, where only g
 Path following is often expressed in terms of the cross-track error (XTE) \citep{Fossen2011-Handbook}. The XTE is the closest distance between the \acrshort{OS} and the reference path. In reactive methods such as pure pursuit and line-of-sight guidance, the XTE is used to determine the steering angle of the \acrshort{OS} at any given time \citep{Fossen2011-Handbook}. 
 Using these costs in motion planning problems, where the entire trajectory is considered, is not straightforward. Depending on the geometry of the reference trajectory, the XTE can be a non-convex function of the OS position. This also holds true in the B-spline framework, where numerical search methods are generally needed to compute the closest distance from a point to a spline \citep{johnson2005distance,hu2005second,chen2009computing}.
 
-The \acrfull{TTE} will now be defined as the distance between a time parameterized OS and a time parameterized reference trajectory. This is a more practical cost function, as now only a distance between two points is considered at any given time. The TTE between the position of the OS $\mathbf p_\text{os}(t)$ and the position of the reference trajectory $\mathbf p_\text{ref}(t)$ is given by
+The \acrfull{TTE} will now be defined as the distance between a time parameterized OS and a time parameterized reference trajectory. This is a more practical cost function, as now only a distance between two points is considered at any given time. The TTE between the position of the OS $\mathbf p_\text{OS}(t)$ and the position of the reference trajectory $\mathbf p_\text{ref}(t)$ is given by
 \begin{equation}\label{eq:total-track-error}
-    \mathbf e(t) = \mathbf p_\text{os}(t) - \mathbf p_\text{ref}(t).
+    \mathbf e(t) = \mathbf p_\text{OS}(t) - \mathbf p_\text{ref}(t).
 \end{equation}
 A limitation of employing the TTE as a cost function arises when the OS lags the reference trajectory, such as during collision avoidance maneuvers. In such instances, the OS tends to converge towards a point ahead of the geometrically closest point on the reference trajectory, resulting in prolonged convergence times. 
 
@@ -284,10 +284,10 @@ To illustrate this, consider the following optimization problem, which is a simp
 \begin{equation}\label{eq:conservativeness-optimization}
     \begin{aligned}
         \min_{\mathbf c} \quad & J_\text{ref} \\
-        \text{subject to} \quad &\mathbf p_\text{os}(0) = \mathbf p_0, \\
-                    &\mathbf p_\text{os} = \mathbf B^\top(x) \mathbf c, \\
+        \text{subject to} \quad &\mathbf p_\text{OS}(0) = \mathbf p_0, \\
+                    &\mathbf p_\text{OS} = \mathbf B^\top(x) \mathbf c, \\
                     &\mathbf p_\text{ref} = \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
-                    & \mathbf p_\text{os}'(x) \cdot \mathbf p_\text{os}'(x) \le v_\text{max}^2.
+                    & \mathbf p_\text{OS}'(x) \cdot \mathbf p_\text{OS}'(x) \le v_\text{max}^2.
     \end{aligned}
 \end{equation}
 Here, $\mathbf p_0$ is the initial position of the OS and the $\cdot$ operator denotes the pointwise dot product as described in \cref{sec:b-spline-theory}. The B-spline basis functions $\mathbf B$ and $\mathbf B_\text{ref}$ are defined as uniform B-splines of degree $p$ and 1, respectively, with the parameter domain $x\in[0,1]$. The control points $\mathbf c$ of the OS B-spline function are optimized to minimize the TTE to a reference trajectory $\mathbf p_\text{ref}$, which is defined by the control points $\mathbf c_\text{ref}$.
@@ -343,7 +343,7 @@ To find the Hessian of the cost function, one can observe that the integral of t
     \end{aligned}
 \end{equation}
 where $\mathbf c_{\mathbf e,i}$ are the coefficients of the B-spline function $\mathbf e(x)$, which represents the TTE. The subscript $i\in\{N,E\}$ denotes the North and East components of the position error, respectively.
-The basis $\mathbf B(x)$ is the same as for $\mathbf p_\text{os}(x)$ as $\mathbf B_\text{ref} \subseteq \mathbf B$ using the parameters in \cref{eq:conservativeness-parameters}. 
+The basis $\mathbf B(x)$ is the same as for $\mathbf p_\text{OS}(x)$ as $\mathbf B_\text{ref} \subseteq \mathbf B$ using the parameters in \cref{eq:conservativeness-parameters}. 
 The integral $\int_\mathbb R \mathbf B(x) \mathbf B^\top(x) dx$ results in a matrix $\mathbf G$, known in the literature as the Gramian of the B-spline basis, and hereafter referred to simply as the Gramian (see \citet{Chu2022} for a more detailed description).
 The Gramian matrix is an important mathematical object in the literature with one of its defining properties being that it is always positive semi-definite \citep{horn2013positive}. However, with our choice of basis functions with restrictions on knot multiplicality, the Gramians considered in this work will always be symmetric and strictly positive definite, i.e., all eigenvalues real and positive. Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. Herafter, the B-spline norm $\|\mathbf e(x)\|_\mathbf H$ will refer to computing the bilinear form
 \begin{equation}\label{eq:b-spline-norm}
@@ -568,7 +568,7 @@ The encounter and maneuver windows are incorporated into the cost function as we
         J_\text{mv} &= \|w_\text{mv}(x)\;\mathbf e'(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})},
         \label{eq:cost-maneuver-window-mv}\\
         J_\mathrm{acc} &= \|w_\text{acc}(x)\;\mathbf p''_\text{os}(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, \label{eq:cost-maneuver-window-acc}\\
-        J_\mathrm{end} &= \|w_\text{end}(x)\;(\mathbf p_\text{os}(x)-\mathbf p_\text{ref}(1))\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, \label{eq:cost-maneuver-window-end}\\
+        J_\mathrm{end} &= \|w_\text{end}(x)\;(\mathbf p_\text{OS}(x)-\mathbf p_\text{ref}(1))\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, \label{eq:cost-maneuver-window-end}\\
         J &= J_\text{ref} + J_\text{mv} + J_\mathrm{acc} + J_\mathrm{end},
         \label{eq:cost-maneuver-window-total}
     \end{align}
@@ -581,54 +581,51 @@ If the weights are fixed as a function of time before the optimization problem i
 Estimating when the encounter window should start and end is a non-trivial problem. As is determining how long the maneuver windows should be. \cite{Thyri2022-MPC} proposes to use the time of closest point of approach (TCPA) to the TS along the desired trajectory. The desired trajectory can for example be estimated using Line-of-Sight (LOS) guidance \citep{Fossen2011-Handbook} or by considering the optimzation problem without the TS. Estimation of the encounter window time is implemented according to \cite{Thyri2022-MPC}, and won't be discussed further here.
 
 
-\section{Implementation}\label{sec:python-implementation}
+\section{Python Implementation}\label{sec:python-implementation}
 
-The B-spline MINMPC is implemented in python using CasADi \citep{casadi} and numpy \citep{numpy} as the main libraries. The code is divided into two main parts: a B-spline implementation and a CasAdi wrapper. 
-The B-spline implementation closely follows the structure in \citet{mercy2016spline}, and takes inspiration from the CasAdi wrapper presented there. The main modifications are focused around on small optimizations, making the library more type safe, and making it easier to use with vector-valued spline functions. Support for CasADi's MIP solvers was also added, which was not present in the original implementation. 
-The code is available in \todo{gh repo}.
+The B-spline MINMPC is implemented in Python using CasADi \citep{casadi} and numpy \citep{numpy}. The code is organized into two components: a B-spline library and a CasADi wrapper. The B-spline library follows the structure of the OMGTools library by \citet{mercy2016spline} with enhancements for type safety, vector-valued spline support, small performance optimizations, and added compatibility with CasADi’s MIP solvers. All B-spline transformations and operations are hidden behind a clean interface, so that spline variables and constraints can be declared on symbolic variables just like native CasADi types.
 
-In the end, all the B-spline transformations and handling is abstracted away, letting the user create B-spline variables and constraints on symbolic variables as if they were normal CasADi variables. 
-
-\subsection{Optimization Problem Class}
-This section will present the public interface of the Optimization Problem class. The class is designed to be used with CasADi and operates similarly to CasADi's own Opti framework. It differs from CasADi's Opti framework in that it supports B-spline variables and constraints, as well as binary and integer variables more seamlessly. The Optimization Problem class is also modular, in the sense that different objects can be used to represent e.g. the own ship, target ship and reference, before being combined into a single optimization problem. This will be clarified in the following example.
+A single optimization-problem class provides a public interface mirroring CasADi’s Opti while extending it with B-spline variables, constraints, and integer/binary decision variables. 
+A key feature of this class is its modular design, enabling the representation of distinct entities such as the OS, TS, and reference trajectories as individual objects. These objects can then be seamlessly integrated into a unified optimization problem.  The subsequent example illustrates the construction of a complete optimization problem using this class, presenting a simplified version of the problem addressed in this paper:
 
 \begin{example}{Optimization Problem Setup}
 \begin{python}
 from cs_mpc import OptiObject, OptiCollection, BSplineBasis
 
+# Define a spline basis for the own ship
+os_basis = BSplineBasis.Uniform(degree=2, n_control_points=12)
 
-degree = 3
-n_control_points = 10
-basis = create_uniform_b_spline_basis(
-    degree, n_control_points, 0, 1
-)
+# Create own-ship object
+own_ship     = OptiObject('own_ship')
+os_pos       = own_ship.declare_spline_variable('pos', n_dim=2, basis=os_basis)
+os_pos_init  = own_ship.declare_parameter('pos_init',  n_dim=2)
+os_pos_final = own_ship.declare_parameter('pos_final',  n_dim=2)
 
-own_ship = OptiObject('own_ship')
-os_pos = own_ship.declare_spline_variable('pos', n_dim=2, basis=basis)
-os_pos_0 = own_ship.declare_parameter('pos_0', n_dim=2)
-os_pos_f = own_ship.declare_parameter('pos_f', n_dim=2)
+# Boundary constraints
+own_ship.declare_constraint(os_pos(0) - os_pos_init, lower_bound=0, upper_bound=0)
+own_ship.declare_constraint(os_pos(1) - os_pos_final, lower_bound=0, upper_bound=0)
 
-own_ship.declare_constraint(os_pos(0) - os_pos_0, lb=0, ub=0)
-own_ship.declare_constraint(os_pos(1) - os_pos_f, lb=0, ub=0)
-
-end_err = os_pos - os_pos_f
+# Objective: minimize end-point error
+end_err = os_pos - os_pos_final
 own_ship.declare_objective(end_err.dot(end_err).definite_integral(0,1))
 
-
+# Create a target-ship object
 target_ship = OptiObject('target_ship')
-ts_pos = target_ship.declare_spline_parameter('pos', n_dim=2, basis=basis)
+ts_basis    = BSplineBasis.Uniform(degree=1, n_control_points=2)
+ts_pos      = target_ship.declare_spline_parameter('pos', n_dim=2, basis=ts_basis)
+min_dist    = target_ship.declare_parameter('min_dist', n_dim=1)
+
+# Collision-avoidance constraint
 ts_err = os_pos - ts_pos
-min_dist = target_ship.declare_parameter('min_dist', n_dim=1)
-target_ship.declare_constraint(ts_err.dot(ts_err) - min_dist**2, lb=0)
+target_ship.declare_constraint(ts_err.dot(ts_err) - min_dist**2, lower_bound=0)
 
-
+# Set paramter values and solve
 opti = OptiCollection([own_ship, target_ship])
-own_ship.set_value('pos_0', [0, 0])
-own_ship.set_value('pos_f', [1000, 0])
-target_ship.set_value('pos', ...)
-target_ship.set_value('min_dist', 10)
-sol = opti.solve()
-
+own_ship.set_value('pos_init', [0,0])
+own_ship.set_value('pos_final', [1000,0])
+target_ship.set_value('pos', [[500,200],[500,-200]])
+target_ship.set_value('min_dist', 50)
+solution = opti.solve()
 \end{python}
 \end{example}
 

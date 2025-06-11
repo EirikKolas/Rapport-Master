@@ -71,7 +71,7 @@ A B-spline function $f: \mathbb{R} \rightarrow \mathbb{R}$ is defined by $n$ \em
 \begin{equation}\label{eq:b-spline-def}
     f(x) = f(x ; \mathbf{c}, p, \mathbf{t})=\sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)=\mathbf{c}^{\top} \mathbf{B}_{\mathrm{p}, \mathrm{t}}(\mathrm{x})
 \end{equation}
-Where appropriate, the shorter notation $f(x)$ is used when the parameters $\mathbf{c}, p$, and $\mathbf{t}$ are clear from the context. The coefficients $c_j$ determine the shape of the B-spline, and $p$ denotes its degree, a non-negative integer. The $B_{j, p, \mathbf{t}}(x)$ are the B-spline basis functions, defined recursively based on the degree $p$ and the knot vector $\mathbf{t}$. These basis functions form the vector $\mathbf{B}_{p, \mathbf{t}}(x) = [B_{j, p, \mathbf{t}}(x)]_{j=0}^{n-1}$ used in \cref{eq:b-spline-def}. The B-spline basis functions can be defined as \citep{deBoor1978practicalguide}:
+Where appropriate, the shorter notation $f(x)$ is used when the parameters $\mathbf{c}, p$, and $\mathbf{t}$ are clear from the context. The coefficients $c_j$ determine the shape of the B-spline, and $p$ denotes its degree, a non-negative integer. The $B_{j, p, \mathbf{t}}(x)$ are the B-spline basis functions, defined recursively based on the degree $p$ and the knot vector $\mathbf{t}$. These basis functions form the vector $\mathbf{B}_{p, \mathbf{t}}(x) = [B_{j, p, \mathbf{t}}(x)]_{j=0}^{n-1}$ used in \cref{eq:b-spline-def}. The B-spline basis functions can be defined using the Cox-de Boor recurrence \citep{deBoor1978practicalguide}:
 
 \begin{subequations}\label{eq:b-spline-recurrence}
     \begin{align}
@@ -104,8 +104,26 @@ These properties are well-documented in the literature and are summarized as fol
 \begin{property}[Partition of unity]\label{b-prop:partitionofunity}
     $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1 \quad\forall x \in [t_i, t_{i+1})$.
 \end{property}
-So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by creating a vector where each element is a B-spline sharing the same basis. In this case the B-spline is a vector-valued function $\mathbf{f}: \mathbb R \rightarrow \mathbb R^m$, where $\mathbf{f}(x) = [f_1(x), f_2(x), \dots, f_m(x)]^\top$ and each $f_i(x)$ is a B-spline. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} apply to each $f_i(x)$ individually.
 
+So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by creating a vector where each element is a B-spline sharing the same basis. In this case the B-spline is a vector-valued function $\mathbf{f}: \mathbb R \rightarrow \mathbb R^d$, where $\mathbf{f}(x) = [f_1(x), f_2(x), \dots, f_d(x)]^\top$ and each $f_i(x)$ is a B-spline. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} apply to each $f_i(x)$ individually. It is convenient to work with the vector-valued B-spline in the form:
+\begin{equation}\label{eq:b-spline-vector-valued}
+    \mathbf f(x) = \begin{bmatrix}
+        \mathbf{B}_{p, \mathbf{t}}^\top(x) \mathbf c_1 \\
+        \mathbf{B}_{p, \mathbf{t}}^\top(x) \mathbf c_2 \\
+        \vdots \\
+        \mathbf{B}_{p, \mathbf{t}}^\top(x) \mathbf c_d
+    \end{bmatrix}
+    = 
+    (\mathbf{I}_d \otimes \mathbf{B}_{p, \mathbf{t}}^\top(x)) 
+    \begin{bmatrix}
+        \mathbf c_1 \\
+        \mathbf c_2 \\
+        \vdots \\
+        \mathbf c_d
+    \end{bmatrix} 
+    = (\mathbf{I}_d \otimes \mathbf{B}_{p, \mathbf{t}}^\top(x)) \mathbf C
+\end{equation}
+where $\mathbf{I}_d$ is the identity matrix of size $d$, $\otimes$ denotes the Kronecker product, and $\mathbf{C} = [\mathbf c_1, \mathbf c_2, \ldots, \mathbf c_d]^\top\in\mathbb R^{nd}$ is the stacked coefficient vector, each $\mathbf c_i \in \mathbb R^n$.
 
 
 Together, \cref{b-prop:nonnegativity,b-prop:partitionofunity} imply that the B-spline in \cref{eq:b-spline-def} is a convex combination of the coefficients $\mathbf c$. This means that the B-spline is always within the convex hull of the control points $\mathbf c$.
@@ -122,82 +140,66 @@ The convex hull $\text{conv}(\mathbf{c})$ of a set of points $\mathbf{c} = \{c_1
 
 This also applies to the vector-valued B-spline, which is a powerful property in optimization, as it allows for constraints on the B-spline to be imposed directly on the control points.
 
-The B-spline basis functions, for a given degree \(p\) and knot vector \(\mathbf{t}\), span a linear vector space denoted as \(\mathcal{S}_{p, \mathbf{t}}\). This space, referred to as the spline space, encompasses all piecewise polynomials of degree less than or equal to \(p\) defined over the knot vector \(\mathbf{t}\) \citep{Grimstad2016}. The property of splines spanning a linear vector space is crucial for using B-splines in optimization. 
+
+\subsection{Fundamental B-spline Operations}
+\label{sec:b-spline-operations-theory}
+The B-spline basis functions, for a given degree $p$ and knot vector $\mathbf{t}$, span a linear vector space denoted as $\mathcal{S}_{p, \mathbf{t}}$. This space, referred to as the spline space, encompasses all piecewise polynomials of degree less than or equal to $p$ defined over the knot vector $\mathbf{t}$ \citep{Grimstad2016}. The property of splines spanning a linear vector space is crucial for using B-splines in optimization. 
 It allows the spline representation of functions to be converted between various bases by simply applying a matrix transform on its coefficients. This enables efficient computation and manipulation of the B-spline objects.
 
-\subsection{Operations on B-splines}
+Because the spline space $\mathcal{S}_{p,\mathbf{t}}$ is a vector space, any operation that is linear on the spline itself can be carried out by a suitable matrix acting on those coefficients.  This is briefly illustrated with a few representative examples.
+
+First, the \emph{sum} of two scalar splines with coefficient vectors $\mathbf{c},\mathbf{d}\in\mathbb R^n$ (same degree $p$ and knot vector $\mathbf{t}$) is given by
+\begin{equation}
+    \begin{aligned}
+        f(x) &= \mathbf{B}_{p,\mathbf{t}}^\top(x)\,\mathbf{c}
+        \quad\text{and}\quad
+        g(x) = \mathbf{B}_{p,\mathbf{t}}^\top(x)\,\mathbf{d} \\
+        \quad\Longrightarrow\quad
+        (f+g)(x)
+        &= \mathbf{B}_{p,\mathbf{t}}^\top(x)\,(\mathbf{c}+\mathbf{d})\!,
+    \end{aligned}
+\end{equation}
+so that addition of the two splines reduces to a sum of their coefficient vectors.  
+
+Second, \emph{differentiation} is also a linear map.  There exists a sparse \emph{derivative matrix} $\mathbf{D}\in\mathbb R^{n\times n}$ such that
+\begin{equation}
+  \frac{\mathrm{d}}{\mathrm{d}x}\bigl(\mathbf{B}_{p,\mathbf{t}}^\top(x)\,\mathbf{c}\bigr)
+  = \mathbf{B}_{p-1,\mathbf{t}}^\top(x)\,\bigl(\mathbf{D}\,\mathbf{c}\bigr).
+\end{equation}
+Here $\mathbf{D}$ encodes the Cox–de Boor recurrence in \cref{eq:b-spline-recurrence} for the basis‐function derivatives; no manipulation of the analytic form is required beyond this coefficient‐level multiplication. The same is also true for computing the antiderivative, which is a linear map from $\mathcal{S}_{p,\mathbf{t}}$ to $\mathcal{S}_{p+1,\mathbf{t}}$.
+
+When these operations are applied component‐wise to the vector‐valued spline of \cref{eq:b-spline-vector-valued}, each of the above matrices is lifted via including it in the Kronecker product with $\mathbf{I}_d$ in \cref{eq:b-spline-vector-valued}.  For instance, differentiating $\mathbf f(x)$ yields
+\begin{equation}
+  \mathbf f'(x)
+  = \bigl(\mathbf{I}_d \otimes (\mathbf{B}_{p-1,\mathbf{t}}^\top(x) \mathbf{D})\bigr)
+  \,\mathbf{C}.
+\end{equation}
+
+These simple examples demonstrate how addition, differentiation, and integration all \emph{condense} to matrix operations on the control‐point coefficients, leveraging the linearity of the spline basis (in particular the partition‐of‐unity property, \cref{b-prop:partitionofunity}) without ever needing to manipulate piecewise‐polynomial formulas directly. A detailed explanation on how to compute these matrices and implement these operations in code can be found in \cref{sec:operations-on-b-splines}.
 
 
 
 \subsection{Pythogerean-Hodograph B-splines (PH B-Splines)}\label{sec:pythogerean-hodograph}
-The Pythogerean-Hodograph (PH) B-spline is utilized to leverage exact geometric quantities in CAD/CAM. Pythagorean‐Hodograph (PH) B‐splines \cite{Albrecht2016}, a natural extension of PH Bézier curves \cite{Farouki1990}, are employed. In this framework, the hodograph (derivative) 
-\begin{equation*}
-    \mathbf r'(x) = [a'(x), b'(x)]
-\end{equation*}
-of a planar B‐spline
-\begin{equation*}
-    \mathbf r(x) = [a(x), b(x)],
-\end{equation*}
-satisfies the Pythagorean condition
-\begin{equation}\label{eq:pythagorean-condition}
-a'(x)^2 + b'(x)^2 = \sigma(x)^2,
-\end{equation}
-where $\sigma(x)$ is itself a B‐spline function. Enforcing \cref{eq:pythagorean-condition} guarantees that magnitude, curvature, turn‐rate, and arc‐length admit closed‐form rational expressions without numerical approximation. The following derivation is based on \cite{Albrecht2016}.
+In motion planning and trajectory optimization, it is often necessary to compute geometric quantities such as curvature, turn-rate, and arc-length. These quantities are essential for ensuring smooth and feasible trajectories. However, computing these quantities from standard B-splines does not yield closed-form expressions in the spline space $\mathcal S$ 
 
-Introducing the complex pre‐image
-\begin{equation*}
-    z(x) = u(x) + i\,v(x),
-\end{equation*}
-the hodograph is defined via the square relation
-\begin{equation}\label{eq:hodograph-square}
-    \mathbf r'(x) = z(x)^2.
-\end{equation}
-Expanding the complex square yields
-\begin{equation*}
-    (u + i v)^2 = u^2 + 2iuv - v^2 = (u^2 - v^2) + i(2uv),
-\end{equation*}
-and equating real and imaginary parts gives
-\begin{subequations}\label{eq:hodograph-derivatives}
-    \begin{align}
-        a'(x) &= \Re\bigl(z(x)^2\bigr) = u(x)^2 - v(x)^2, \label{eq:hodograph-derivatives-a}\\
-        b'(x) &= \Im\bigl(z(x)^2\bigr) = 2\,u(x)\,v(x), \label{eq:hodograph-derivatives-b}
-    \end{align}
-\end{subequations}
-while the magnitude of the hodograph follows as
-\begin{equation*}
-    \sigma(x) = \|\mathbf r'(x)\| = |z(x)|^2 = u(x)^2 + v(x)^2.
-\end{equation*}
-Finally, integrating recovers the curve coordinates:
-\begin{equation*}
-    \begin{aligned}
-        a(x) &= a_0 + \int_{x_0}^{x}\bigl(u(\tau)^2 - v(\tau)^2\bigr)\,d\tau,\\
-        b(x) &= b_0 + \int_{x_0}^{x}2\,u(\tau)\,v(\tau)\,d\tau,
-    \end{aligned}
-\end{equation*}
+Pythagorean‐Hodograph (PH) B‐splines \citep{Albrecht2016}, which generalize PH Bézier curves \citep{Farouki1990}, form a subclass of B‐splines whose hodograph (derivative) satisfies a Pythagorean relation.  By enforcing 
+\[
+  \|\mathbf r'(x)\|^2 = a'(x)^2 + b'(x)^2 = \sigma(x)^2,
+\]
+for a B-spline $\mathbf r(x) = [a(x), b(x)]$ with \(\sigma(x)\) itself a spline, PH B‐splines admit closed‐form expressions for curvature, turn‐rate, and arc‐length directly in the spline space.  
 
-where $(a_0,b_0)=\mathbf r(x_0)$.
-
-The curvature $\kappa(x)$ of the curve $\mathbf r(x)$ is defined as
-\begin{equation*}
-    \kappa(x) = \frac{a'(x)b''(x) - b'(x)a''(x)}{\|\mathbf r'(x)\|^3},
-\end{equation*}
-where $a'(x)$ and $b'(x)$ are the first derivatives of the curve, and $a''(x)$ and $b''(x)$ are the second derivatives. Using \cref{eq:hodograph-derivatives} gives
-which in terms of $u(x)$ and $v(x)$ simplifies to
-\begin{equation}\label{eq:curvature}
-    \kappa(x) = \frac{2(uv'-vu')}{(u^2+v^2)^2}.
+Introducing the scalar spline functions $u(x)$ and $v(x)$, the PH B-spline $\mathbf r(x)$ can be expressed as:
+\begin{equation}\label{eq:ph-b-spline}
+    \mathbf r(x) = \mathbf r(x_0) + \int_{x_0}^x 
+    \begin{bmatrix}
+        u(t)^2 - v(t)^2 \\
+        2u(t)v(t)
+    \end{bmatrix} \mathrm{d}t
 \end{equation}
-The turn-rate $\dot\theta(x)$ is then
-\begin{equation}\label{eq:turn-rate}
-    \dot\theta(x) = \kappa(x) \sigma(x) = \frac{2(uv'-vu')}{u^2+v^2},
-\end{equation}
-while the arc-length $s(x)$ is given by
-\begin{equation*}
-    s(x) = \int_{x_0}^{x}\sigma(\tau)\,d\tau.
-\end{equation*}
-
+where $x_0$ is the starting point of the B-spline. This form allows for the computation of the curvature and turn-rate as functions of $u(x)$ and $v(x)$ and is used in this paper to parameterize Dubins model (see \cref{sec:dubins-model}). A derivation of this form and the properties of PH B-splines can be found in \cref{app:ph-spline-derivation}.
 
 \subsection{Non-Uniform Rational B-splines (NURBS)}
-In the previous section, rational functions of B-splines were mentioned in the context of Pythagorean-Hodograph curves. \Cref{eq:curvature,eq:turn-rate} are examples of such rational functions. This section formalizes the concept of Non-uniform rational B-splines (NURBS), for which a good reference is \cite{Piegl1997}. 
+In the previous section, rational functions of B-splines were mentioned in the context of Pythagorean-Hodograph curves. Equations \Cref{eq:curvature,eq:turn-rate} are examples of such rational functions. This section formalizes the concept of Non-uniform rational B-splines (NURBS), for which a good reference is \cite{Piegl1997}. 
 
 NURBS are defined by the rational basis functions
 \begin{equation}\label{eq:nurbs-basis}
@@ -213,8 +215,8 @@ NURBS inherit the local support and non-negativity properties from B-splines. Wh
 
 A principal advantage of NURBS is their ability to represent conic sections---such as circles, ellipses, and parabolas---exactly using quadratic or cubic segments \citep{Piegl1997}. For example, a circle can be constructed by appropriate choice of four rational quadratic segments, each representing a quarter arc \citep{DenbighStarkeyNURBS}. Many CAD systems likewise rely on NURBS for the exactness of the conic-surface representation as well as the ability to create flexible free-form shapes \citep{Farin1991,PieglTillerSIGGRAPH,cottrell2009isogeometric}.
 
-In \cref{sec:b-spline-definition} it is mentioned that a B-spline function $f(x; p, \mathbf t)$ is part of the linear vector space $\mathbb S_{p, \mathbf t}$.
-, a NURBS function $f(x; p, \mathbf t, \mathbf w)$ is part of the rational spline space $\mathbb B_{p, \mathbf t, \mathbf w}$. This space contains all piecewise rational polynomials on the knot vector $\mathbf t$ with degree $p$ and weights $\mathbf w$. 
+In \cref{sec:b-spline-definition} it is mentioned that a B-spline function $f(x; p, \mathbf t)$ is part of the linear vector space $\mathcal S_{p, \mathbf t}$.
+, a NURBS function $f(x; p, \mathbf t, \mathbf w)$ is part of the rational spline space $\mathcal B_{p, \mathbf t, \mathbf w}$. This space contains all piecewise rational polynomials on the knot vector $\mathbf t$ with degree $p$ and weights $\mathbf w$. 
 
 
 
@@ -240,74 +242,74 @@ Table of operations for B-splines is given in \cref{tab:operations}. A summary o
     \hline
     Evaluation   
       & $\mathbf f(x)$ 
-        & $\mathbb S^n_{p}\to\mathbb{R}^n$ 
+        & $\mathcal S^n_{p}\to\mathbb{R}^n$ 
           & Linear 
             & \cref{eq:b-spline-recurrence} \\
     \hline
     Derivative   
       & $\mathbf f'$  
-        & $\mathbb S^n_{p}\to\mathbb S^n_{p-1}$ 
+        & $\mathcal S^n_{p}\to\mathcal S^n_{p-1}$ 
           & Linear 
             & \cref{eq:b-spline-derivative} \\
     \hline
     Integral     
       & \rule{0pt}{4ex}$\displaystyle\int \mathbf f(x)\,dx$ 
-        & $\mathbb S^n_{p}\to\mathbb S^n_{p+1}$ 
+        & $\mathcal S^n_{p}\to\mathcal S^n_{p+1}$ 
           & Linear 
             & \cref{eq:b-spline-integral} \\[1.5ex]
     \hline
     Degree elevation  
       & $\mathbf f$  
-        & $\mathbb S^n_{p}\to\mathbb S^n_{p+1}$ 
+        & $\mathcal S^n_{p}\to\mathcal S^n_{p+1}$ 
           & Linear 
             & \Cref{alg:degree-elevation} \\      
     \hline
     Knot insertion    
       & $\mathbf f$  
-        & $\mathbb S^n_{p}\to\mathbb S^n_{p}$ 
+        & $\mathcal S^n_{p}\to\mathcal S^n_{p}$ 
           & Linear 
             & \Cref{alg:knot-refinement} \\
     \hline
     \hline
     Vector Addition  
       & $\mathbf a + \mathbf f$  
-        & $\mathbb R^n \times\mathbb S^n_{p}\to\mathbb S^n_{p}$ 
+        & $\mathbb R^n \times\mathcal S^n_{p}\to\mathcal S^n_{p}$ 
           & Linear 
             & \Cref{alg:addition} \\
     \hline
     Scalar multiplication  
       & $a\,\mathbf f$  
-        & $\mathbb R\times\mathbb S^n_{p}\to\mathbb S^n_{p}$ 
+        & $\mathbb R\times\mathcal S^n_{p}\to\mathcal S^n_{p}$ 
           & Linear 
             & $-$ \\
     \hline
     Addition     
       & $\mathbf f +\mathbf g$  
-        & $\mathbb S^n_{p_1}\times\mathbb S^n_{p_2}\to\mathbb S^n_{\max(p_1,p_2)}$ 
+        & $\mathcal S^n_{p_1}\times\mathcal S^n_{p_2}\to\mathcal S^n_{\max(p_1,p_2)}$ 
           & Linear 
             & \Cref{alg:addition} \\[.5ex]
     \hline
     Multiplication   
       & $\mathbf f\,g$  
-        & $\mathbb S^n_{p_1}\times\mathbb S_{p_2}\to\mathbb S^n_{p_1+p_2}$ 
+        & $\mathcal S^n_{p_1}\times\mathcal S_{p_2}\to\mathcal S^n_{p_1+p_2}$ 
           & Bilinear 
             & \Cref{alg:multiplication} \\
     \hline
     PW inner product  
       & $\mathbf f \cdot \mathbf g$  
-        & $\mathbb S^n_{p_1}\times\mathbb S^n_{p_2}\to\mathbb S_{p_1+p_2}$
+        & $\mathcal S^n_{p_1}\times\mathcal S^n_{p_2}\to\mathcal S_{p_1+p_2}$
           & Bilinear 
             & \cref{eq:dot-product-pointwise} \\
     \hline
     Inner product    
       & $\langle \mathbf f, \mathbf g \rangle$  
-        & $\mathbb S^n_{p_1}\times\mathbb S^n_{p_2}\to\mathbb R$ 
+        & $\mathcal S^n_{p_1}\times\mathcal S^n_{p_2}\to\mathbb R$ 
           & Bilinear 
             & \cref{eq:dot-product} \\
     \hline
     Division  
       & \rule{0pt}{4ex}$\displaystyle\frac{\mathbf f}{g}$  
-        & $\mathbb S^n_{p_1}\times\mathbb S_{p_2}\to\mathbb B^n_{\max(p_1,p_2)}$
+        & $\mathcal S^n_{p_1}\times\mathcal S_{p_2}\to\mathcal B^n_{\max(p_1,p_2)}$
           & Rational 
             & \Cref{alg:nurbs-conversion} \\[1.5ex]
     \hline

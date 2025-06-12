@@ -85,14 +85,19 @@ Where appropriate, the shorter notation $f(x)$ is used when the parameters $\mat
     \end{align}
 \end{subequations}
 
-From \cref{eq:b-spline-recurrence}, it is clear that the B-spline basis functions are all non-negative, as \cref{eq:b-spline-recurrence-0} gives $B_{j, 0, \mathbf{t}}(x) \geq 0 \quad\forall j, x$, and the coefficients $\frac{x-t_j}{t_{j+p}-t_j}$ and $\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}}$
-in \cref{eq:b-spline-recurrence-p} are also non-negative $\forall x, j\in[0,\dots,n-1], p, \mathbf t$ by the non-decreasing condition on the knots $\mathbf t$. 
+% From \cref{eq:b-spline-recurrence}, it is clear that the B-spline basis functions are all non-negative, as \cref{eq:b-spline-recurrence-0} gives $B_{j, 0, \mathbf{t}}(x) \geq 0 \quad\forall j, x$, and the expressions $\frac{x-t_j}{t_{j+p}-t_j}$ and $\frac{t_{j+1+p}-x}{t_{j+1+p}-t_{j+1}}$
+% in \cref{eq:b-spline-recurrence-p} are also non-negative $\forall x, j\in[0,\dots,n-1], p, \mathbf t$ by the non-decreasing condition on the knots $\mathbf t$. 
 
-\Cref{eq:b-spline-recurrence} also implies $B_{j, p, \mathbf{t}}(x)$ has local support on the interval $[t_j, t_{j+p+1})$. This can be seen by noting that the support of $B_{j, 0, \mathbf{t}}$, $\text{supp}(B_{j, 0, \mathbf{t}}) = [t_j, t_{j+1})$ and for each of the $p$ recurrence steps in \cref{eq:b-spline-recurrence-p}, the support is extended by one knot. 
+% \Cref{eq:b-spline-recurrence} also implies $B_{j, p, \mathbf{t}}(x)$ has local support on the interval $[t_j, t_{j+p+1})$. This can be seen by noting that the support of $B_{j, 0, \mathbf{t}}$, $\text{supp}(B_{j, 0, \mathbf{t}}) = [t_j, t_{j+1})$ and for each of the $p$ recurrence steps in \cref{eq:b-spline-recurrence-p}, the support is extended by one knot. 
 
-It can also be shown that the B-spline basis functions are a partition of unity, i.e. $\sum_{j=0}^{n-1} B_{j, p, \mathbf{t}}(x) = 1 \quad\forall x \in [t_0, t_{n+p})$ \citep{deBoor1978practicalguide}.
+% It can also be shown that the B-spline basis functions are a partition of unity, i.e. 
+% $$
+% \sum_{j=0}^{n-1} B_{j, p, \mathbf{t}}(x) = 1 \quad\forall x \in [t_0, t_{n+p})$$ 
+% \citep{deBoor1978practicalguide}.
 
-These properties are well-documented in the literature and are summarized as follows:
+% These properties are well-documented in the literature \citep{deBoor1978practicalguide} and are summarized as follows:
+
+The B-spline basis functions $B_{j, p, \mathbf{t}}(x)$ have several important properties which are well documented in the literature \citep{deBoor1978practicalguide}. These properties are summarized as follows:
 \begin{property}[Nonnegativity]\label{b-prop:nonnegativity}
     $B_{j, p, \mathbf{t}}(x) \geq 0 \quad\forall j, p$, and $x$.
 \end{property}
@@ -105,29 +110,10 @@ These properties are well-documented in the literature and are summarized as fol
     $\sum_{j=i-p}^i B_{j, p, \mathbf{t}}(x)=1 \quad\forall x \in [t_i, t_{i+1})$.
 \end{property}
 
-So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by creating a vector where each element is a B-spline sharing the same basis. In this case the B-spline is a vector-valued function $\mathbf{f}: \mathbb R \rightarrow \mathbb R^d$, where $\mathbf{f}(x) = [f_1(x), f_2(x), \dots, f_d(x)]^\top$ and each $f_i(x)$ is a B-spline. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} apply to each $f_i(x)$ individually. It is convenient to work with the vector-valued B-spline in the form:
-\begin{equation}\label{eq:b-spline-vector-valued}
-    \mathbf f(x) = \begin{bmatrix}
-        \mathbf{B}_{p, \mathbf{t}}^\top(x) \mathbf c_1 \\
-        \mathbf{B}_{p, \mathbf{t}}^\top(x) \mathbf c_2 \\
-        \vdots \\
-        \mathbf{B}_{p, \mathbf{t}}^\top(x) \mathbf c_d
-    \end{bmatrix}
-    = 
-    (\mathbf{I}_d \otimes \mathbf{B}_{p, \mathbf{t}}^\top(x)) 
-    \begin{bmatrix}
-        \mathbf c_1 \\
-        \mathbf c_2 \\
-        \vdots \\
-        \mathbf c_d
-    \end{bmatrix} 
-    = (\mathbf{I}_d \otimes \mathbf{B}_{p, \mathbf{t}}^\top(x)) \mathbf C
-\end{equation}
-where $\mathbf{I}_d$ is the identity matrix of size $d$, $\otimes$ denotes the Kronecker product, and $\mathbf{C} = [\mathbf c_1, \mathbf c_2, \ldots, \mathbf c_d]^\top\in\mathbb R^{nd}$ is the stacked coefficient vector, each $\mathbf c_i \in \mathbb R^n$.
+So far, only B-splines with a one-dimensional co-domain have been considered. However, B-splines can be extended to curves in higher dimensions by creating a vector where each element is a B-spline sharing the same basis. In this case the B-spline is a vector-valued function $\mathbf{f}: \mathbb R \rightarrow \mathbb R^d$, where $\mathbf{f}(x) = [f_1(x), f_2(x), \dots, f_d(x)]^\top$ and each $f_i(x)$ is a B-spline. The \cref{b-prop:nonnegativity,b-prop:localsupport,b-prop:partitionofunity} apply to each $f_i(x)$ individually. 
 
 
-Together, \cref{b-prop:nonnegativity,b-prop:partitionofunity} imply that the B-spline in \cref{eq:b-spline-def} is a convex combination of the coefficients $\mathbf c$. This means that the B-spline is always within the convex hull of the control points $\mathbf c$.
-
+Together, \cref{b-prop:nonnegativity,b-prop:partitionofunity} imply that the B-spline in \cref{eq:b-spline-def} is a convex combination of the coefficients $\mathbf c$. This means that the B-spline is always within the convex hull of the control points $\mathbf c$, which can be formally stated as follows:
 \begin{property}[Convex hull]\label{b-prop:convexhull}
     $f(x) \in \text{conv}(\mathbf{c})
     \quad\forall x$.
@@ -137,8 +123,7 @@ The convex hull $\text{conv}(\mathbf{c})$ of a set of points $\mathbf{c} = \{c_1
 \begin{equation}
     \text{conv}(\mathbf{c}) = \left\{ \sum_{i=1}^n \lambda_i c_i \mid \lambda_i \geq 0, \sum_{i=1}^n \lambda_i = 1 \right\}
 \end{equation}
-
-This also applies to the vector-valued B-spline, which is a powerful property in optimization, as it allows for constraints on the B-spline to be imposed directly on the control points.
+This is a powerful property in optimization, as it allows for constraints on vector-valued B-splines to be imposed directly on the control points.
 
 
 \subsection{Fundamental B-spline Operations}
@@ -146,7 +131,7 @@ This also applies to the vector-valued B-spline, which is a powerful property in
 The B-spline basis functions, for a given degree $p$ and knot vector $\mathbf{t}$, span a linear vector space denoted as $\mathcal{S}_{p, \mathbf{t}}$. This space, referred to as the spline space, encompasses all piecewise polynomials of degree less than or equal to $p$ defined over the knot vector $\mathbf{t}$ \citep{Grimstad2016}. The property of splines spanning a linear vector space is crucial for using B-splines in optimization. 
 It allows the spline representation of functions to be converted between various bases by simply applying a matrix transform on its coefficients. This enables efficient computation and manipulation of the B-spline objects.
 
-Because the spline space $\mathcal{S}_{p,\mathbf{t}}$ is a vector space, any operation that is linear on the spline itself can be carried out by a suitable matrix acting on those coefficients.  This is briefly illustrated with a few representative examples.
+Because the spline space $\mathcal{S}_{p,\mathbf{t}}$ is a vector space, any operation that is linear on the spline itself can be carried out by a suitable matrix acting on those coefficients.  While the following operations---such as differentiation and integration---are important for understanding the application of B-splines in optimization, their practical implementation and role in the cost function and constraint construction are described in detail in \cref{sec:operations-on-b-splines}.
 
 First, the \emph{sum} of two scalar splines with coefficient vectors $\mathbf{c},\mathbf{d}\in\mathbb R^n$ (same degree $p$ and knot vector $\mathbf{t}$) is given by
 \begin{equation}
@@ -168,15 +153,7 @@ Second, \emph{differentiation} is also a linear map.  There exists a sparse \emp
 \end{equation}
 Here $\mathbf{D}$ encodes the Cox–de Boor recurrence in \cref{eq:b-spline-recurrence} for the basis‐function derivatives; no manipulation of the analytic form is required beyond this coefficient‐level multiplication. The same is also true for computing the antiderivative, which is a linear map from $\mathcal{S}_{p,\mathbf{t}}$ to $\mathcal{S}_{p+1,\mathbf{t}}$.
 
-When these operations are applied component‐wise to the vector‐valued spline of \cref{eq:b-spline-vector-valued}, each of the above matrices is lifted via including it in the Kronecker product with $\mathbf{I}_d$ in \cref{eq:b-spline-vector-valued}.  For instance, differentiating $\mathbf f(x)$ yields
-\begin{equation}
-  \mathbf f'(x)
-  = \bigl(\mathbf{I}_d \otimes (\mathbf{B}_{p-1,\mathbf{t}}^\top(x) \mathbf{D})\bigr)
-  \,\mathbf{C}.
-\end{equation}
-
-These simple examples demonstrate how addition, differentiation, and integration all \emph{condense} to matrix operations on the control‐point coefficients, leveraging the linearity of the spline basis (in particular the partition‐of‐unity property, \cref{b-prop:partitionofunity}) without ever needing to manipulate piecewise‐polynomial formulas directly. A detailed explanation on how to compute these matrices and implement these operations in code can be found in \cref{sec:operations-on-b-splines}.
-
+These simple examples demonstrate how addition, differentiation, and integration all \emph{condense} to matrix operations on the control‐point coefficients, leveraging the linearity of the spline basis (in particular the partition‐of‐unity property, \cref{b-prop:partitionofunity}) without ever needing to manipulate piecewise‐polynomial formulas directly.
 
 
 \subsection{Pythogerean-Hodograph B-splines (PH B-Splines)}\label{sec:pythogerean-hodograph}
@@ -199,7 +176,8 @@ Introducing the scalar spline functions $u(x)$ and $v(x)$, the PH B-spline $\mat
 where $x_0$ is the starting point of the B-spline. This form allows for the computation of the curvature and turn-rate as functions of $u(x)$ and $v(x)$ and is used in this paper to parameterize Dubins model (see \cref{sec:dubins-model}). A derivation of this form and the properties of PH B-splines can be found in \cref{app:ph-spline-derivation}.
 
 \subsection{Non-Uniform Rational B-splines (NURBS)}
-In the previous section, rational functions of B-splines were mentioned in the context of Pythagorean-Hodograph curves. Equations \Cref{eq:curvature,eq:turn-rate} are examples of such rational functions. This section formalizes the concept of Non-uniform rational B-splines (NURBS), for which a good reference is \cite{Piegl1997}. 
+Another useful construct in the context of B-splines is the Non-Uniform Rational B-spline (NURBS). NURBS generalize B-splines by introducing a set of \emph{weights} associated with each control point, allowing for more flexibility in shape representation.
+This section formalizes the concept of Non-uniform rational B-splines (NURBS), for which a good reference is \cite{Piegl1997}. 
 
 NURBS are defined by the rational basis functions
 \begin{equation}\label{eq:nurbs-basis}

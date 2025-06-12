@@ -41,7 +41,7 @@ If we in addition require the time to be positive, the velocity constraint in \c
     \begin{aligned}
         &&\|\mathbf{v}(t)\|_2 = \left\|\frac{\mathbf{p}'}{t'}\right\|_2 &\leq v_{\max} \\
         &\implies& \|\mathbf{p}'(x)\|_2 &\leq t'(x)v_{\max} \\
-        &\implies& \mathbf{p}'(x)\cdot\mathbf{p}'(x) &\leq (t'(x))^2v_{\max}^2.
+        &\implies& \mathbf{p}'(x)^\top\mathbf{p}'(x) &\leq (t'(x))^2v_{\max}^2.
     \end{aligned}
 \end{equation}
 To simplify the model, yet another restriction is put on the time function $t(x)$ by requiring it to be a 1st degree B-spline function. This means that the time variable is a piecewise linear function of the parameter $x$, and the second derivative of $t$ is zero, giving the simplified acceleration constraint
@@ -49,7 +49,7 @@ To simplify the model, yet another restriction is put on the time function $t(x)
     \begin{aligned}
         &&\|\mathbf{a}(t)\|_2 = \left\|\frac{\mathbf{p}''}{(t')^2}\right\|_2 &\leq a_{\max} \\
         &\implies& \|\mathbf{p}''(x)\|_2 &\leq t'(x)^2a_{\max} \\
-        &\implies& \mathbf{p}''(x)\cdot\mathbf{p}''(x) &\leq t'(x)^4a_{\max}^2.
+        &\implies& \mathbf{p}''(x)^\top\mathbf{p}''(x) &\leq t'(x)^4a_{\max}^2.
     \end{aligned}
 \end{equation}
 
@@ -58,8 +58,8 @@ Now the B-Spline relaxation is fully given by the following equations:
     \begin{align}
         \mathbf{p}(x) &= \sum_{i=0}^{n} \mathbf{p}_i B_{i,p,\mathbf{t}}(x), \label{eq:double-integrator-spline-complete-p} \\
         t(x) &= \sum_{i=0}^{m} t_i B_{i,1,\boldsymbol{\tau}}(x), \label{eq:double-integrator-spline-complete-t} \\
-        \mathbf{p}'(x) \cdot \mathbf{p}'(x) &\leq t'(x)^2v_{\max}^2, \label{eq:double-integrator-spline-complete-vmax} \\
-        \mathbf{p}''(x) \cdot \mathbf{p}''(x) &\leq t'(x)^4a_{\max}^2, \label{eq:double-integrator-spline-complete-a} \\
+        \mathbf{p}'(x) ^\top \mathbf{p}'(x) &\leq t'(x)^2v_{\max}^2, \label{eq:double-integrator-spline-complete-vmax} \\
+        \mathbf{p}''(x) ^\top \mathbf{p}''(x) &\leq t'(x)^4a_{\max}^2, \label{eq:double-integrator-spline-complete-a} \\
         t(x) &\geq 0, \label{eq:double-integrator-spline-complete-t-constraint} \\
         t'(x) &> 0. \label{eq:double-integrator-spline-complete-t-derivative} \end{align}
 \end{subequations}
@@ -97,13 +97,13 @@ where $p_N$ and $p_E$ are the North and East position coordinates of the ship, a
 where \cref{eq:dubins-ph-x,eq:dubins-ph-y} correspond to \cref{eq:hodograph-derivatives-a,eq:hodograph-derivatives-b} and \cref{eq:dubins-ph-chi} follows from \cref{eq:turn-rate}.
 
 To implement this model in an optimization framework, $u(x)$ and $v(x)$ are represented as B-spline functions, and the turn-rate constraints are derived as follows
-\begin{equation*}
+\begin{equation}
     \begin{aligned}
         |\omega(x)| &\le \omega_{\max} \\
         \implies \left|\frac{2\big(u(x)v'(x) - u'(x)v(x)\big)}{u(x)^2 + v(x)^2}\right| &\le \omega_{\max} \\
         \implies \left|u(x)v'(x) - u'(x)v(x)\right| &\le \frac{\omega_{\max}}{2}\left(u(x)^2 + v(x)^2\right),
     \end{aligned}
-\end{equation*}
+\end{equation}
 yeilding the polynomial constraints
 \begin{subequations}\label{eq:dubins-ph-turn-rate}
     \begin{align}
@@ -121,7 +121,7 @@ The constraint in \cref{eq:dubins-ph-chi} is a rational B-spline function and co
 \subsection{Hyperplane Separation Theorem}
 The standard way to enforce collision constraints between the OS and TS is to apply a minumum distance constraint between the two ships as
 \begin{equation}\label{eq:minimum-distance}
-    (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \cdot (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \geq d_{\text{min}}^2,
+    (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}})^\top (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \geq d_{\text{min}}^2,
 \end{equation}
 where $\mathbf p_{\text{OS}}$ and $\mathbf p_{\text{TS}}$ are the positions of the OS and TS, respectively, and $d_{\text{min}}$ is the minimum distance between the two ships. Examples of this type of constraint can be found in \cite{Thyri2022-MPC}.\todo{flere kilder} This constraint is non-convex, as the feasible region for the OS lies outside the circle with radius $d_{\text{min}}$ centered at the TS.
 
@@ -130,9 +130,9 @@ The hyperplane separation theorem states that for two disjoint convex sets $\mat
 
 Using this theorem, the collision avoidance task can be transformed to a classification problem. The objective is to find a line that separates the OS and TS, such that the distance between the line and the ships is greater than a given threshold. This is done in the B-spline framework by introducing a hyperplane $\mathcal H$ with normal $\mathbf n(t)\in\mathcal{S}^2_{p,\mathbf t}$ and offset $b(t)\in\mathcal{S}_{p,\mathbf t}$, which separates the OS and TS. This hyperplane is implemented using the following constraints:
 \begin{subnumcases}{\label{eq:minimum-distance-hyperplane}\mathcal{H}:}
-    \mathbf p_\text{OS}(t) \cdot{\mathbf n}(t) & $\ge b(t) + d_\text{OS}$,
+    \mathbf p_\text{OS}(t)^\top{\mathbf n}(t) & $\ge b(t) + d_\text{OS}$,
     \label{eq:hyperplane-os} \\
-    \mathbf p_\text{TS}(t) \cdot{\mathbf n}(t) & $\le b(t) - d_\text{TS}$,
+    \mathbf p_\text{TS}(t)^\top{\mathbf n}(t) & $\le b(t) - d_\text{TS}$,
     \label{eq:hyperplane-ts} \\
     \|{\mathbf n}(t)\|_\infty & $\le 1$.
     \label{eq:hyperplane-norm}
@@ -155,18 +155,18 @@ For designing a COLREGS-compliant trajectory, being able to decide which side of
 The idea is that each target ship is represented by two obstacles, each obstacle having only one feasible side to be passed on. The passing side of the target ship is enforced by adding additional points to each obstacle on the opposide side of the passing side using the normal $\mathbf{\hat n}_\text{ref}$ of the reference trajectory $\mathbf p_\text{ref}$. The two obstacles are then moved into and out of the feasible region by introducing a binary variable $z_j\in\{0,1\}$ for each target ship $j$ which controls an offset $M \mathbf{\hat n}_\text{ref}$, where $M$ is a large positive number. More formally, the constraints are given by
 
 \begin{subnumcases}{\label{eq:colregs-bigM}\mathcal{O}_j:}
-    \mathbf{n}_{p,j}(t)\cdot\mathbf{p}_{\mathrm{OS}}(t)
+    \mathbf{n}_{p,j}(t)^\top\mathbf{p}_{\mathrm{OS}}(t)
       & \label{eq:colregs-bigM-os-p}$\ge b_{p,j}(t) + d_{\text{OS}}$\\
-    \mathbf{n}_{p,j}(t)\cdot\mathbf{p}_{\mathrm{TS},j}(t)
+    \mathbf{n}_{p,j}(t)^\top\mathbf{p}_{\mathrm{TS},j}(t)
       & \label{eq:colregs-bigM-ts-p}$\le b_{p,j}(t) - d_{\text{TS},j} + M\,z_j$\\
-    \mathbf{n}_{p,j}(t)\cdot\bigl(\mathbf{p}_{\mathrm{TS},j}(t)+2M\,\mathbf{\hat n}_{\mathrm{ref}}(t)\bigr)
+    \mathbf{n}_{p,j}(t)^\top\bigl(\mathbf{p}_{\mathrm{TS},j}(t)+2M\,\mathbf{\hat n}_{\mathrm{ref}}(t)\bigr)
       & \label{eq:colregs-bigM-ts-o-p}$\le b_{p,j}(t) - M$\\[1.5ex]
       %
-    \mathbf{n}_{s,j}(t)\cdot\mathbf{p}_{\mathrm{OS}}(t)
+    \mathbf{n}_{s,j}(t)^\top\mathbf{p}_{\mathrm{OS}}(t)
       & \label{eq:colregs-bigM-os-s}$\ge b_{s,j}(t) + d_{\text{OS}}$\\
-    \mathbf{n}_{s,j}(t)\cdot\mathbf{p}_{\mathrm{TS},j}(t)
+    \mathbf{n}_{s,j}(t)^\top\mathbf{p}_{\mathrm{TS},j}(t)
       & \label{eq:colregs-bigM-ts-s}$\le b_{s,j}(t) - d_{\text{TS},j} + M\,(1-z_j)$\\
-    \mathbf{n}_{s,j}(t)\cdot\bigl(\mathbf{p}_{\mathrm{TS},j}(t)-2M\,\mathbf{\hat n}_{\mathrm{ref}}(t)\bigr)
+    \mathbf{n}_{s,j}(t)^\top\bigl(\mathbf{p}_{\mathrm{TS},j}(t)-2M\,\mathbf{\hat n}_{\mathrm{ref}}(t)\bigr)
       & \label{eq:colregs-bigM-ts-o-s}$\le b_{s,j}(t) - M$\\[1.5ex]
     z_j \in \{0,1\} & \label{eq:colregs-bigM-z} \\
     \|\mathbf{n}_{p,j}(t)\|_\infty\le 1 & \label{eq:colregs-bigM-np} \\
@@ -227,296 +227,66 @@ The following section will examine the behavior of the B-spline method when appl
 \subsection{Reference Following Metric}
 \label{sec:reference-following-metric}
 
-
 \begin{figure}
     \centering
-    \includesvg[width=0.8\textwidth]{fig/illustrations/cross-track- and along-track- error.svg}
-    \caption{Cross-track error and total track error for a vessel trying its best to follow a reference trajectory. Figure adapted from \cite{prosjektoppgave}.}
+    \includesvg[width=\textwidth]{fig/illustrations/cross-track- and along-track- error.svg}
+\caption{Cross-track error (XTE), total track error (TTE) and psuedo cross-track error (PXTE) between an OS $\mathbf p_\text{OS}(t)$ and a reference trajectory $\mathbf p_\text{ref}(t)$. Each identically colored arrow represents the position of $\mathbf p_\text{OS}(t_i)$ and $\mathbf p_\text{ref}(t_i)$ at a given time $t_i$.}
     \label{fig:cross-track-along-track-error}
 \end{figure}
 
-Literature on motion planning distinguishes between path following, where only geometric relations are considered, and trajectory following, which considers both geometric and temporal relations. 
-Path following is often expressed in terms of the cross-track error (XTE) \citep{Fossen2011-Handbook}. The XTE is the closest distance between the \acrshort{OS} and the reference path. In reactive methods such as pure pursuit and line-of-sight guidance, the XTE is used to determine the steering angle of the \acrshort{OS} at any given time \citep{Fossen2011-Handbook}. 
-Using these costs in motion planning problems, where the entire trajectory is considered, is not straightforward. Depending on the geometry of the reference trajectory, the XTE can be a non-convex function of the OS position. This also holds true in the B-spline framework, where numerical search methods are generally needed to compute the closest distance from a point to a spline \citep{johnson2005distance,hu2005second,chen2009computing}.
+Literature distinguishes between path following (geometric relations) and trajectory following (geometric and temporal relations). Path following often uses \acrfull{XTE} metric, the closest distance between the OS and the reference path \citep{Fossen2011-Handbook}. However, XTE is in general non-convex and requires numerical methods for computation in a B-spline framework \citep{johnson2005distance,hu2005second,chen2009computing}.
 
-The \acrfull{TTE} will now be defined as the distance between a time parameterized OS and a time parameterized reference trajectory. This is a more practical cost function, as now only a distance between two points is considered at any given time. The TTE between the position of the OS $\mathbf p_\text{OS}(t)$ and the position of the reference trajectory $\mathbf p_\text{ref}(t)$ is given by
+\acrfull{TTE} is the distance between a time-parameterized OS and a reference trajectory:
 \begin{equation}\label{eq:total-track-error}
     \mathbf e(t) = \mathbf p_\text{OS}(t) - \mathbf p_\text{ref}(t).
 \end{equation}
-A limitation of employing the TTE as a cost function arises when the OS lags the reference trajectory, such as during collision avoidance maneuvers. In such instances, the OS tends to converge towards a point ahead of the geometrically closest point on the reference trajectory, resulting in prolonged convergence times. 
+TTE can cause the OS to converge towards a point ahead of the geometrically closest point on the reference trajectory when the OS lags the reference trajectory.
 
-A reference‐following metric that balances geometric and temporal alignment is the pseudo cross–track error (PXTE), defined by
+
+A reference‐following metric that balances geometric and temporal alignment is the \acrfull{PXTE}, defined by
 \begin{equation}\label{eq:pxte}
   \bar e(t)
-  = \mathbf e(t)^\top
-    \mathbf{\hat n}_{\mathrm{ref}}(t),
+  = \mathbf e(t)^\top \mathbf{\hat n}_{\mathrm{ref}}(t),
 \end{equation}
-where
-\begin{equation}\label{eq:reference-normal-pxte}
-  \mathbf{\hat n}_{\mathrm{ref}}(t)
-  = \mathbf R\,\frac{\mathbf p_{\mathrm{ref}}'(t)}{\sqrt{\mathbf p_{\mathrm{ref}}'(t) \cdot \mathbf p_{\mathrm{ref}}'(t)}}
+where $\mathbf{\hat n}_{\mathrm{ref}}(t)$ is the unit normal to the reference trajectory defined as 
+\begin{equation}\label{eq:reference-normal-2}
+    \mathbf{\hat n}_{\mathrm{ref}}(t) = \mathbf R\frac{\mathbf p_\text{ref}'(t)}{\|\mathbf p_\text{ref}'(t)\|_2},
 \end{equation}
-is the unit normal to the reference path (with $\mathbf R$ a $+\pi/2$ rotation).  On straight segments \cref{eq:pxte} reduces to the standard XTE, yet---unlike the XTE---remains closed‐form and differentiable.
+where $\mathbf R$ is a 90-degree rotation. 
 
-
-In classical optimal control with time grids, a straightforward approach to design an objective function based on the PXTE is to minimize the sum of the squared PXTE at each time step, i.e., to minimize
-\begin{equation}\label{eq:total-track-error-time-grid}
-    J_\text{ref} = \sum_{k=0}^{n} \bar e(t_k)^2,
-\end{equation}
-where $t_k$ is the time at the $k$-th time step and $n$ is the number of time steps.
-
-A similar approach can be used in the B-spline framework, where both the OS and the reference trajectory are represented as B-spline functions. The resulting PXTE is a NURBS, as it is a rational function of two B-splines. The natural extension of \cref{eq:total-track-error-time-grid} to the B-spline framework is then to minimize the integral of the squared PXTE over the parameter domain of the B-spline functions, i.e., to minimize
+In time‐grid formulations this error is often penalized as a sum of squared values at discrete instants. In the B‐spline framework, one may instead formulate a continuous cost over the spline parameter, for example
 \begin{equation}\label{eq:total-track-error-b-spline}
-J_\text{ref} = \int_\mathbb R \bar e(x)^2 \, dx.
+J_\text{ref} = \int_0^1 \bar e(x)^2 \, dx,
 \end{equation}
-This integral, however, does not yield a rational function, as the integral of a rational polynomial function includes $\log$ and $\arctan$ functions in its solution. Instead, this integral can be approximated by dividing each coefficient of $\mathbf p'_\text{ref}(x)$ by the average speed over each basis function's support. This gives an approximate normalized normal vector of the reference trajectory at parameter $x$:
-\begin{equation}\label{eq:approx-reference-normal-pxte}
-    \mathbf{\tilde n}_{\mathrm{ref}}(x) = \sum_{i=0}^{N} \frac{\mathbf c_\text{ref,i} }{\sqrt{\mathbf p_\text{ref}'(\xi_i)^\top \mathbf p_\text{ref}'(\xi_i)}}B_{\mathrm{ref},i}^\top(x).
+This integral does not yield a closed form function as the unit normal is a rational expression. Instead, it can be approximated by dividing each coefficient of $\mathbf p'_\text{ref}(x)$ by the average speed over each basis function's support, resulting in an approximate unit normal vector $\bf\tilde n$. This approximation simplifies the integral in \cref{eq:total-track-error-b-spline} to a B-spline function, suitable for use as the error to minimize in a cost in the optimization problem.
+
+
+\subsection{Reference Following Cost Function}\label{sec:oscillations}
+To ensure smoothness and suppress high-frequency oscillations in the B-spline trajectory, a novel method of constructing the cost function is proposed. This method is based on the observation that high-frequency components of the eigenstructure of the Hessian defining the cost in \cref{eq:total-track-error-b-spline} are amplified. Using the inverse of this Hessian as weighting on the PXTE cost, the high frequency components are penalized instead. This is explained in great detail in \cref{sec:norms,sec:b-spline-norms-as-cost-functions}, but a brief overview is given here:
+
+The cost $J_\text{ref}$ in \cref{eq:total-track-error-b-spline} can be written as a bilinear function of its cofficients $c$ as
+\begin{equation}\label{eq:cost-reference-following-bilinear}
+    J_\text{ref} = \mathbf c^\top \mathbf G \mathbf c,
 \end{equation}
-Here $\mathbf c_\text{ref,i}$ are the control points of the reference trajectory B-spline, $B_{\mathrm{ref},i}(x)$ is the $i$-th basis function in the $N$-element basis, and $\xi_i$ is the greville abscissa of the $i$-th basis function. Replacing $\mathbf{\hat n}_{\mathrm{ref}}(t)$ in \cref{eq:pxte} with $\mathbf{\tilde n}_{\mathrm{ref}}(x)$, the integral in \cref{eq:total-track-error-b-spline} reduces to a B-spline function, which can easily be used as a cost function in the B-spline optimization framework. 
-This approximiation has the advantage that it retains the property of being equivalent to the XTE on straight segments, while the accuracy on curved segments depends on the change in the curvature of the reference trajectory over the supports of the basis functions in that particular segment.
+where $\mathbf G$ is referred to as the Gramian matrix of the B-spline basis functions. 
 
-
-\subsection{Reference Following Weighting}\label{sec:oscillations}
-During the development of the B-spline framework, it was discovered that the choice of cost function for reference following has a significant impact on the resulting trajectory. Overlapping support of B-spline basis functions can induce oscillations in the resulting optimized trajectory when employing an integral function over the spline parameter $x$ like the one in \cref{eq:total-track-error-b-spline} as a cost. (see \cref{fig:conservativeness-traj-integral} for a solution to an optimization problem using this cost). Similar results have been found for other integral-based costs as well. Therefore, careful consideration is required when designing the cost within the B-spline framework.
-
-To illustrate this, consider the following optimization problem, which is a simple reference-following problem where the OS is constrained to a maximum velocity $v_\text{max}$:
-\begin{equation}\label{eq:conservativeness-optimization}
-    \begin{aligned}
-        \min_{\mathbf c} \quad & J_\text{ref} \\
-        \text{subject to} \quad &\mathbf p_\text{OS}(0) = \mathbf p_0, \\
-                    &\mathbf p_\text{OS} = \mathbf B^\top(x) \mathbf c, \\
-                    &\mathbf p_\text{ref} = \mathbf B_\text{ref}^\top(x) \mathbf c_\text{ref}, \\
-                    & \mathbf p_\text{OS}'(x) \cdot \mathbf p_\text{OS}'(x) \le v_\text{max}^2.
-    \end{aligned}
+It is desirable to weight the cost function such that it can be deactivated during certain time intervals. It is for example undesirable to track the reference closely when on a collision course with another vessel.
+Using the inverse of the Gramian matrix, the cost function instead, the cost function can be written as
+\begin{equation}\label{eq:cost-reference-following-inverse-gramian}
+    J_\text{ref} = \mathbf c^\top \mathbf G^{-1} \mathbf c.
 \end{equation}
-Here, $\mathbf p_0$ is the initial position of the OS and the $\cdot$ operator denotes the pointwise dot product as described in \cref{sec:b-spline-theory}. The B-spline basis functions $\mathbf B$ and $\mathbf B_\text{ref}$ are defined as uniform B-splines of degree $p$ and 1, respectively, with the parameter domain $x\in[0,1]$. The control points $\mathbf c$ of the OS B-spline function are optimized to minimize the TTE to a reference trajectory $\mathbf p_\text{ref}$, which is defined by the control points $\mathbf c_\text{ref}$.
-This optimization problem is then analyzied for different choices of $p$ and number $N$ of uniform B-spline basis functions $\mathbf B$. The resulting trajectories are shown in \cref{fig:conservativeness} with the parameters for the optimization problem set to
-\begin{equation}\label{eq:conservativeness-parameters}
-    \begin{aligned}
-        \mathbf p_0 &= \begin{bmatrix} 1 & 0 \end{bmatrix} \\
-        \mathbf B &= \mathbf B_{p, \mathbf u(p,n)} \\
-        \mathbf B_\text{ref} &= \mathbf B_{1,\{0, 0, 1, 1\}} \\
-        \mathbf c_\text{ref} &= \begin{bmatrix}
-            [0 & 0] \\
-            [0 & 3]
-        \end{bmatrix} \\
-        v_\text{max} &= 6, \\
-    \end{aligned}
-\end{equation}
-where $\mathbf u(p,n) = \{\{0\}^{(p)}, \{i/N\}_{i=0}^{N}, \{1\}^{(p)}\}$ is a function that generates the knot vector for a uniform B-spline of degree $p$ with $N$ basis functions. The resulting trajectories are shown in \cref{fig:conservativeness-traj-integral}.
+the cost function is constructed using the inverse Gramian matrix in the basis of a weighted PXTE. This section explains how the transformation is derived and how the Hessian matrix \( H \) is constructed for the optimization problem.
 
-% $\|\cdot\|_\text{F}^2$ is the squared Frobenius norm, given by
-% \begin{equation}
-%     \|\mathbf A\|_\text{F}^2 = \sum_{i,j} a_{ij}^2,
-% \end{equation}
-% where $\mathbf A$ is a matrix and $a_{ij}$ is the element in the $i$-th row and $j$-th column of $\mathbf A$. All other operations on the B-spline functions are done using the algorithms in \cref{sec:b-spline-theory}. 
+A uniform quadratic B-spline basis is used initially, and the basis is transformed into one with maximally repeated knots using a transformation matrix \( T \). The Gramian \( G \) of the refined basis is then used to compute the Hessian:
 
+\[
+H = T^\top \tilde{G}^{-1} T
+\]
 
-\begin{figure}
-    % \centering
-    % \begin{subfigure}[b]{\textwidth}
-    % \centering
-    % \includesvg[width=\textwidth]{fig/conservativeness/conservativeness_traj_coeffs_degree_3.svg}
-    %     \caption{Discrete cost: Trajectory using the sum of squared coefficients of the reference error as a cost function.}
-    %     \label{fig:conservativeness-traj-coeffs}
-    % \end{subfigure}
-    % \hfill
-    % \begin{subfigure}[b]{\textwidth}
-    %     \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_integral_degree_2.svg}
-        \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $p=2$,$N\in\{3,\ldots,20\}$.}
-        \label{fig:conservativeness-traj-integral}
-    % \end{subfigure}
-    % \caption{Comparison of optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $N\in\{4,\ldots,20\}$.}
-    % \label{fig:conservativeness-traj}
-\end{figure}
-
-The oscillatory behavior observed in \cref{fig:conservativeness-traj-integral} can be attributed to the integral cost function's emphasis on the global trajectory shape, which consequently diminishes its sensitivity to high-frequency oscillations. To substantiate this claim, and to find a solution to the problem, a rigorous analysis of the eigenvectors and eigenvalues of the Hessian matrix associated with this cost function will be conducted.
-
-To find the Hessian of the cost function, one can observe that the integral of the squared error can be expressed as a quadratic form in the coefficients of the B-spline functions. The cost function can be rewritten as
-\begin{equation}
-    \begin{aligned}
-        J_\text{ref} &= \int_\mathbb R \mathbf e(x) \cdot \mathbf e(x) \, dx \\
-        &= \int_\mathbb R \sum_i \mathbf c_{\mathbf e,i}^\top \mathbf B(x) \mathbf B^\top(x) \mathbf c_{\mathbf e,i}  dx \\
-        &= \sum_i \mathbf c_{\mathbf e,i}^\top \underbrace{\int_\mathbb R \mathbf B(x) \mathbf B^\top(x) dx}_{\mathbf G} \;\mathbf c_{\mathbf e,i},
-    \end{aligned}
-\end{equation}
-where $\mathbf c_{\mathbf e,i}$ are the coefficients of the B-spline function $\mathbf e(x)$, which represents the TTE. The subscript $i\in\{N,E\}$ denotes the North and East components of the position error, respectively.
-The basis $\mathbf B(x)$ is the same as for $\mathbf p_\text{OS}(x)$ as $\mathbf B_\text{ref} \subseteq \mathbf B$ using the parameters in \cref{eq:conservativeness-parameters}. 
-The integral $\int_\mathbb R \mathbf B(x) \mathbf B^\top(x) dx$ results in a matrix $\mathbf G$, known in the literature as the Gramian of the B-spline basis, and hereafter referred to simply as the Gramian (see \citet{Chu2022} for a more detailed description).
-The Gramian matrix is an important mathematical object in the literature with one of its defining properties being that it is always positive semi-definite \citep{horn2013positive}. However, with our choice of basis functions with restrictions on knot multiplicality, the Gramians considered in this work will always be symmetric and strictly positive definite, i.e., all eigenvalues real and positive. Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. Herafter, the B-spline norm $\|\mathbf e(x)\|_\mathbf H$ will refer to computing the bilinear form
-\begin{equation}\label{eq:b-spline-norm}
-    \|\mathbf e(x)\|_\mathbf H^2 = \sum_i \mathbf c_{\mathbf e,i}^\top \mathbf H \mathbf c_{\mathbf e,i},
-\end{equation}
-where $\mathbf H$ is a suitible symmetric positive definite matrix. 
-
-Using the spectral (eigenvalue) decomposition of the Gramian $\mathbf G = \mathbf U \mathbf \Lambda \mathbf U^\top$ \citep{horn2013positive}, the cost function can be expressed differently. Here, $\mathbf U$ is a matrix whose columns are the unit-normalized eigenvectors of $\mathbf G$, and $\mathbf \Lambda$ is a diagonal matrix with the eigenvalues of $\mathbf G$ on the diagonal. Thus, the cost function can be rewritten as
-\begin{equation}\label{eq:cost-function-spectral-decomposition}
-    J_\text{ref} = \sum_i \mathbf c_{\mathbf e,i}^\top \mathbf G \mathbf c_{\mathbf e,i} = \sum_i \mathbf c_{\mathbf e,i}^\top \mathbf U \mathbf \Lambda \mathbf U^\top \mathbf c_{\mathbf e,i} = \sum_i \sum_{j=1}^{N} \lambda_j (\mathbf u_j^\top \mathbf c_{\mathbf e,i})^2,
-\end{equation}
-where $\lambda_j$ is the $j$-th eigenvalue of $\mathbf G$ and $\mathbf u_j$ is the $j$-th eigenvector of $\mathbf G$. With the cost function in this form, it is clear that the cost is a weighted sum of the squared projections of the coefficients $\mathbf c_{\mathbf e,i}$ onto the eigenvectors $\mathbf u_j$ of the Gramian $\mathbf G$. The eigenvalues $\lambda_j$ determine the weight of each projection, and thus the cost function penalizes the coefficients more heavily if they have a matching projection onto an eigenvector with a large eigenvalue.
-
-As an example, consider the Gramian $\mathbf G_{2,\mathbf u(2,4)}$ for a uniform B-spline basis of degree $p=2$ with $N=4$ can be computed using the relevant formulas in \cref{sec:b-spline-theory} to yield
-\begin{equation}
-    \mathbf G_{2,\mathbf u(2,4)} = \int_\mathbb R \mathbf B_{2,\mathbf u(2,4)}(x) \mathbf B_{2,\mathbf u(2,4)}^\top(x) dx = 
-    \frac{1}{120}\begin{bmatrix}
-        12 & 7 & 1 & 0 \\
-        7 & 20 & 12 & 1 \\
-        1 & 12 & 20 & 7 \\
-        0 & 1 & 7 & 12
-    \end{bmatrix}.
-\end{equation}
-
-This matrix has the eigenvectors 
-\begin{equation}
-    \begin{aligned}
-        \mathbf u_1 &\approx \begin{bmatrix}  
-            0.23 \\  0.67 \\  0.67 \\  0.23 
-        \end{bmatrix}, &
-        \mathbf u_2 &\approx \begin{bmatrix}         
-            0.57 \\  0.41 \\ -0.41 \\  -0.57 
-        \end{bmatrix}, &
-        \mathbf u_3 &\approx \begin{bmatrix}         
-            0.67 \\  -0.23 \\  -0.23 \\  0.67 
-        \end{bmatrix}, &
-        \mathbf u_4 &\approx \begin{bmatrix}         
-            0.41 \\  -0.57 \\  0.57 \\  -0.41 
-        \end{bmatrix},
-    \end{aligned}
-\end{equation}
-with corresponding eigenvalues
-\begin{equation}
-    \begin{aligned}
-        \lambda_1 &\approx 0.29, &
-        \lambda_2 &\approx 0.14, &
-        \lambda_3 &\approx 0.07. &
-        \lambda_4 &\approx 0.03.
-    \end{aligned}
-\end{equation}
-The $u_1$ direction can be interpreted as a direction where all the coefficients have the same sign, while the $u_4$ direction can be interpreted as a direction where subsequent coefficients alternate in sign. 
-As the cost in the $u_1$ direction compared to the $u_4$ direction is $\frac{\lambda_1}{\lambda_4} \approx 10$ times smaller, the cost function will amplify high frequency oscillations in the coefficients, which explains the behaviour in \cref{fig:conservativeness-traj-integral}. In \cref{fig:conservativeness-eigenvectors}, each eigenvector is shown as a weight on each B-spline coefficient where \cref{fig:conservativeness-eigenvectors-integral} shows the situation for the above example. Here, the relative eigenvalues $\hat\lambda_i = \lambda_i/\sum_{i=1}^{N} \lambda_i$ are shown, which will be used to better compare the costs between different cost functions. That the high frequency components of the eigenvectors are penalized less is appearent when increasing the number of B-spline basis functions $N$. This is shown in \cref{fig:integral-basis-eigenvectors-9} in \cref{app:reference-cost-plots} for $N=9$.
-\Cref{fig:conservativeness-eigenvectors-coeffs} show the eigenvectors for when the cost has the form $\|\mathbf e(x)\|_\mathbf I^2$, where $\mathbf I$ is the identity matrix. 
-So, in the pursuit of finding a more suitible cost function, these Hessians and how they interact with B-spline functions are now the subject of analysis.
-
-
-\begin{figure}
-    \centering
-    \begin{subfigure}{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_integral_degree_2_N_4.svg}
-        \caption{$\mathbf H = \mathbf G$}
-        \label{fig:conservativeness-eigenvectors-integral}
-    \end{subfigure}
-    \begin{subfigure}{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_coeffs_degree_2_N_4.svg}
-        \caption{$\mathbf H = \mathbf I$}
-        \label{fig:conservativeness-eigenvectors-coeffs}
-    \end{subfigure}
-    \caption{Eigenvectors of the Hessian $\mathbf H$ of the cost function $\|\mathbf e(x)\|_\mathbf H^2$ for $N=4$ and $p=2$. Note that $\hat\lambda_i$ is a scaled version of the eigenvalue $\lambda_i$ such that $\hat\lambda_i = \lambda_i/\sum_{i=1}^{N} \lambda_i$. Marks on the vertical axis are ommited as it is the relative size between the eigenvector components that are of interest.}
-\label{fig:conservativeness-eigenvectors}
-\end{figure}
+The eigenstructure of \( H \) confirms this behavior: eigenvectors associated with high-frequency oscillations have higher associated cost. This is illustrated in Figures~3.5 and 3.6, where eigenfunctions and their corresponding eigenvalues are visualized.
 
 
 
-Setting $\mathbf H = \mathbf I$ results in a cost function that penalizes all coefficients in the relevant basis equally. This is analogous to treating the coefficients as time-discretized points in the time-grid formulation in \cref{eq:total-track-error-time-grid}, where the cost is simply the sum of the squared TTE at each time step. \cref{fig:conservativeness-traj-coeffs} shows the resulting trajectory when using this cost function in \cref{eq:conservativeness-optimization} with the parameters in \cref{eq:conservativeness-parameters}. 
-
-\begin{figure}
-    \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_coeffs_degree_2.svg}
-    \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $p=2$, $N\in\{3,\ldots,20\}$ and where the cost is changed to $J_\text{ref} = \|\mathbf e(x)\|_{\mathbf I}^2$.}
-    \label{fig:conservativeness-traj-coeffs}
-\end{figure}
-
-
-It may be desirable to weigh the cost $J_\text{ref}$ against other objectives, such as the COLREGS objectives in the next section.
-Using $J_\text{ref}=\| w_\text{ref}\;\mathbf e(x)\|_{\mathbf I}^2$ as the cost term works well when $w_\text{ref}$ is a scalar. If however, $w_\text{ref}(x)$ is a spline function itself, the oscillatory behavior of the cost function may return. This was discovered during the work for this thesis. The reason for wanting to use a spline function for $w_\text{ref}(x)$ is to allow for the cost to be weighted differently at different times, e.g., to allow for a higher cost on the TTE during transit and a lower cost during an encounter with a \acrshort{TS}. Again, this will be discussed in more detail in \cref{sec:colregs-objectives}.
-
-The intuition for this comes from that while the cost yields independent directions for the eigenvectors in the Gramian $\mathbf{\tilde G}$ for the $\mathbf{\tilde B}$ basis, the Hessian of the cost function is ultimately expressed in the basis $\mathbf B$ of the original coefficients $\mathbf c_\mathbf e$. In vector notation, the cost function is expressed as
-\begin{equation}\label{eq:cost-function-w-ref}
-    J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf I}^2 = \sum_i \mathbf{\tilde c}_{w \mathbf{e},i}^\top \mathbf I \mathbf{\tilde c}_{w \mathbf{e},i},
-\end{equation}
-where $\mathbf{\tilde c}_{w \mathbf{e}}$ are the coefficients of the spline function $w_\text{ref}(x)\;\mathbf e(x)$ in the $\mathbf{\tilde B}$ basis.  Using the transform $\mathbf T$ from $\mathbf B$ to $\mathbf{\tilde B}$ (see \cref{alg:basis-transformation}), the shape of the cost in the original basis can be approximated. Starting from \cref{eq:cost-function-w-ref}, the Hessian for the cost can be translated to the original basis as follows:
-\begin{equation}\label{eq:cost-function-w-ref-derivation}
-        J_\text{ref} = \sum_i \mathbf{\tilde c}_{w \mathbf{e},i}^\top \mathbf I \mathbf{\tilde c}_{w \mathbf{e},i} 
-        = \sum_i \mathbf c_{w,\mathbf e,i}^\top \underbrace{\mathbf T^\top \mathbf I \mathbf T}_{\mathbf H} \mathbf c_{w,\mathbf e,i} 
-        = \sum_i \mathbf c_{w,\mathbf e,i}^\top \mathbf H \mathbf c_{w,\mathbf e,i},
-\end{equation}
-where $\mathbf c_{w,\mathbf e}$ represents the approximated coefficients of the product $w_\text{ref}(x)\;\mathbf e(x)$ when expressed within the original, unrefined basis $\mathbf B$. This highlights a critical insight: modifying the basis in which the cost function is formulated inherently alters the cost function's characteristics and behavior.
-
-As a simple example, consider the case where $w_\text{ref}(x)$ is a piecewise constant spline with its basis $\mathbf B_w$ sharing the same knot values as $\mathbf B$. I.e. for $N=4$ and $p=2$, the knot vector for $\mathbf B$ and $\mathbf B_w$ is $\mathbf u(2,4) = \left\{0, 0, 0, \frac{1}{2}, 1, 1, 1\right\}$ and $\left\{0, \frac{1}{2}, 1\right\}$ respectively. Multiplying $w_\text{ref}(x)$ with $\mathbf e(x)$ results in a new spline function which is minimally represented in $\mathbf{\tilde B}$ with $p=2$ and knot vector $\left\{0, 0, 0, \frac{1}{2}, \frac{1}{2}, \frac{1}{2}, 1, 1, 1\right\}$.  The transformation matrix $\mathbf T$ from $\mathbf B$ to $\mathbf{\tilde B}$ and the corresponding Hessian $\mathbf H$ is then:
-\begin{equation*}
-    \mathbf T = \begin{bmatrix}
-        1 & 0 & 0 & 0 \\
-        0 & 1 & 0 & 0 \\
-        0 & \frac{1}{2} & \frac{1}{2} & 0 \\
-        0 & \frac{1}{2} & \frac{1}{2} & 0 \\
-        0 & 0 & 1 & 0 \\
-        0 & 0 & 0 & 1
-    \end{bmatrix},
-    \quad
-    \mathbf H = \mathbf T^\top \mathbf T =
-    \begin{bmatrix}
-        1 & 0 & 0 & 0 \\
-        0 & \frac{3}{2} & \frac{1}{2} & 0 \\
-        0 & \frac{1}{2} & \frac{3}{2} & 0 \\
-        0 & 0 & 0 & 1 \\
-    \end{bmatrix}.
-\end{equation*}
-This Hessian reveals that the first and last basis functions remain unchanged, while the middle basis functions are now linear combinations. This is reflected in \Cref{fig:conservativeness-eigenvectors-full}, which shows the Hessian before and after multiplying the error with the weight function. The figure shows that the cost for consecutive coefficients being aligned is once again higher than for alternating coefficients. For a visualization with a higher number of basis functions the reader is referred to \cref{fig:refined-basis-eigenvectors-9} in \cref{app:reference-cost-plots}.
-
-    
-\begin{figure}
-    \centering
-    \begin{subfigure}[t]{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_coeffs_degree_2_N_4.svg}
-        \caption{$J_\text{ref} = \|\mathbf e(x)\|_\mathbf I^2$}
-        \label{fig:conservativeness-eigenvectors-coeffs-unrefined}
-    \end{subfigure}
-    \begin{subfigure}[t]{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_refined_basis_degree_2_N_4.svg}
-        \caption{$J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_\mathbf I^2$}
-        \label{fig:conservativeness-eigenvectors-weight-refined}
-    \end{subfigure}
-    \caption{Eigenvectors of the Hessian $\mathbf H = \mathbf I$ of the cost function for $N=4$ and $p=2$ before (top) and after (bottom) weighing $\mathbf e(x)$ with $w_\text{ref}(x)$. The eigenvectors are shown in the original basis $\mathbf B$.}
-    \label{fig:conservativeness-eigenvectors-full}
-\end{figure}
-
-With this analysis in mind, it is clear that the Hessian of the cost function should be chosen such that 1), high frequency oscillations in the coefficients are penalized more heavily than low frequency oscillations and 2), that the cost function should not be too sensitive to basis transformations. Choosing $\mathbf H = \mathbf G^{-1}$, the inverse Gramian, has been found during the course of this work to acheive these criteria. The inverse Gramian has the same eigenvectors as the Gramian, but the eigenvalues are now inversely proportional to the original eigenvalues \citep{horn2013positive}, so the eigen decomposition of the inverse Gramian is given by
-\begin{equation}
-    \mathbf G^{-1} = \left(\mathbf U \mathbf \Lambda \mathbf U^\top\right)^{-1} = \mathbf U \mathbf \Lambda^{-1} \mathbf U^\top.
-\end{equation}
-
-The eigenvectors are shown in \cref{fig:conservativeness-eigenvectors-inv-gramian-full} for $N=4$ and $p=2$ and in \cref{fig:refined-basis-inverse-gramian-eigenvectors-9} for $N=9$ and $p=2$. These figures show that the change in cost after the basis change induced by the weight function $w_\text{ref}(x)$ is now much less pronounced, and high frequency oscillations are damped by the high eigenvalues. 
-
-\begin{figure}
-    \begin{subfigure}{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_inv_gramian_degree_2_N_4.svg}
-        \caption{$J_\text{ref} = \|\mathbf e(x)\|_{\mathbf G^{-1}}^2$}
-        \label{fig:conservativeness-eigenvectors-inv-gramian}
-    \end{subfigure}
-    \begin{subfigure}{\textwidth}
-        \centering
-        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_refined_inv_gramian_degree_2_N_4.svg}
-        \caption{$J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf G^{-1}}^2$}
-        \label{fig:conservativeness-eigenvectors-weight-inv-gramian}
-    \end{subfigure}
-    \caption{Eigenvectors of the Hessian $\mathbf H = \mathbf G^{-1}$ of the cost function for $N=4$ and $p=2$ before (top) and after (bottom) weighing $\mathbf e(x)$ with $w_\text{ref}(x)$. The eigenvectors are shown in the original basis $\mathbf B$.}
-    \label{fig:conservativeness-eigenvectors-inv-gramian-full}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_inv_gramian_degree_2.svg}
-    \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $N\in\{3,\ldots,20\}$ and where the cost is changed to $J_\text{ref} = \|\mathbf e(x)\|_{\mathbf G^{-1}}^2$.}
-    \label{fig:conservativeness-traj-inv-gramian}
-\end{figure}
-
-The trajectories resulting from using the inverse Gramian as the Hessian in \cref{eq:conservativeness-optimization} are shown in \cref{fig:conservativeness-traj-inv-gramian}. The trajectories are much smoother than those in \cref{fig:conservativeness-traj-integral}, but converge slower to the reference trajectory for low $N$. This is also the case for using the cost function with $\mathbf H = \mathbf I$ in \cref{fig:conservativeness-traj-coeffs}. For higher $N$, all cost functions converge to the same trajectory, as the B-spline basis functions become more localized and the oscillatory effects from the Gramian are damped. This convergence can be seen in \cref{fig:conservativeness}, where $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=2$ and for each of the cost functions $\|\mathbf e(x)\|_\mathbf I^2$, $\|\mathbf e(x)\|_\mathbf G^2$ and $\|\mathbf e(x)\|_{\mathbf G^{-1}}^2$.
 
 
 The final cost function for the reference trajectory following is thus chosen as
@@ -525,14 +295,13 @@ The final cost function for the reference trajectory following is thus chosen as
 \end{equation}
 where $w_\text{ref}(x)$ is a B-spline function that can be used to weight the cost function at different times, and $\mathbf G^{-1}$ is the inverse Gramian in the given expressions' basis. The trace term is included to ensure that the total cost of all the directions is normalized to 1, as the trace of a matrix is the sum of its eigenvalues.
 
-To the authors knowledge, this is the first time that the inverse Gramian has been used as a Hessian in a B-spline-based optimization problem, or that a similar analysis of the eigenvectors and eigenvalues of the Gramian has been performed in the context of B-spline trajectory following. Other cost functions have also been considered, but with poor results in terms of feasibility for the optimization problem in question. A brief overview of these costs is given in \cref{app:failed-reference-following}.
 
-\begin{figure}
-    \centering
-    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_2.svg}
-    \caption{Convergence of the different cost functions. The integral of the square error $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=2$.}
-    \label{fig:conservativeness}
-\end{figure}
+% \begin{figure}
+%     \centering
+%     \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_2.svg}
+%     \caption{Convergence of the different cost functions. The integral of the square error $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=2$.}
+%     \label{fig:conservativeness}
+% \end{figure}
 
 
 \FloatBarrier
@@ -631,25 +400,45 @@ solution = opti.solve()
 \end{python}
 \end{example}
 
+\section{Operations on B-splines}\label{sec:operations-on-b-splines}
 
-\subsection{Operations on B-splines}\label{sec:operations-on-b-splines}
-
-An algoritmic overview of how operations on B-splines are performed in the library is given in this section. 
+The B-spline library implements various unary and binary operations, as outlined in this section. First, the differentiation and integration of B-splines are presented. Then, the transformation between different B-spline bases is explained, along with its use in B-spline addition, multiplication, and inner product calculations. Finally, the implementation of cost functions and constraints within the optimization problem is discussed.
 
 
 From the recursive relation in \cref{eq:b-spline-recurrence} it follows that the B-spline basis functions are piecewise polynomial functions in $x$ of degree $p$. This property makes it clear that all polynomial operations on B-splines will result in a new B-spline. This property is exploited in the following sections to derive the B-spline derivative and integral, as well as to transform between different B-spline bases.
 
-In all following sections, it is assumed that for a given B-spline basis of degree $p$, the corresponding knot vector $\mathbf t$ is $p+1$ regular, i.e. all knots have multiplicity of most $p+1$ as well as the first and last knot having multiplicity $p+1$. The knot vector $\mathbf t$ can then be written with the notation 
-\begin{equation}\label{eq:regular-knot-vector}
-    \mathbf t = \{\underbrace{\eta_0, \dots, \eta_0}_{m_0}, \underbrace{\eta_1, \dots, \eta_1}_{m_1}, \dots, \underbrace{\eta_{r}, \dots, \eta_{r}}_{m_r}\} = \{\eta_0^{(m_0)}, \eta_1^{(m_1)}, \dots, \eta_r^{(m_r)}\}
+In all following sections, it is assumed that for a given B-spline basis of degree $p$, the corresponding knot vector $\mathbf t$ is $p+1$ regular, which means that all knots have multiplicity of at most $p+1$, as well as the first and last knot having a multiplicity of exactly $p+1$. This ensures that the B-spline basis is well-defined and constrains the endpoints of the B-spline to the first and last coefficients of the B-spline.
+
+
+It is convenient to work with the vector-valued B-spline in the form:
+\begin{equation}\label{eq:b-spline-vector-valued}
+    \mathbf f(x) = \begin{bmatrix}
+        \mathbf{B}_{p, \mathbf{t}}^\top(x) \mathbf c_1 \\
+        \mathbf{B}_{p, \mathbf{t}}^\top(x) \mathbf c_2 \\
+        \vdots \\
+        \mathbf{B}_{p, \mathbf{t}}^\top(x) \mathbf c_d
+    \end{bmatrix}
+    = 
+    (\mathbf{I}_d \otimes \mathbf{B}_{p, \mathbf{t}}^\top(x)) 
+    \begin{bmatrix}
+        \mathbf c_1 \\
+        \mathbf c_2 \\
+        \vdots \\
+        \mathbf c_d
+    \end{bmatrix} 
+    = (\mathbf{I}_d \otimes \mathbf{B}_{p, \mathbf{t}}^\top(x)) \mathbf{\vec c}
 \end{equation}
-where $\{\eta_i\}$ is the set of unique knots in increasing order and $m_i$ denotes the multiplicity of the corresponding unique knot. For the knot vector to be regular, $m_0 = m_r = p+1$ and $m_i \leq p+1$ for $i \in \{1,2,\ldots,n-1\}$.
+where $\mathbf{I}_d$ is the identity matrix of size $d\times d$, $\otimes$ denotes the Kronecker product, and $\mathbf{\vec c} = [\mathbf c_1^\top, \mathbf c_2^\top, \ldots, \mathbf c_d^\top]^\top\in\mathbb R^{nd}$ is the stacked coefficient vector, each $\mathbf c_i \in \mathbb R^n$. Another practiacl form is with the coefficients in matrix form $\mathbf C = [\mathbf c_1, \ldots \mathbf c_d]\in \mathbb R^{n \times d}$.  The vector-valued B-spline can then be compactly expressed as:
+\begin{equation}\label{eq:b-spline-vector-valued-matrix}
+    \mathbf f(x) = \mathbf C^T \mathbf B_{p, \mathbf{t}}(x) 
+\end{equation}
+
 
 \subsection{Differentiation}\label{sec:derivative}
 Given a B-spline $f(x) = \sum_{j=0}^{n-1} c_j B_{j, p, \mathbf{t}}(x)$,
 the derivative of the B-spline can be computed by simply differencing its coefficients. 
 \begin{equation}\label{eq:b-spline-derivative}
-    \frac{d}{dx} f(x) = (p-1) \sum_{j=1}^{n-1} \frac{c_j-c_{j-1}}{t_{j+p-1}-t_j} B_{j, p-1, \boldsymbol{\tau}}(x)
+    \frac{\mathrm d}{\mathrm dx} f(x) = (p-1) \sum_{j=1}^{n-1} \frac{c_j-c_{j-1}}{t_{j+p-1}-t_j} B_{j, p-1, \boldsymbol{\tau}}(x)
 \end{equation}
 where $\boldsymbol{\tau} = [t_j]_{j=1}^{n+p-1}$ is the same knot vector as $\mathbf{t}$, but with the first and last knot removed in order to maintain regularity of the knot vector for the derivative B-spline basis.
 
@@ -672,7 +461,7 @@ The denominator $t_{j+p}-t_j$ in \cref{eq:b-spline-derivative} illustrates the c
 Given a degree $p$ and initial knot sequence $\mathbf t$, \cref{eq:b-spline-derivative}, gives
 \begin{equation}\label{eq:b-spline-integral-pre}
     p \sum_{j=1}^{n-1} \gamma_j B_{j, p, \boldsymbol{t}}(x) 
-    = \frac{d}{dx} \sum_{j=0}^{n-1} c_j B_{j, p+1, \boldsymbol{\tau}}(x),
+    = \frac{\rm d}{\mathrm dx} \sum_{j=0}^{n-1} c_j B_{j, p+1, \boldsymbol{\tau}}(x),
 \end{equation}
 given that
 \begin{equation}
@@ -685,7 +474,7 @@ the new coefficients on the right hand side of \cref{eq:b-spline-integral-pre} c
 \end{equation}
 This then gives the general anti-derivative of a B-spline as
 \begin{equation}\label{eq:b-spline-integral}
-    \int f(x) dx = \sum_{j=0}^{n-1} c_j B_{j, p+1, \boldsymbol{\tau}}(x)
+    \int f(x) \mathrm dx = \sum_{j=0}^{n-1} c_j B_{j, p+1, \boldsymbol{\tau}}(x)
 \end{equation}
 where $[c_j]_{j=1}^{n-1}$ are given by \cref{eq:b-spline-integral-coefficients}, $c_0$ is the constant of integration and $[\gamma_j]_1^{n-1}$ are the original coefficients of $f(x)$. In matrix form, the coefficients of the integral B-spline can be expressed as
 \begin{equation}\label{eq:b-spline-integral-matrix}
@@ -709,13 +498,12 @@ where $\mathbf T_I$ is an $n \times (n-1)$ matrix with elements
 \end{equation}
 
 and $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$ still.
-As integration and differentiation are inverse operations, it should come as no surprise that the transformation matrices $\mathbf T_I$ and $\mathbf T_D$ are similirly related. This is explored further in \cref{app:homogeneous-integration-matrix}.
 
 
 \subsection{Transforming Between Bases}\label{sec:basis-transformation}
-In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$\todo[inlinepar]{ikke helt sant} \citep{Grimstad2016}. Moreover, the coefficients in the new basis can be found by solving a linear system of equations. The following basis transformation method is employed in many algorithms in literature, and forms the foundation for the rest of the methods in this chapter, which is why a thorough explanation of this method is given attention here.
+In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$\todo[inlinepar]{ikke helt sant} \citep{Grimstad2016}. Moreover, the coefficients in the new basis can be found by solving a linear system of equations. The following basis transformation method is employed in many algorithms in literature, and forms the foundation for the rest of the implementations in this chapter, which is why a thorough explanation of this method is given attention here.
 
-The goal is to find the transformation matrix $\mathbf T$ such that $\mathbf c_{q, \boldsymbol \tau} = \mathbf T \mathbf c_{p, \mathbf t}$, where $\mathbf c_{q, \boldsymbol \tau}$ and $\mathbf c_{p, \mathbf t}$ are the coefficients of the spline function $\mathbf S$ in the bases $\mathbf B_{q,\boldsymbol \tau}$ and $\mathbf B_{p,\mathbf t}$, respectively.
+The goal is to find the transformation matrix $\mathbf T$ such that $\mathbf c_{q, \boldsymbol \tau} = \mathbf T \mathbf c_{p, \mathbf t}$, where $\mathbf c_{q, \boldsymbol \tau}$ and $\mathbf c_{p, \mathbf t}$ are the coefficients of the spline function $f(x)$ in the bases $\mathbf B_{q,\boldsymbol \tau}$ and $\mathbf B_{p,\mathbf t}$, respectively.
 
 %The strategy to find $\mathbf T$ involves expressing the coefficients of the original basis $\mathbf c_{p, \mathbf t}$ as a linear combination of the refined basis $\mathbf c_{q,\boldsymbol \tau}$.
 Noting that the two spline functions $\mathbf B_{q,\boldsymbol \tau}^\top \mathbf c_{q, \boldsymbol \tau}$, $\mathbf B_{p,\mathbf t}^\top \mathbf c_{p, \mathbf t}$ have to be equal,
@@ -826,7 +614,7 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
     We want to express the constant spline $f(x) =\mathbf B_{0, \mathbf t}^\top\mathbf c$ with knot vector $\mathbf t = \left[0, 1\right]$ as a linear spline $g(x) = \mathbf B_{1, \boldsymbol \tau}^\top \mathbf d$ with knot vector $\boldsymbol \tau = \left[0, 0, 1, 1\right]$. 
 
     The Greville abscissae for the linear spline are 
-    \begin{equation*}
+    \begin{equation}
         \boldsymbol \xi_{1,\boldsymbol \tau} = 
         \begin{bmatrix}
             \frac{\tau_0 + \tau_1 + \tau_2}{3} &
@@ -838,9 +626,9 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
         \end{bmatrix} = \begin{bmatrix}
             \frac{1}{3} & \frac{2}{3}
         \end{bmatrix}.
-    \end{equation*}
+    \end{equation}
     Evaluating $\mathbf B_{0, \mathbf t}$ and $\mathbf B_{1, \boldsymbol \tau}$  at the Greville abscissae gives
-    \begin{equation*}
+    \begin{equation}
         \begin{aligned}
             \mathbf B_{0, \mathbf t}\begin{pmatrix}\frac{1}{3}\end{pmatrix} &= \begin{bmatrix} 1 \end{bmatrix}, 
             &\mathbf B_{0, \mathbf t}\begin{pmatrix}\frac{2}{3}\end{pmatrix} &= \begin{bmatrix} 1 \end{bmatrix} 
@@ -848,9 +636,9 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
             \mathbf B_{1, \boldsymbol \tau}\begin{pmatrix}\frac{1}{3}\end{pmatrix} &= \begin{bmatrix} \frac{2}{3} & \frac{1}{3} \end{bmatrix}^\top, 
             &\mathbf B_{1, \boldsymbol \tau}\begin{pmatrix}\frac{2}{3}\end{pmatrix} &= \begin{bmatrix} \frac{1}{3} & \frac{2}{3} \end{bmatrix}^\top
         \end{aligned}
-    \end{equation*}
+    \end{equation}
     Solving
-    \begin{equation*}
+    \begin{equation}
         \begin{bmatrix}
             \frac{2}{3} & \frac{1}{3} \\
             \frac{1}{3} & \frac{2}{3}
@@ -859,9 +647,9 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
         =
         \begin{bmatrix} 1 \\ 1 \end{bmatrix}
         \begin{bmatrix} c_0 \end{bmatrix}
-    \end{equation*}
+    \end{equation}
     gives the solution
-    \begin{equation*}
+    \begin{equation}
         \begin{bmatrix} d_0 \\ d_1 \end{bmatrix}
         =
         \begin{bmatrix} 2 & -1 \\ -1 & 2 \end{bmatrix}
@@ -870,21 +658,21 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
         =
         \begin{bmatrix} 1 \\ 1 \end{bmatrix}
         \begin{bmatrix} c_0 \end{bmatrix}
-    \end{equation*}
+    \end{equation}
 \end{indentedexample}
 
 \begin{indentedexample}[Knot Refinement]
     Given a linear spline function $f(x) = \mathbf B_{1, \mathbf t}^\top \mathbf c$ with knot vector $\mathbf t = \left\{ 0, 0, \frac{1}{2}, 1, 1\right\}$, the goal is to express it with in the basis $\mathbf B_{1, \boldsymbol \tau}$ with the refined knot vector $\boldsymbol \tau = \left\{ 0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1\right\}$.
 
         The Greville abscissae for the refined basis are
-        \begin{equation*}
+        \begin{equation}
             \boldsymbol \xi_{1,\boldsymbol \tau} = 
             \left\{
                 \frac{1}{12}, \frac{3}{12}, \frac{6}{12}, \frac{9}{12}, \frac{11}{12}
             \right\}.
-        \end{equation*}
+        \end{equation}
         Using \cref{tab:linear-spline-evaluation} to evaluate $\mathbf B_{1,\boldsymbol\tau}(x)$ at the Greville abscissae gives
-        \begin{equation*}
+        \begin{equation}
             \begin{aligned}
                 \mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{1}{12}\end{pmatrix} &= \begin{bmatrix} \frac{3}{4} & \frac{1}{4} & 0 & 0 & 0 \end{bmatrix}^\top,
                 &\mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{3}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 1 & 0 & 0 & 0 \end{bmatrix}^\top, \\
@@ -892,9 +680,9 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
                 &\mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{9}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 0 & 1 & 0 \end{bmatrix}^\top, \\
                 \mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{11}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 0 & \frac{1}{4} & \frac{3}{4} \end{bmatrix}^\top,
             \end{aligned}
-        \end{equation*}
+        \end{equation}
         while evaluating $\mathbf B_{1,\mathbf t}(x)$ at the Greville abscissae gives
-        \begin{equation*}
+        \begin{equation}
             \begin{aligned}
                 \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{1}{12}\end{pmatrix} &= \begin{bmatrix} \frac{5}{6} & \frac{1}{6} & 0 \end{bmatrix}^\top,
                 &\mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{3}{12}\end{pmatrix} &= \begin{bmatrix} \frac{1}{2} & \frac{1}{2} & 0 \end{bmatrix}^\top, \\
@@ -902,9 +690,9 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
                 &\mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{9}{12}\end{pmatrix} &= \begin{bmatrix} 0 & \frac{1}{2} & \frac{1}{2} \end{bmatrix}^\top, \\
                 \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{11}{12}\end{pmatrix} &= \begin{bmatrix} 0 & \frac{1}{6} & \frac{5}{6} \end{bmatrix}^\top.
             \end{aligned}
-        \end{equation*}
+        \end{equation}
         Inserting the calculated values into \cref{eq:transformation-matrix} gives
-        \begin{equation*}
+        \begin{equation}
             \begin{bmatrix}
                 \frac{3}{4} & \frac{1}{4} & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 & 0 \\
@@ -922,9 +710,9 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
                 0 & \frac{1}{6} & \frac{5}{6}
             \end{bmatrix}
             \mathbf c,
-        \end{equation*}
+        \end{equation}
         which has the solution
-        \begin{equation*}
+        \begin{equation}
             \mathbf d = \begin{bmatrix}
                 \frac{8}{9} & \frac{1}{9} & 0 \\
                 \frac{1}{2} & \frac{1}{2} & 0 \\
@@ -933,23 +721,22 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
                 0 & \frac{1}{9} & \frac{8}{9}
             \end{bmatrix}
             \mathbf c.
-        \end{equation*}
+        \end{equation}
 
             \centering
             \begin{tabular}{c|c|c|c|c|c}
                 Knot Interval & $\mathbf B_{1, \boldsymbol\tau, 0}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 1}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 2}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 3}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 4}(x)$ \\[5pt]
                 \hline
-                \rule{0pt}{2.5ex} $\left[0,\frac{1}{4}\right]$ & $1-4x$ & $4x$ & 0 & 0 & 0 \\[5pt]
+                \rule{0pt}{2.5ex} $\left[0,\tfrac{1}{4}\right]$ & $1-4x$ & $4x$ & 0 & 0 & 0 \\[5pt]
                 \hline
-                \rule{0pt}{2.5ex} $\left[\frac{1}{4},\frac{1}{2}\right]$ & 0 & $2-4x$ & $-1+4x$ & 0 & 0 \\[5pt]
+                \rule{0pt}{2.5ex} $\left[\tfrac{1}{4},\tfrac{1}{2}\right]$ & 0 & $2-4x$ & $-1+4x$ & 0 & 0 \\[5pt]
                 \hline
-                \rule{0pt}{2.5ex} $\left[\frac{1}{2},\frac{3}{4}\right]$ & 0 & 0 & $3-4x$ & $-2+4x$ & 0 \\[5pt]
+                \rule{0pt}{2.5ex} $\left[\tfrac{1}{2},\tfrac{3}{4}\right]$ & 0 & 0 & $3-4x$ & $-2+4x$ & 0 \\[5pt]
                 \hline
-                \rule{0pt}{2.5ex} $\left[\frac{3}{4},1\right]$ & 0 & 0 & 0 & $4-4x$ & $-3+4x$
+                \rule{0pt}{2.5ex} $\left[\tfrac{3}{4},1\right]$ & 0 & 0 & 0 & $4-4x$ & $-3+4x$
             \end{tabular}
             \captionof{table}{The polynomials for each basis function in $\mathbf B_{1, \left[0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1\right]}$ in their respecive knot intervals}
             \label{tab:linear-spline-evaluation}
-
 \end{indentedexample}
 
 \subsection{Addition and Subtraction}
@@ -993,7 +780,7 @@ To do this, the basis of the lowest degree is first elevated to the highest degr
 
 Scalar addition in the form of $f(x) + a$ can be performed by simply adding the scalar to all the coefficients of the B-spline. This is clear from the fact thats a scalar can be represented as a B-spline with degree $0$ (constant spline), and then performing the addition as described above. 
 
-\subsection{Multiplication and Inner Product}\label{sec:multiplication}
+\subsection{Multiplication}\label{sec:multiplication}
 
 For addition, the common basis had to have degree $q \geq \max(p_1, p_2)$, but for multiplication, the degree of the common basis must be $q = p_1 + p_2$\todo[inlinepar]{forklar hvorfor}. Intuitively, this is because the product of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $p_1 + p_2$ while the sum of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $\max(p_1, p_2)$.
 
@@ -1012,9 +799,12 @@ Writing the equation for the product of the two B-splines gives
     \end{align}
 \end{subequations}
 
-where $\otimes$ denotes the Kronecker product. In \cref{eq:b-spline-product-3}, the mixed product property of the Kronecker product has been used, while \cref{eq:b-spline-product-4} is obtained using the fact that the transpose is distributive over the Kronecker product \citep{LOAN200085}. \Cref{eq:b-spline-product-4} resembles the structure in \cref{eq:transformation-matrix-equation}, and the transformation matrix $\mathbf T$ from $\mathbf c_1 \otimes \mathbf c_2$ to $\mathbf d$ can similarily be found by sampling \cref{eq:b-spline-product-4} at the Greville abscissae of $\mathbf B_{q, \boldsymbol{\tau}}^{\top}(x)$. This is summarized in \cref{alg:multiplication}.
+where $\otimes$ denotes the Kronecker product. In \cref{eq:b-spline-product-3}, the mixed product property of the Kronecker product has been used, while \cref{eq:b-spline-product-4} is obtained using the fact that the transpose is distributive over the Kronecker product \citep{LOAN200085}. \Cref{eq:b-spline-product-4} resembles the structure in \cref{eq:transformation-matrix-equation}, and the transformation matrix $\mathbf T$ required for computing the inner product can be derived analogously to the multiplication operation, as described in \cref{alg:multiplication}.
 
-This algorithm can be made more efficient by exploiting the local support property of B-splines. The product of two B-splines is zero outside the union of the supports of the two B-splines, and the transformation matrix $\mathbf T$ will have many zero entries. So, instead of computing the Kronecker products $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and $\mathbf c_1 \otimes \mathbf c_2$, which are column vectors of $p_1\cdot p_2$ entries, one can instead create vectors where only the non-zero entries of $\mathbf B_{p_1, \mathbf{t}_1}(x) \otimes \mathbf B_{p_2, \mathbf{t}_2}(x)$ and corresponding entries of $\mathbf c_1 \otimes \mathbf c_2$ are stored. 
+So, to find the product $h(x) = f(x) g(x)$, one first finds a common basis for $f(x)$ and $g(x)$ using \cref{alg:common-basis}, before finding the transformation matrix $\mathbf T$ from $\mathbf c_1 \otimes \mathbf c_2$ to $\mathbf d$ using \cref{eq:transformation-matrix-solution}. The product is then given by
+\begin{equation}
+    h(x) = \mathbf B_{q, \boldsymbol{\tau}}^\top(x) \mathbf d = \mathbf B_{q, \boldsymbol{\tau}}^\top(x) \mathbf T (\mathbf c_1 \otimes \mathbf c_2).
+\end{equation}
 
 \begin{algorithm}
     \caption{Product}\label{alg:multiplication}
@@ -1031,21 +821,21 @@ This algorithm can be made more efficient by exploiting the local support proper
 \begin{indentedexample}[B-Spline Product]
     \label{ex:linear-spline-multiplication}
     Consider the two B-splines
-    \begin{equation*}
+    \begin{equation}
         f(x) = \mathbf{B}_{p_1, \mathbf t_1}^\top(x) \mathbf{c}_1
         \quad g(x) = \mathbf{B}_{p_2, \mathbf t_2}^\top(x) \mathbf{c}_2
-    \end{equation*}
+    \end{equation}
     with knot vectors $\mathbf t_1 = \left\{0, 0, \frac{1}{3}, \frac{2}{3}, 1, 1\right\}$,  $\mathbf t_2 = \left\{0, 0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1, 1\right\}$ and degrees  $p_1 = 1$, $p_2 = 2$. 
     The common basis $\mathbf{B}_{q,\boldsymbol{\tau}}$ is then found using \cref{alg:common-basis}, to get:
-    \begin{equation*}
+    \begin{equation}
         q = p_1 + p_2 = 3,
         \quad
         \boldsymbol{\tau} = \left\{0, 0, 0, 0, \tfrac{1}{4}, \tfrac{1}{4}, \tfrac{1}{3}, \tfrac{1}{3}, \tfrac{1}{3}, \tfrac{1}{2}, \tfrac{1}{2}, \tfrac{2}{3}, \tfrac{2}{3}, \tfrac{2}{3}, \tfrac{3}{4}, \tfrac{3}{4}, 1, 1, 1, 1\right\},
-    \end{equation*}
+    \end{equation}
     where the internal knots of $\mathbf t_1$ and $\mathbf t_2$ have been duplicated twice and once respectively to account for the degree elevation. 
     The left hand side of \cref{eq:b-spline-product-4} is found as in \cref{eq:transformation-matrix}, sampling $\mathbf B_{q, \boldsymbol{\tau}}(x)$ at the Greville abscissae $\boldsymbol{\zeta_\tau}$.
     For the right hand side, we can write out the product of the B-splines in matrix form using the Kronecker product:
-    \begin{equation*}
+    \begin{equation}
         \begin{aligned}
             (\mathbf B_{p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) \otimes \mathbf B_{p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}))^\top \mathbf{c}_1 \otimes \mathbf{c}_2 = \begin{bmatrix}
                 B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{0, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
@@ -1068,7 +858,7 @@ This algorithm can be made more efficient by exploiting the local support proper
                 c_{n, 1} c_{m, 2}
             \end{bmatrix}                
         \end{aligned}
-    \end{equation*}
+    \end{equation}
     This is a matrix with $p_1 \cdot p_2$ rows and column number equal to the number of Greville abscissae in $\boldsymbol{\tau}$, which depend on the degrees of $\mathbf B_{p_1, \mathbf{t}_1}$ and $\mathbf B_{p_2, \mathbf{t}_2}$ and how many knots they share.
     In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero-entries, but as the knot vectors get denser, this number will increase.
 
@@ -1094,15 +884,17 @@ This algorithm can be made more efficient by exploiting the local support proper
 
 \end{indentedexample}
 
-The inner product of two (vector-valued) functions is a scalar that measures the similarity between the functions. combines the components of the two vector-valued functions. This operation is useful in applications such as calculating projections, or defining cost functions in optimization problems. The $\mathcal L_2$ inner product (henceforth referred to as the inner product)for vector-valued functions is defined as:
+\subsection{Inner Product, Norms and the B-spline Gramian}\label{sec:inner-product}
+\subsubsection{Inner Product}
+The inner product of two (vector-valued) functions is a scalar that measures the similarity between the functions. combines the components of the two vector-valued functions. This operation is useful in applications such as calculating projections, or defining cost functions in optimization problems. The $\mathcal L_2$ inner product (henceforth referred to as the inner product) for vector-valued functions is defined as:
 \begin{equation}
     \label{eq:dot-product}
-    \langle\mathbf f(x), \mathbf g(x)\rangle = \int_{-\infty}^\infty\sum_{i=1}^m f_i(x) g_i(x)
+    \langle\mathbf f(x), \mathbf g(x)\rangle = \int_{-\infty}^\infty \mathbf f^\top(x) \mathbf g(x)
 \end{equation}
-where $\mathbf f, \mathbf g: \mathbb{R} \to \mathbb{R}^m$, $\mathbf f(x) = [f_1(x), \ldots, f_m(x)]^\top$ and $\mathbf g(x) = [g_1(x), \ldots, g_m(x)]^\top$ are vector-valued functions with $m$ components. The expression inside the integral also carries useful information, and one may refer to it as the pointwise (PW) inner product which is defined as
+where $\mathbf f, \mathbf g: \mathbb{R} \to \mathbb{R}^d$, $\mathbf f(x) = [f_1(x), \ldots, f_d(x)]^\top$ and $\mathbf g(x) = [g_1(x), \ldots, g_d(x)]^\top$ are vector-valued functions with $d$ components. The expression inside the integral also carries useful information, and one may refer to it as the pointwise (PW) inner product, defined as
 \begin{equation}
     \label{eq:dot-product-pointwise}
-    \mathbf f(x) \cdot \mathbf g(x) = \sum_{i=1}^m f_i(x) g_i(x).
+    \mathbf (f\cdot \mathbf g)(x) = \mathbf f^\top(x) \mathbf g(x).
 \end{equation}
 
 When $\mathbf f$ and $\mathbf g$ are spline functions, the PW inner product can be expressed in terms of their B-spline representations as
@@ -1115,25 +907,168 @@ When $\mathbf f$ and $\mathbf g$ are spline functions, the PW inner product can 
         &= \left(\mathbf B_{p_1, \mathbf t_1}(x) \otimes \mathbf B_{p_2, \mathbf t_2}(x)\right)^{\top} \sum_{i=1}^m \mathbf c_{1,i} \otimes \mathbf c_{2,i},
     \end{aligned}
 \end{equation}
-where $\mathbf c_{1,i}$ and $\mathbf c_{2,i}$ are the coefficients of the $i$-th component of $\mathbf f$ and $\mathbf g$, respectively. Notice that the expression $\left(\mathbf B_{p_1, \mathbf t_1}(x) \otimes \mathbf B_{p_2, \mathbf t_2}(x)\right)^{\top}$ is found in both \cref{eq:b-spline-product-4} and \cref{eq:dot-product-spline}. This means that the transformation matrix $\mathbf T$ for the inner product can be computed in the same way as for the multiplication, using \cref{alg:multiplication}.
-This is due to the fact that per \cref{eq:transformation-matrix-solution}, the transformation matrix $\mathbf T$ is independent of the coefficients $\mathbf c_{1}$ and $\mathbf c_{2}$.
+where $\mathbf c_{1,i}$ and $\mathbf c_{2,i}$ represent the B-spline coefficients associated with the $i$-th component of the vector-valued functions $\mathbf f$ and $\mathbf g$, respectively. It is noteworthy that the term $\left(\mathbf B_{p_1, \mathbf t_1}(x) \otimes \mathbf B_{p_2, \mathbf t_2}(x)\right)^{\top}$ appears in both \cref{eq:b-spline-product-4} and \cref{eq:dot-product-spline}. Consequently, the transformation matrix $\mathbf T$ required for computing the inner product can be derived analogously to the multiplication operation, as described in \cref{alg:multiplication}.
 
 So, to find the PW inner product $h(x) = \mathbf f(x) \cdot \mathbf g(x)$, \cref{alg:multiplication} is used on the bases of $\mathbf f$ and $\mathbf g$, and the coefficients $\mathbf d$ of $h(x) = \mathbf B_{q, \boldsymbol{\tau}}^\top(x) \mathbf d$ are given by
 \begin{equation}
     \mathbf d = \mathbf T \sum_{i=1}^m (\mathbf c_{1,i} \otimes \mathbf c_{2,i}).
 \end{equation}
 
-As for the regular product, the PW inner product can be made more efficient by not computing the terms in the Kronecker product that correspond to non-overlapping supports of the basis functions. The most common case for applying the PW inner product is between two vector-valued B-splines of the same basis, in which case the number of non-zero entires is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline. This is linear in the number of basis functions, instead of quadratic as for when this optimization is not used. See explanation in \cref{fig:overlapping-bases}. Finding a general formula arbitrary bases is not as easily acheivable, as the number of non-zero entries depends on the placement of the knots in the knot vectors.
+% As for the regular product, the PW inner product can be made more efficient by not computing the terms in the Kronecker product that correspond to non-overlapping supports of the basis functions. The most common case for applying the PW inner product is between two vector-valued B-splines of the same basis, in which case the number of non-zero entires is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline. This is linear in the number of basis functions, instead of quadratic as for when this optimization is not used. See explanation in \cref{fig:overlapping-bases}. Finding a general formula arbitrary bases is not as easily acheivable, as the number of non-zero entries depends on the placement of the knots in the knot vectors.
+
+% \begin{figure}
+%     \centering
+%     \includesvg[width=\textwidth,pretex=\footnotesize]{fig/b-spline/overlapping-bases.svg}
+%     \caption{The overlapping supports of the B-splines. Each rectangle represents the support of a basis function, so counting the number of basis functions withing each knot interval gives the number of multiplications for that interval. The total number of multiplications then the area of all the rectangles, which is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline.}
+%     \label{fig:overlapping-bases}
+% \end{figure}
+
+
+\subsubsection{Norms and the B-spline Gramian}\label{sec:norms}
+The inner product defined in \cref{eq:dot-product} can be used to define a norm of a vector-valued function $\mathbf f(x)$ as
+\begin{equation}
+    \label{eq:norm}
+    \|\mathbf f(x)\|_\mathbf G = \sqrt{\langle\mathbf f(x), \mathbf f(x)\rangle} = \sqrt{\int_{-\infty}^\infty \mathbf f^\top(x) \mathbf f(x)}.
+\end{equation}
+
+The norm is a measure of the size of the function, and its square is useful in applications such as optimization, where it can be used as an objective function or a constraint. If the function $f(x)$ is a scalar B-spline, the squared norm can be computed as
+\begin{equation}
+    \label{eq:norm-spline}
+    \begin{aligned}
+        \|f\|_\mathbf G^2 &= \langle\mathbf B_{p, \mathbf t}^\top(x) \mathbf c, \mathbf B_{p, \mathbf t}^\top(x) \mathbf c\rangle \\
+        &= \int_{-\infty}^\infty \mathbf c^\top \mathbf B_{p, \mathbf t}\mathbf B_{p, \mathbf t}^\top(x) \mathbf c \\
+        &= \mathbf c^\top \left(\int_{-\infty}^\infty \mathbf B_{p, \mathbf t}(x) \mathbf B_{p, \mathbf t}^\top(x) \, dx\right) \mathbf c \\
+        &= \mathbf c^\top \mathbf G \mathbf c,
+\end{aligned}
+\end{equation}
+where the matrix $\mathbf G$ is the Gramian matrix of the B-spline basis $\mathbf B_{p, \mathbf t}(x)$. The Gramian matrix captures the inner product structure of the B-spline basis functions with one of its defining properties being that it is symmetric and positive semi-definite \citep{horn2013positive}. With a basis defined on a regular knot vector, the Gramian can be shown to be symmetric and positive definite \acrshort{SPD}, which means that the norm is well-defined and non-zero for all non-zero B-splines.  Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. In this work, the B-spline norm $\|\mathbf f\|_\mathbf H$ on a spline function $f: \mathbb R\to\mathbb R$ with $n$ basis functions, will refer to computing the bilinear form
+\begin{equation}\label{eq:b-spline-norm}
+    \|f\|_\mathbf H^2 = \mathbf{c}^\top \mathbf H \mathbf {c}
+\end{equation}
+where $\mathbf{c}\in\mathbb R^{n}$ is the coefficients of $\mathbf f$ as in and $\mathbf H\in\mathbb R^{n\times n}$ is a suitible SPD matrix. 
+
+
+\subsubsection{B-spline Norms as Cost Functions}\label{sec:b-spline-norms-as-cost-functions}
+Considering $\|f\|_\mathbf G^2$ as a cost function in an optimization problem, analyzing its eigenvalues and eigenvectors provides insights into the behavior of the optimal solution.
+
+
+Using the spectral (eigenvalue) decomposition of the Gramian $\mathbf G = \mathbf U \mathbf \Lambda \mathbf U^\top$ \citep{horn2013positive}, the cost function can be reduced into weighted sum over different frequency components. Here, $\mathbf U$ is a matrix whose columns are the unit-normalized eigenvectors of $\mathbf G$, and $\mathbf \Lambda$ is a diagonal matrix with the eigenvalues of $\mathbf G$ on the diagonal. Thus, the norm can be rewritten as
+\begin{equation}\label{eq:cost-function-spectral-decomposition}
+    \|f\|_\mathbf G^2 = \mathbf c^\top \mathbf G \mathbf c = \mathbf c^\top \mathbf U \mathbf \Lambda \mathbf U^\top \mathbf c = \sum_{i=1}^{n} \lambda_i (\mathbf u_i^\top \mathbf c)^2,
+\end{equation}
+where $\lambda_i$ and $\mathbf u_i$ are the $i$-th eigenvalue and eigenvector of $\mathbf G$, respectively. With the cost function in this form, it is clear that the cost is a weighted sum of the squared projections of the coefficients $\mathbf c$ onto the eigenvectors $\mathbf u_i$ of the Gramian $\mathbf G$. The eigenvalues $\lambda_i$ determine the weight of each projection, and thus a cost function based on this norm penalizes the coefficients more heavily if they have a matching projection onto an eigenvector with a large eigenvalue.
+
 
 \begin{figure}
     \centering
-    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/b-spline/overlapping-bases.svg}
-    \caption{The overlapping supports of the B-splines. Each rectangle represents the support of a basis function, so counting the number of basis functions withing each knot interval gives the number of multiplications for that interval. The total number of multiplications then the area of all the rectangles, which is $n(p+1)$, where $n$ is the number of basis functions and $p$ is the degree of the B-spline.}
-    \label{fig:overlapping-bases}
+        \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/eigenvectors_integral_degree_2_N_4.svg}
+        \caption{Eigenvectors of the Gramian $\mathbf G$ of the cost function $\|f\|_\mathbf G^2$ for $n=4$ and $p=2$. Note that $\hat\lambda_i$ is a scaled version of the eigenvalue $\lambda_i$ such that $\hat\lambda_i = \lambda_i/\sum_{i=1}^{n} \lambda_i$. Values on the vertical axis are ommited as it is the relative size between the eigenvector components that are of interest.}
+        \label{fig:conservativeness-eigenvectors-integral}
 \end{figure}
 
 
-\section{Rational B-spline expression to NURBS conversion}
+As an example, consider the Gramian $\mathbf G$ for a uniform B-spline basis of degree $p=2$ with $n=4$. This can be computed using the relevant formulas in \cref{sec:operations-on-b-splines} to yield
+\begin{equation}
+    \mathbf G_{2,\mathbf u(2,4)} = \int_\mathbb R \mathbf B_{2,\mathbf u(2,4)}(x) \mathbf B_{2,\mathbf u(2,4)}^\top(x) dx = 
+    \frac{1}{120}\begin{bmatrix}
+        12 & 7 & 1 & 0 \\
+        7 & 20 & 12 & 1 \\
+        1 & 12 & 20 & 7 \\
+        0 & 1 & 7 & 12
+    \end{bmatrix}.
+\end{equation}
+
+This matrix has the eigenvectors 
+\begin{equation}
+    \begin{aligned}
+        \mathbf u_1 &\approx \begin{bmatrix}  
+            0.23 \\  0.67 \\  0.67 \\  0.23 
+        \end{bmatrix}, &
+        \mathbf u_2 &\approx \begin{bmatrix}         
+            0.57 \\  0.41 \\ -0.41 \\  -0.57 
+        \end{bmatrix}, &
+        \mathbf u_3 &\approx \begin{bmatrix}         
+            0.67 \\  -0.23 \\  -0.23 \\  0.67 
+        \end{bmatrix}, &
+        \mathbf u_4 &\approx \begin{bmatrix}         
+            0.41 \\  -0.57 \\  0.57 \\  -0.41 
+        \end{bmatrix},
+    \end{aligned}
+\end{equation}
+with corresponding eigenvalues
+\begin{equation}
+    \begin{aligned}
+        \lambda_1 &= 0.29, &
+        \lambda_2 &= 0.14, &
+        \lambda_3 &= 0.07. &
+        \lambda_4 &= 0.03.
+    \end{aligned}
+\end{equation}
+The $u_1$ direction can be interpreted as a direction where all the coefficients have the same sign, while the $u_4$ direction can be interpreted as a direction where subsequent coefficients alternate in sign. 
+As the cost in the $u_1$ direction compared to the $u_4$ direction is $\frac{\lambda_1}{\lambda_4} \approx 10$ times smaller, the cost function will amplify high frequency oscillations in the coefficients. In \cref{fig:conservativeness-eigenvectors-integral}, each eigenvector is shown as a weight on each B-spline coefficient. Here, the relative eigenvalues $\hat\lambda_i = \lambda_i/\sum_{i=1}^{N} \lambda_i$ are shown to better compare the costs between different Hessians. That high frequency directions are amplified is more appearent when increasing the number of B-spline basis functions $n$. This is shown in \cref{fig:integral-basis-eigenvectors-20} for $n=20$.
+
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\tiny]{fig/conservativeness/eigenvectors_integral_degree_2_N_20.svg}
+    \caption{Eigenvectors of the Hessian $\mathbf H = \mathbf G$ where $\mathbf G$ is the Gramian matrix of a uniform quadratic B-spline with 20 basis functions. Each mark on the x-axis corresponds to a coefficient. The eigenvectors of $\mathbf G^{-1}$ are the same as for $\mathbf G$, but with inverted eigenvalues.}
+    \label{fig:integral-basis-eigenvectors-20}
+\end{figure}
+
+
+
+To illustrate the oscillations using the Gramian, consider the following optimization problem, which is a simple reference-following problem where the OS is constrained to a maximum velocity $v_\text{max}$:
+\begin{equation}\label{eq:conservativeness-optimization}
+    \begin{aligned}
+        \min_{\mathbf c} \quad & J_\text{ref} \\
+        \text{subject to} \quad &\mathbf p_\text{OS}(0) = \mathbf p_0, \\
+                    &\mathbf p_\text{OS} = \mathbf C^\top\mathbf B(x) , \\
+                    &\mathbf p_\text{ref} = \mathbf C_\text{ref}^\top\mathbf B_\text{ref}(x) , \\
+                    & \mathbf p_\text{OS}'^\top(x) \mathbf p_\text{OS}'(x) \le v_\text{max}^2.
+    \end{aligned}
+\end{equation}
+Here, $\mathbf p_0$ is the initial position of the OS. The B-spline basis functions $\mathbf B$ and $\mathbf B_\text{ref}$ are defined as uniform B-splines of degree $p$ and 1, respectively, with the parameter domain $x\in[0,1]$. The control points $\mathbf C$ of the OS B-spline function are optimized to minimize the TTE to a reference trajectory $\mathbf p_\text{ref}$, which is defined by the control points $\mathbf C_\text{ref}$.
+This optimization problem is then analyzied for different choices of $p$ and number $N$ of uniform B-spline basis functions $\mathbf B$. The resulting trajectories are shown in \cref{fig:conservativeness-traj-integral} with the parameters for the optimization problem set to
+\begin{equation}\label{eq:conservativeness-parameters}
+    \begin{aligned}
+        \mathbf p_0 &= \begin{bmatrix} 1 & 0 \end{bmatrix} \\
+        \mathbf B &= \mathbf B_{p, \mathbf u(p,n)} \\
+        \mathbf B_\text{ref} &= \mathbf B_{1,\{0, 0, 1, 1\}} \\
+        \mathbf c_\text{ref} &= \begin{bmatrix}
+            [0 & 0] \\
+            [0 & 3]
+        \end{bmatrix} \\
+        v_\text{max} &= 6, \\
+    \end{aligned}
+\end{equation}
+where $\mathbf u(p,n) = \{\{0\}^{(p)}, \{i/N\}_{i=0}^{N}, \{1\}^{(p)}\}$ is a function that generates the knot vector for a uniform B-spline of degree $p$ with $N$ basis functions. The resulting trajectories are shown in \cref{fig:conservativeness-traj-integral}.
+
+\begin{figure}
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_integral_degree_2.svg}
+    \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $p=2$,$n\in\{3,\ldots,20\}$.}
+    \label{fig:conservativeness-traj-integral}
+\end{figure}
+
+Choosing $\mathbf H = \mathbf G^{-1}$, the inverse Gramian, suppresses the high frequency oscillations in the coefficients instead, as shown in \cref{fig:conservativeness-traj-inv-gramian}.  
+The inverse Gramian has the same eigenvectors as the Gramian, but the eigenvalues are now the reciprocals of the original eigenvalues \citep{horn2013positive}, so the eigen-decomposition of the inverse Gramian is given by
+\begin{equation}
+    \mathbf G^{-1} = \left(\mathbf U \mathbf \Lambda \mathbf U^\top\right)^{-1} = \mathbf U \mathbf \Lambda^{-1} \mathbf U^\top.
+\end{equation}
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/conservativeness_traj_inv_gramian_degree_2.svg}
+    \caption{Optimal trajectory in \cref{eq:conservativeness-optimization} with parameters \cref{eq:conservativeness-parameters} for $N\in\{3,\ldots,20\}$ and where the cost is changed to $J_\text{ref} = \|\mathbf e(x)\|_{\mathbf G^{-1}}^2$.}
+    \label{fig:conservativeness-traj-inv-gramian}
+\end{figure}
+
+
+To the authors knowledge, this is the first time that the inverse Gramian has been used as a Hessian in a B-spline-based optimization problem, or that a similar analysis of the eigenvectors and eigenvalues of the Gramian has been performed in the context of B-spline trajectory following. Other cost functions have also been considered, but with poor results in terms of feasibility for the optimization problem in question. A brief overview of these costs is given in \cref{app:failed-reference-following}.
+
+
+
+\FloatBarrier
+\subsection{Rational B-spline expression to NURBS conversion}
 
 
 To convert a general rational B-spline

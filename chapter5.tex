@@ -322,15 +322,15 @@ Under COLREGS 8b), a $3\degree$ alteration over 50\,s  may be insufficiently con
 
 
 The speed is kept close to the reference speed of 6 m/s during the segments where the OSs are not maneuvering, but dips below the reference speed during course change.  This is undesirable in context of COLREGS 8c) if there is sufficient sea room, as the OSs should prioritize altering course alone over altering speed.  This is uniquely a result of the B-Spline parameterization. For a constant speed trajectory, the equation
-\begin{equation*}
+\begin{equation}
     u^2(x) + v^2(x) = C
-\end{equation*}
+\end{equation}
 must hold, where $u(x)$ and $v(x)$ are the speeds of a vessel in two orthogonal directions, and $C$ is a constant. This equation has solutions of the form
-\begin{equation*}
+\begin{equation}
   u(x) = \sqrt{C}\,\cos\varphi(x), 
   \quad
   v(x) = \sqrt{C}\,\sin\varphi(x),
-\end{equation*}
+\end{equation}
 where $\varphi(x)$ is an arbitrary (sufficiently smooth) function of $x$.  B-Splines are piecewise polynomials and cannot represent trancendental functions such as sines and cosines.  This explains the small dips in speed during the course change segments. During the straight segments,  
 Even PH B-splines, which has a piecewise polynomial representation of the speed, cannot represent a constant speed trajectory in a non-trivial way as they are still fundamentally B-splines.  The same is also true for NURBS, which while they can represent circular and elliptical arcs perfectly, cannot do so with a constant speed parameterization due to the same reasons as above.  This is a fundamental limitation of B-splines and NURBS, and not a limitation of the B-MINMPC itself.  The speed dips during the course change segments can indirectly be mitigated by refining the B-spline basis for $\mathbf p_\text{OS}$, which under acceleration constraints gives a smaller angle between the control points, and thus a smaller speed reduction. This is explained in more detail in Case 2.2.
 
@@ -367,7 +367,7 @@ With the refined basis, the course change exhibits piecewise continuity over 25-
 The refined basis does not at all mitigate the speed reduction during maneuvers; the speed still decreases to approximately 4.8 m/s during course alterations. This phenomenon can be analyzed by examining the relationship between the speed and the consecutive control points of $\mathbf p_\text{OS}$, as well as the angle between these control points.
 
 Let $P_i,P_{i+1},P_{i+2}\in\mathbb R^2$ be the three consecutive control points affecting the $i$-th spline segment on a uniform quadratic B-spline with knot interval length $h$.  Over $t\in[t_{i+1}, t_{i+2}]$, the derivative of $\mathbf p_\text{OS}(t)$ is given by
-\begin{equation*}
+\begin{equation}
     \begin{aligned}
         \mathbf p_\text{OS}'(t) 
         &=\frac{t_{i+2}-t}{h^2}\;(P_{i+1}-P_i) 
@@ -375,24 +375,24 @@ Let $P_i,P_{i+1},P_{i+2}\in\mathbb R^2$ be the three consecutive control points 
         &=\frac{t_{i+2}-t}{h}\;P'_0
         +\frac{t - t_{i+1}}{h}\;P'_1,
     \end{aligned}
-\end{equation*}
+\end{equation}
 where
-\begin{equation*}
+\begin{equation}
 P'_i = \tfrac1h (P_{i+1} - P_i),
 \qquad
 P'_{i+1} = \tfrac1h(P_{i+2} - P_{i+1}).
-\end{equation*}
+\end{equation}
 When the maximum speed constraint on $\mathbf p_\text{OS}$ is active: $\|P'_i\|=\|P'_{i+1}\|=v_{\max}$ .  Let $\theta\in[0,\pi]$ be the smallest angle between the three consecutive points $P_i,P_{i+1},P_{i+2}$ so that
-\begin{equation*}
+\begin{equation}
 P'_i\cdot P'_{i+1} = v_{\max}^2\cos\theta.
-\end{equation*}
+\end{equation}
 Then one shows by differentiating $\|\mathbf p'_\text{OS}(t)\|_2^2$ that the minimal speed $v_{\min}$ occurs at $t^*=\tfrac12(t_{i+1}+t_{i+2})$ and is given by
-\begin{equation*}
+\begin{equation}
 v_{\min}
 =\Bigl\|\tfrac12(P'_i+P'_{i+1})\Bigr\|
 =v_{\max}\sqrt{\frac{1+\cos\theta}{2}}
 =v_{\max}\cos\Bigl(\tfrac\theta2\Bigr).
-\end{equation*}
+\end{equation}
 As the derived expressions for $t^*$ and $v_{\min}$ are independent of $h$, the knot interval, the minimum achievable speed is solely dependent on the turning angle $\theta$ and the maximum speed $v_{\max}$. Consequently, mitigating speed reduction during maneuvers necessitates a reduction in $\theta$ between successive control points. While knot refinement alone is insufficient, it facilitates closer approximation of the spline by the control points. This, in turn, allows the constraint on the maximum acceleration of the OS to effectively limit the angle between consecutive control points, thereby reducing the speed reduction during maneuvers.
 
 

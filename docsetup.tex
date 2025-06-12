@@ -47,7 +47,7 @@
 \usepackage{dcolumn}
 \usepackage{enumitem}
 
-\usepackage[pdftex,bookmarks=true]{hyperref}
+\usepackage[pdftex,bookmarks=true,hypertexnames=false]{hyperref}
 % \usepackage[style=altsuper4colheader]{glossaries}
 % \usepackage[pdftex]{hyperref}
 \hypersetup{
@@ -60,8 +60,11 @@
 \usepackage[capitalize]{cleveref}
 \usepackage{zref-clever}
 \zcsetup{noname}
+\usepackage{autonum}
+
 \usepackage[hyperfirst=false,style=altsuper4col,acronym]{glossaries}
 % \usepackage[draft]{pdfcomment}
+
 \glsdisablehyper
 \makeglossaries
 
@@ -178,3 +181,5 @@ bordercolor=ForestGreen,#1]{#2}}
 
 % center after minus sign
 \newcolumntype{d}[1]{D{.}{\degree}{#1.-1}}
+
+\def\vec{\mathaccent "017E\relax }

@@ -16,17 +16,17 @@ whose hodograph satisfies the Pythagorean condition
 \end{equation}
 where $\sigma(x)$ itself is a spline function. 
 Introducing the complex pre‐image
-\begin{equation*}
+\begin{equation}
     z(x) = u(x) + i\,v(x),
-\end{equation*}
+\end{equation}
 the hodograph is defined via the square relation
 \begin{equation}\label{eq:hodograph-square}
     \mathbf r'(x) = z(x)^2.
 \end{equation}
 Expanding the complex square yields
-\begin{equation*}
+\begin{equation}
     (u + i v)^2 = u^2 + 2iuv - v^2 = (u^2 - v^2) + i(2uv),
-\end{equation*}
+\end{equation}
 and equating real and imaginary parts gives
 \begin{subequations}\label{eq:hodograph-derivatives}
     \begin{align}
@@ -35,24 +35,24 @@ and equating real and imaginary parts gives
     \end{align}
 \end{subequations}
 while the magnitude of the hodograph follows as
-\begin{equation*}
+\begin{equation}
     \sigma(x) = \|\mathbf r'(x)\| = |z(x)|^2 = u(x)^2 + v(x)^2.
-\end{equation*}
+\end{equation}
 Finally, integrating recovers the curve coordinates:
-\begin{equation*}
+\begin{equation}
     \begin{aligned}
         a(x) &= a_0 + \int_{x_0}^{x}\bigl(u(\tau)^2 - v(\tau)^2\bigr)\,d\tau,\\
         b(x) &= b_0 + \int_{x_0}^{x}2\,u(\tau)\,v(\tau)\,d\tau,
     \end{aligned}
-\end{equation*}
+\end{equation}
 where $(a_0,b_0)=\mathbf r(x_0)$. $\square$
 
 
 The curvature $\kappa(x)$ and turn-rate $\dot\theta(x)$ of the curve $\mathbf r(x)$ can be derived from the hodograph. The curvature is defined as the rate of change of the unit tangent vector with respect to arc-length, and the turn-rate is the rate of change of the heading angle with respect to time.
 With this parameterization of the PH B-spline, the curvature $\kappa(x)$ of the curve $\mathbf r(x)$ is given by
-\begin{equation*}
+\begin{equation}
     \kappa(x) = \frac{a'(x)b''(x) - b'(x)a''(x)}{\|\mathbf r'(x)\|^3},
-\end{equation*}
+\end{equation}
 where $a'(x)$ and $b'(x)$ are the first derivatives of the curve, and $a''(x)$ and $b''(x)$ are the second derivatives. Using \cref{eq:hodograph-derivatives} gives
 which in terms of $u(x)$ and $v(x)$ simplifies to
 \begin{equation}\label{eq:curvature}
@@ -63,9 +63,9 @@ The turn-rate $\dot\theta(x)$ is then
     \dot\theta(x) = \kappa(x) \sigma(x) = \frac{2(uv'-vu')}{u^2+v^2},
 \end{equation}
 while the arc-length $s(x)$ is given by
-\begin{equation*}
+\begin{equation}
     s(x) = \int_{x_0}^{x}\sigma(\tau)\,d\tau.
-\end{equation*}
+\end{equation}
 
 
 
@@ -310,13 +310,6 @@ To implement the inequality constraint $f(t) \le g(t)$, for two spline functions
 
 
 This appendix contains additional plots of different choices of the Hessian for the reference cost functions explored in \cref{sec:oscillations}. The eigenvalues shown are scaled by the sum of the eigenvalues.
-
-\begin{figure}
-    \centering
-    \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_integral_degree_2_N_9.svg}
-    \caption{Eigenvectors of the Gramian matrix $\mathbf H = \mathbf G$ where $\mathbf G$ is the Gramian matrix of a uniform quadratic B-spline with 9 basis functions. The eigenvectors of $\mathbf G^{-1}$ are the same as for $\mathbf G$, but with inverted eigenvalues.}
-    \label{fig:integral-basis-eigenvectors-9}
-\end{figure}
 
 
 \begin{figure}

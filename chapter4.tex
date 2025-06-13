@@ -261,47 +261,44 @@ J_\text{ref} = \int_0^1 \bar e(x)^2 \, dx,
 This integral does not yield a closed form function as the unit normal is a rational expression. Instead, it can be approximated by dividing each coefficient of $\mathbf p'_\text{ref}(x)$ by the average speed over each basis function's support, resulting in an approximate unit normal vector $\bf\tilde n$. This approximation simplifies the integral in \cref{eq:total-track-error-b-spline} to a B-spline function, suitable for use as the error to minimize in a cost in the optimization problem.
 
 
+
+
+
+
+% filepath: c:\Users\eirik\NTNU lokal\Rapport-Master\chapter4.tex
 \subsection{Reference Following Cost Function}\label{sec:oscillations}
-To ensure smoothness and suppress high-frequency oscillations in the B-spline trajectory, a novel method of constructing the cost function is proposed. This method is based on the observation that high-frequency components of the eigenstructure of the Hessian defining the cost in \cref{eq:total-track-error-b-spline} are amplified. Using the inverse of this Hessian as weighting on the PXTE cost, the high frequency components are penalized instead. This is explained in great detail in \cref{sec:norms,sec:b-spline-norms-as-cost-functions}, but a brief overview is given here:
 
-The cost $J_\text{ref}$ in \cref{eq:total-track-error-b-spline} can be written as a bilinear function of its cofficients $c$ as
+When the PXTE is penalized with the function in \cref{eq:total-track-error-b-spline}, 
+the Hessian of this cost in its B‐spline coefficients is the Gramian matrix $G_e$, whose eigenvalues decrease with an increasing spatial frequency of the corresponding modes.  Consequently, high‐frequency oscillations are under‐penalized and tend to dominate the solution. Using the inverse of this Hessian as weighting on the coefficients of $\bar e$, the high frequency modes are penalized instead. This is explained in great detail in \cref{sec:norms,sec:b-spline-norms-as-cost-functions}. Still, a brief overview is given here:
+
+The cost \cref{eq:total-track-error-b-spline} can be written in a bilinear form
 \begin{equation}\label{eq:cost-reference-following-bilinear}
-    J_\text{ref} = \mathbf c^\top \mathbf G \mathbf c,
+  J_{\rm ref} = c_e^\top\,\left(\int_0^1 \mathbf B_e(x) \mathbf B_e(x)^\top \, dx\right)\,c_e =
+  \mathbf c_e^\top\,\mathbf G_e\, \mathbf c_e,
 \end{equation}
-where $\mathbf G$ is referred to as the Gramian matrix of the B-spline basis functions. 
+where \(G_e\) is the Gramian of the basis $\mathbf B_e$ for \(\bar e(x)\). Its eigenvalues decay with an increasing spatial frequency of the corresponding modes. Consequently, high‐frequency oscillations are under‐penalized and tend to dominate the solution.
 
-It is desirable to weight the cost function such that it can be deactivated during certain time intervals. It is for example undesirable to track the reference closely when on a collision course with another vessel.
-Using the inverse of the Gramian matrix, the cost function instead, the cost function can be written as
-\begin{equation}\label{eq:cost-reference-following-inverse-gramian}
-    J_\text{ref} = \mathbf c^\top \mathbf G^{-1} \mathbf c.
+To allow spatially varying emphasis of the PXTE cost along the spline parameter $x\in[0,1]$, a nonnegative weight function $w_{\rm ref}(x)$ (e.g.\ piecewise constant or any B-spline) is introduced. This weight is multiplied by $\bar e$ resulting in an expression in a new basis $\mathbf B_{we}$, with new coefficients $\mathbf c_{we}$. The Gramian is then computed for $\mathbf B_{we}$ and the final cost is written as
+\begin{equation}\label{eq:cost-reference-following-gramian}
+    J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf{\hat G}_{we}^{-1}}^2 
+    = \mathbf{c}_{we}^\top \mathbf{\hat G}_{we}^{-1} \mathbf{c}_{we}
 \end{equation}
-the cost function is constructed using the inverse Gramian matrix in the basis of a weighted PXTE. This section explains how the transformation is derived and how the Hessian matrix \( H \) is constructed for the optimization problem.
-
-A uniform quadratic B-spline basis is used initially, and the basis is transformed into one with maximally repeated knots using a transformation matrix \( T \). The Gramian \( G \) of the refined basis is then used to compute the Hessian:
-
-\[
-H = T^\top \tilde{G}^{-1} T
-\]
-
-The eigenstructure of \( H \) confirms this behavior: eigenvectors associated with high-frequency oscillations have higher associated cost. This is illustrated in Figures~3.5 and 3.6, where eigenfunctions and their corresponding eigenvalues are visualized.
-
-
-
-
-
-The final cost function for the reference trajectory following is thus chosen as
-\begin{equation}\label{eq:cost-reference-following}
-    J_\text{ref} = \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})},
+where
+\begin{equation}\label{eq:gramian-density}
+    \mathbf{\hat G}_{we} = \frac{\mathbf G_{we}}{\tr(\mathbf G_{we})}, 
 \end{equation}
-where $w_\text{ref}(x)$ is a B-spline function that can be used to weight the cost function at different times, and $\mathbf G^{-1}$ is the inverse Gramian in the given expressions' basis. The trace term is included to ensure that the total cost of all the directions is normalized to 1, as the trace of a matrix is the sum of its eigenvalues.
+is the Gramian matrix of the new basis, normalized by its trace for easier weighting of other cost terms. 
+Because $\mathbf{\hat G}_{we}^{-1}$ has the reciprocal eigenvalues of $\mathbf{\hat G}_{we}$, its largest weights now lie on the high‐frequency eigenvectors, thereby suppressing oscillatory modes. \Cref{fig:inverse-gramian-eigenvectors} nine eigenvectors of $\mathbf{\hat G}_e$ (quadratic, uniform basis) and show how applying the inverse‐Gramian cost flips the spectrum, effectively damping high‐frequency components.
 
 
-% \begin{figure}
-%     \centering
-%     \includesvg[width=\textwidth,pretex=\small]{fig/conservativeness/compare_conservativeness_degree_2.svg}
-%     \caption{Convergence of the different cost functions. The integral of the square error $\|\mathbf e_\mathbf c\|_\mathbf G^2$ is plotted against the number $N$ of B-spline basis functions for $p=2$.}
-%     \label{fig:conservativeness}
-% \end{figure}
+Other cost weighting schemes have also been considered for this work, using more classical methods sucha as penalizing the integral of the squared acceleration, or the squared velocity, but with unsatisfactory results. These and other methods are briefly discussed in \cref{app:failed-reference-following}.
+
+\begin{figure}
+    \centering
+    \includesvg[width=\textwidth]{fig/conservativeness/eigenvectors_refined_inv_gramian_degree_2_N_9.svg}
+    \caption{Eigenvectors of the inverse Gramian matrix $\mathbf{\hat G}_e^{-1}$ for the PXTE cost function in \cref{eq:cost-reference-following-gramian}. The eigenvectors are ordered by their eigenvalues, which decay with increasing spatial frequency. The inverse Gramian cost function flips the spectrum, effectively damping high‐frequency components.}    
+    \label{fig:inverse-gramian-eigenvectors}
+\end{figure}
 
 
 \FloatBarrier
@@ -330,19 +327,21 @@ The reason for the second maneuver window as opposed to the singular one in \cit
 \end{figure}
 
 The encounter and maneuver windows are incorporated into the cost function as weights $w_\text{ref}(x)$ and $w_\text{mv}(x)$, which are applied to the reference trajectory following cost and the cost for altering course, respectively. The resulting cost function is:
+\begin{equation}\label{eq:cost-maneuver-window-total}
+    J = J_\text{ref} + J_\text{mv} + J_\mathrm{acc} + J_\mathrm{end},
+\end{equation}
+where the individual costs are defined as follows:
 \begin{subequations}\label{eq:cost-maneuver-window}
     \begin{align}
-        J_\text{ref} &= \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, 
+        J_\text{ref} &= \|w_\text{ref}(x)\;\mathbf e(x)\|_{\mathbf{\hat G}^{-1}}^2 , 
         \label{eq:cost-maneuver-window-ref}\\
-        J_\text{mv} &= \|w_\text{mv}(x)\;\mathbf e'(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})},
+        J_\text{mv} &= \|w_\text{mv}(x)\;\mathbf e'(x)\|_{\mathbf{\hat G}^{-1}}^2 ,
         \label{eq:cost-maneuver-window-mv}\\
-        J_\mathrm{acc} &= \|w_\text{acc}(x)\;\mathbf p''_\text{os}(x)\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, \label{eq:cost-maneuver-window-acc}\\
-        J_\mathrm{end} &= \|w_\text{end}(x)\;(\mathbf p_\text{OS}(x)-\mathbf p_\text{ref}(1))\|_{\mathbf G^{-1}}^2 \frac{1}{\text{trace}(\mathbf G^{-1})}, \label{eq:cost-maneuver-window-end}\\
-        J &= J_\text{ref} + J_\text{mv} + J_\mathrm{acc} + J_\mathrm{end},
-        \label{eq:cost-maneuver-window-total}
+        J_\mathrm{acc} &= \|w_\text{acc}(x)\;\mathbf p''_\text{os}(x)\|_{\mathbf{\hat G}^{-1}}^2 , \label{eq:cost-maneuver-window-acc}\\
+        J_\mathrm{end} &= \|w_\text{end}(x)\;(\mathbf p_\text{OS}(x)-\mathbf p_\text{ref}(1))\|_{\mathbf{\hat G}^{-1}}^2 , \label{eq:cost-maneuver-window-end}\\
     \end{align}
 \end{subequations}
-where $J_\text{mv}$ is the cost for altering course, $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text{mv}(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. An additional cost $J_\mathrm{acc}$ is included to penalize course and speed alterations where desired. To provide a driving force in the direction of the reference trajectory, a cost $J_\mathrm{end}$ is included as the PXTE alone does not penalize moving in the opposing direction of the reference course. 
+where $J_\text{mv}$ is the cost for deviationg from the reference course. $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text{mv}(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. An additional cost $J_\mathrm{acc}$ is included to penalize course and speed alterations where desired. To provide a driving force in the direction of the reference trajectory, a cost $J_\mathrm{end}$ is included as the PXTE alone does not penalize moving in the opposing direction of the reference course. 
 
 The advantage of the B-spline framework in this case is that the weights can be defined as B-spline functions themselves. This allows for great flexibility in shaping the desired encounter trajectory. The function shape shown in \cref{fig:maneuver-window}, can be represented using a zero-degree B-spline. If smoother transitions are desired, higher degree B-splines can be used.
 If the weights are fixed as a function of time before the optimization problem is solved, then the costs are constant with respect to the optimization variables and the optimization problem is convex as opposed to that of \cref{fig:turn-rate-cost}.
@@ -941,7 +940,7 @@ The norm is a measure of the size of the function, and its square is useful in a
         &= \mathbf c^\top \mathbf G \mathbf c,
 \end{aligned}
 \end{equation}
-where the matrix $\mathbf G$ is the Gramian matrix of the B-spline basis $\mathbf B_{p, \mathbf t}(x)$. The Gramian matrix captures the inner product structure of the B-spline basis functions with one of its defining properties being that it is symmetric and positive semi-definite \citep{horn2013positive}. With a basis defined on a regular knot vector, the Gramian can be shown to be symmetric and positive definite \acrshort{SPD}, which means that the norm is well-defined and non-zero for all non-zero B-splines.  Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. In this work, the B-spline norm $\|\mathbf f\|_\mathbf H$ on a spline function $f: \mathbb R\to\mathbb R$ with $n$ basis functions, will refer to computing the bilinear form
+where the matrix $\mathbf G$ is the Gramian matrix of the B-spline basis $\mathbf B_{p, \mathbf t}(x)$. The Gramian matrix encodes the autocorrelation  structure of the B-spline basis functions with one of its defining properties being that it is symmetric and positive semi-definite \citep{horn2013positive}. With a basis defined on a regular knot vector, the Gramian can be shown to be symmetric and positive definite \acrshort{SPD}, which means that the norm is well-defined and non-zero for all non-zero B-splines.  Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. In this work, the B-spline norm $\|\mathbf f\|_\mathbf H$ on a spline function $f: \mathbb R\to\mathbb R$ with $n$ basis functions, will refer to computing the bilinear form
 \begin{equation}\label{eq:b-spline-norm}
     \|f\|_\mathbf H^2 = \mathbf{c}^\top \mathbf H \mathbf {c}
 \end{equation}

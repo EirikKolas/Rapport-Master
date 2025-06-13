@@ -267,7 +267,7 @@ This integral does not yield a closed form function as the unit normal is a rati
 
 % filepath: c:\Users\eirik\NTNU lokal\Rapport-Master\chapter4.tex
 \subsection{Reference Following Cost Function}\label{sec:oscillations}
-
+To ensure smoothness and suppress high-frequency oscillations in the B-spline trajectory, a novel method of constructing the cost function is proposed.
 When the PXTE is penalized with the function in \cref{eq:total-track-error-b-spline}, 
 the Hessian of this cost in its B‐spline coefficients is the Gramian matrix $G_e$, whose eigenvalues decrease with an increasing spatial frequency of the corresponding modes.  Consequently, high‐frequency oscillations are under‐penalized and tend to dominate the solution. Using the inverse of this Hessian as weighting on the coefficients of $\bar e$, the high frequency modes are penalized instead. This is explained in great detail in \cref{sec:norms,sec:b-spline-norms-as-cost-functions}. Still, a brief overview is given here:
 
@@ -291,6 +291,7 @@ is the Gramian matrix of the new basis, normalized by its trace for easier weigh
 Because $\mathbf{\hat G}_{we}^{-1}$ has the reciprocal eigenvalues of $\mathbf{\hat G}_{we}$, its largest weights now lie on the high‐frequency eigenvectors, thereby suppressing oscillatory modes. \Cref{fig:inverse-gramian-eigenvectors} nine eigenvectors of $\mathbf{\hat G}_e$ (quadratic, uniform basis) and show how applying the inverse‐Gramian cost flips the spectrum, effectively damping high‐frequency components.
 
 
+As far as the author is aware, this is the first time the inverse Gramian matrix is used as a cost function in a B-spline framework.
 Other cost weighting schemes have also been considered for this work, using more classical methods sucha as penalizing the integral of the squared acceleration, or the squared velocity, but with unsatisfactory results. These and other methods are briefly discussed in \cref{app:failed-reference-following}.
 
 \begin{figure}

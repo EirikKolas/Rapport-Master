@@ -69,10 +69,19 @@ while the arc-length $s(x)$ is given by
 
 
 
-\chapter{B-Spline Basis Python Implementation}\label{app:b-spline-python-implementation}
+\chapter{B-Spline Python Implementation}\label{app:b-spline-python-implementation}
 
 
-\subsection{B-spline Basis Class}
+The B-spline basis class is implemented as a dataclass with the degree and knots as datafields. It has methods from \cref{sec:b-spline-theory}. Some of which are listed below:
+\begin{itemize}
+    \item 
+    The \texttt{\_\_call\_\_} method is implemented to evaluate the B-spline basis functions at a given point $x$ using the Cox-de Boor recursion formula. This lets the user call the B-spline basis object as a function, e.g. \texttt{basis(x)}. The B-spline basis functions are evaluated using the Cox-de Boor recursion formula from \cref{eq:b-spline-recurrence} as shown in \cref{alg:cox-de-boor}. The algorithm is implemented using memoization to avoid recomputing the same values multiple times. The memoiziation is done over the minimal set of knots needed to evaluate the B-spline basis function, which is the $k+1$ knots surrounding the knot $t_i$ where the basis function is evaluated. This minimizes the number of function evaluations needed to be stored in memory and maximizes cache hits. The memoization is implemented using the \texttt{@cache} decorator from the functools library.
+    \item
+    The \texttt{transform} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:basis-transformation} to find the transformation matrix $\mathbf T$ in \cref{eq:transformation-matrix-solution}.
+    \item
+    The \texttt{combine} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:common-basis} to find the common basis of two B-spline bases with different degrees. 
+\end{itemize}
+
 
 \begin{algorithm}
     \caption{Cox-de Boor recursion formula for B-spline basis functions (see \cref{eq:b-spline-recurrence}) implemented as a recursive function using memoization.}
@@ -207,15 +216,6 @@ class BSplineBasis:
 \end{algorithm}
 
 
-The B-spline basis class is implemented as a dataclass with the degree and knots as datafields. It has methods from \cref{sec:b-spline-theory}. Some of which are listed below:
-\begin{itemize}
-    \item 
-    The \texttt{\_\_call\_\_} method is implemented to evaluate the B-spline basis functions at a given point $x$ using the Cox-de Boor recursion formula. This lets the user call the B-spline basis object as a function, e.g. \texttt{basis(x)}. The B-spline basis functions are evaluated using the Cox-de Boor recursion formula from \cref{eq:b-spline-recurrence} as shown in \cref{alg:cox-de-boor}. The algorithm is implemented using memoization to avoid recomputing the same values multiple times. The memoiziation is done over the minimal set of knots needed to evaluate the B-spline basis function, which is the $k+1$ knots surrounding the knot $t_i$ where the basis function is evaluated. This minimizes the number of function evaluations needed to be stored in memory and maximizes cache hits. The memoization is implemented using the \texttt{@cache} decorator from the functools library.
-    \item
-    The \texttt{transform} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:basis-transformation} to find the transformation matrix $\mathbf T$ in \cref{eq:transformation-matrix-solution}.
-    \item
-    The \texttt{combine} method (\cref{alg:b-spline-class-methods}) implements \cref{alg:common-basis} to find the common basis of two B-spline bases with different degrees. 
-\end{itemize}
 
 
 % \FloatBarrier
@@ -351,7 +351,7 @@ This appendix contains additional plots of different choices of the Hessian for 
 
 
 
-\chapter{Failed Attempts at Reference Following}\label{app:failed-reference-following}
+\chapter{Other Reference Following Cost Functions}\label{app:failed-reference-following}
 
 Finding a reference-following trajectory using B-splines can be viewed as a penalized regression problem where the reference trajectory is the data to be fitted and the B-spline is the model used to fit data. In the literature, there are two common ways of fitting a B-Spline to data: 1) O'Sullivan splines \citep{OSullivan1986} or smoothing splines, which balances smoothness and fidelity to the data by penalizing the second derivative of the spline\footnote{More specifically the integral over the square of the second derivative.}, and 2) the P-Spline \citep{Eilers1996}, which penalizes the difference of coefficients directly. The second approach achieves more flexibility, as the penalty function is independent of the degree of the B-spline \citep{Eilers2021}. Variations of the first approach is used in optimal control problem literature, to penalize the acceleration of a vehicle. Examples of this are found in \cite{mercy2017spline, van2015b}. P-Splines on the other hand heve not to the author's knowledge been used in optimal control problems, but are widely used in statistics and econometrics \citep{Eilers2021}.
 

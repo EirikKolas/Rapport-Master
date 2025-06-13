@@ -261,11 +261,11 @@ These settings promote course corrections within the maneuver windows, as detail
 \begin{table}[htbp]
     \centering
     \small
-    \begin{tabular}{|c|c|c|c|l|l|}
+    \begin{tabular}{|c|r|l|l|l|l|}
         \hline
-        \textbf{Case} & \multicolumn{1}{c|}{\textbf{TS course}} & \textbf{TS speed} & \textbf{OS Basis} & \textbf{Figures} & \textbf{Description} \\
+        \textbf{Case} & \multicolumn{1}{c|}{\textbf{TS course}} & \textbf{TS speed} & \textbf{OS Basis} & \multicolumn{1}{c|}{\textbf{Figures}} & \multicolumn{1}{c|}{\textbf{Description}} \\
         \hline
-        2.0 & -40\degree, 20\degree, 40\degree & 4.5 m/s & - & \cref{fig:crossing} & Base Crossing scenario \\
+        2.0 & -40\degree, 20\degree, 40\degree & 4.5 m/s & $\mathbf B_{\mathbf u(2,12)}$ & \cref{fig:crossing} & Base Crossing scenario \\
         \hline
         2.1 & 40\degree & 4.5 m/s & $\mathbf{B}_{3, \mathbf u(3, 13)}$ & \Cref{fig:crossing-scenario-degree-3-metrics,fig:crossing-advanced-scenario-10-3} & Degree 3 basis \\
         \hline
@@ -273,12 +273,12 @@ These settings promote course corrections within the maneuver windows, as detail
         \hline
         2.3 & 40\degree & 4.5 m/s & $\mathbf{B}_{3, \mathbf u(3, 23)}$ & \Cref{fig:crossing-advanced-scenario-20-3,fig:crossing-advanced-scenario-20-3-traj} & Refined degree 3 basis \\
         \hline
-        3.0 & -90\degree & 4.5 m/s & - & \cref{fig:head-on} & Head-on scenario \\
+        3.0 & -90\degree & 4.5 m/s & $\mathbf B_{\mathbf u(2,12)}$ & \cref{fig:head-on} & Head-on scenario \\
         \hline
-        4.0 & 75\degree & 4.0 m/s & - & \cref{fig:overtaking} & Overtaking scenario \\
+        4.0 & 75\degree & 4.0 m/s & $\mathbf B_{\mathbf u(2,12)}$ & \cref{fig:overtaking} & Overtaking scenario \\
         \hline
     \end{tabular}
-    \caption{Simulation parameters for the head-on, crossing, and overtaking cases.}\label{tab:batch-params}
+    \caption{Simulation parameters for the head-on, crossing, and overtaking cases. The function $\mathbf u(p,n)$ generates a uniform degree $p$ basis with $n$ basis functions.}\label{tab:batch-params}
 \end{table}
 \renewcommand{\arraystretch}{1.0}
 
@@ -345,7 +345,7 @@ Even PH B-splines, which has a piecewise polynomial representation of the speed,
     \end{subfigure}
     \begin{subfigure}[b]{\textwidth}
         \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_20_3_course_40.svg}
-        \caption{\emph{Case 2.3}: Same scenario as \emph{Case 2.2}, but with a B-spline basis of degree 3 for $\mathbf p_\text{OS}$. Trajectory shown in \cref{fig:crossing-advanced-scenario-20-3-traj} in \cref{app:additional-simulation-plots}.}
+        \caption{\emph{Case 2.3}: Same scenario as Case 2.2, but with a B-spline basis of degree 3 for $\mathbf p_\text{OS}$. Trajectory shown in \cref{fig:crossing-advanced-scenario-20-3-traj} in \cref{app:additional-simulation-plots}.}
         \label{fig:crossing-advanced-scenario-20-3}
     \end{subfigure}
     \caption{Speed, change in course, and distance to the reference trajectory for the OSs in crossing scenario. The dotted lines represent the knots in the B-spline basis for the OS position $\mathbf p_\text{OS}$, and the colored solid lines each represent a single OS starting at the corresponding North coordinate given in the legend.}

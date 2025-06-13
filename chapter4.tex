@@ -3,6 +3,11 @@
 
 \chapter{B-spline MINMPC}\label{chap:b-spline-minmpc}
 
+This chapter presents a unified framework for Mixed‐Integer Nonlinear Model Predictive Control (MINMPC) based on B‐spline trajectory representations. Ship motion, timing and collision‐avoidance constraints are expressed as polynomial inequalities in the B‐spline coefficients, yielding a smooth, continuous formulation capable of minimum‐time planning under dynamic and COLREGS requirements. Two vessel models are introduced: a spline‐relaxed double‐integrator and a Pythagorean‐hodograph (PH) Dubins model, each producing convex or polynomial constraints on velocity and acceleration. Collision avoidance against multiple targets is enforced via hyperplane separation and a Big–M mixed‐integer approach, allowing port‐ or starboard‐side passage decisions. A structured cost combines reference tracking, maneuver windows, and minimum‐time objectives, leveraging inverse‐Gramian norms to suppress high‐frequency oscillations. The complete MINMPC formulation is implemented in a Python/CasADi library with modular components for own‐ship, target‐ships and reference trajectories. 
+
+The chapter is organized into four parts: (i) dynamic models, (ii) collision constraints, (iii) objective design, and (iv) software implementation.
+
+
 \section{Dynamic Model}
 \subsection{Double Integrator}\label{sec:double-integrator}
 The double integrator model is a simple model that ensures a continuous position, velocity, and acceleration for the ship. The model is described by the following equations:
@@ -271,7 +276,7 @@ To ensure smoothness and suppress high-frequency oscillations in the B-spline tr
 When the PXTE is penalized with the function in \cref{eq:total-track-error-b-spline}, 
 the Hessian of this cost in its B‐spline coefficients is the Gramian matrix $G_e$, whose eigenvalues decrease with an increasing spatial frequency of the corresponding modes.  Consequently, high‐frequency oscillations are under‐penalized and tend to dominate the solution. Using the inverse of this Hessian as weighting on the coefficients of $\bar e$, the high frequency modes are penalized instead. This is explained in great detail in \cref{sec:norms,sec:b-spline-norms-as-cost-functions}. Still, a brief overview is given here:
 
-The cost \cref{eq:total-track-error-b-spline} can be written in a bilinear form
+The cost \cref{eq:total-track-error-b-spline} can be written in the bilinear form:
 \begin{equation}\label{eq:cost-reference-following-bilinear}
   J_{\rm ref} = c_e^\top\,\left(\int_0^1 \mathbf B_e(x) \mathbf B_e(x)^\top \, dx\right)\,c_e =
   \mathbf c_e^\top\,\mathbf G_e\, \mathbf c_e,
@@ -291,7 +296,7 @@ is the Gramian matrix of the new basis, normalized by its trace for easier weigh
 Because $\mathbf{\hat G}_{we}^{-1}$ has the reciprocal eigenvalues of $\mathbf{\hat G}_{we}$, its largest weights now lie on the high‐frequency eigenvectors, thereby suppressing oscillatory modes. \Cref{fig:inverse-gramian-eigenvectors} nine eigenvectors of $\mathbf{\hat G}_e$ (quadratic, uniform basis) and show how applying the inverse‐Gramian cost flips the spectrum, effectively damping high‐frequency components.
 
 
-As far as the author is aware, this is the first time the inverse Gramian matrix is used as a cost function in a B-spline framework.
+As far as the author is aware, this is the first time the inverse Gramian matrix is used as a cost function in the context of B-spline optimization.
 Other cost weighting schemes have also been considered for this work, using more classical methods sucha as penalizing the integral of the squared acceleration, or the squared velocity, but with unsatisfactory results. These and other methods are briefly discussed in \cref{app:failed-reference-following}.
 
 \begin{figure}
@@ -352,55 +357,24 @@ Estimating when the encounter window should start and end is a non-trivial probl
 
 \section{Implementation}\label{sec:implementation}
 
-\subsection{Python Library}\label{sec:python-implementation}
 
-The B-spline MINMPC is implemented in Python using CasADi \citep{casadi} and numpy \citep{numpy}. The code is organized into two components: a B-spline library and a CasADi wrapper. The B-spline library follows the structure of the OMGTools library by \citet{mercy2016spline} with enhancements for type safety, vector-valued spline support, small performance optimizations, and added compatibility with CasADi’s MIP solvers. All B-spline transformations and operations are hidden behind a clean interface, so that spline variables and constraints can be declared on symbolic variables just like native CasADi types.
+The B-spline MINMPC is realized as a Python/CasADi library with two layers:
 
-A single optimization-problem class provides a public interface mirroring CasADi’s Opti while extending it with B-spline variables, constraints, and integer/binary decision variables. 
-A key feature of this class is its modular design, enabling the representation of distinct entities such as the OS, TS, and reference trajectories as individual objects. These objects can then be seamlessly integrated into a unified optimization problem.  The subsequent example illustrates the construction of a complete optimization problem using this class, presenting a simplified version of the problem addressed in this paper:
+\begin{itemize}
+  \item \textbf{B-spline core:}  
+    Implements symbolic spline operations—differentiation, integration, basis transformations, addition, multiplication, inner products (Gramians), and NURBS conversion—via CasADi SX/MX variables and sparse transform matrices.
+  \item \textbf{CasADi wrapper:}  
+    Extends CasADi’s Opti interface with methods to declare B-spline variables, polynomial and Big-M collision constraints, binary passage variables, and structured cost terms.
+\end{itemize}
 
-\begin{example}{Optimization Problem Setup}
-\begin{python}
-from cs_mpc import OptiObject, OptiCollection, BSplineBasis
+In the subsections that follow the following topics are discussed in detail:
+\begin{enumerate}
+  \item \emph{Operations on B-splines}: differentiation, integration, basis transformations and more (\cref{sec:operations-on-b-splines} to \cref{sec:inner-product}).
+  \item \emph{Cost implementation}: Gramian‐based norms, inverse‐Gramian weighting, maneuver-window costs (\cref{sec:norms,sec:b-spline-norms-as-cost-functions}).
+  \item \emph{Python API}: OptiObject/OptiCollection usage for problem setup and solving B-spline based optimization problems (\cref{sec:python-implementation}).
+\end{enumerate}
 
-# Define a spline basis for the own ship
-os_basis = BSplineBasis.Uniform(degree=2, n_control_points=12)
-
-# Create own-ship object
-own_ship     = OptiObject('own_ship')
-os_pos       = own_ship.declare_spline_variable('pos', n_dim=2, basis=os_basis)
-os_pos_init  = own_ship.declare_parameter('pos_init',  n_dim=2)
-os_pos_final = own_ship.declare_parameter('pos_final',  n_dim=2)
-
-# Boundary constraints
-own_ship.declare_constraint(os_pos(0) - os_pos_init, lower_bound=0, upper_bound=0)
-own_ship.declare_constraint(os_pos(1) - os_pos_final, lower_bound=0, upper_bound=0)
-
-# Objective: minimize end-point error
-end_err = os_pos - os_pos_final
-own_ship.declare_objective(end_err.dot(end_err).definite_integral(0,1))
-
-# Create a target-ship object
-target_ship = OptiObject('target_ship')
-ts_basis    = BSplineBasis.Uniform(degree=1, n_control_points=2)
-ts_pos      = target_ship.declare_spline_parameter('pos', n_dim=2, basis=ts_basis)
-min_dist    = target_ship.declare_parameter('min_dist', n_dim=1)
-
-# Collision-avoidance constraint
-ts_err = os_pos - ts_pos
-target_ship.declare_constraint(ts_err.dot(ts_err) - min_dist**2, lower_bound=0)
-
-# Set paramter values and solve
-opti = OptiCollection([own_ship, target_ship])
-own_ship.set_value('pos_init', [0,0])
-own_ship.set_value('pos_final', [1000,0])
-target_ship.set_value('pos', [[500,200],[500,-200]])
-target_ship.set_value('min_dist', 50)
-solution = opti.solve()
-\end{python}
-\end{example}
-
-\section{Operations on B-splines}\label{sec:operations-on-b-splines}
+\subsection{Operations on B-splines}\label{sec:operations-on-b-splines}
 
 The B-spline library implements various unary and binary operations, as outlined in this section. First, the differentiation and integration of B-splines are presented. Then, the transformation between different B-spline bases is explained, along with its use in B-spline addition, multiplication, and inner product calculations. Finally, the implementation of cost functions and constraints within the optimization problem is discussed.
 
@@ -948,7 +922,8 @@ where the matrix $\mathbf G$ is the Gramian matrix of the B-spline basis $\mathb
 where $\mathbf{c}\in\mathbb R^{n}$ is the coefficients of $\mathbf f$ as in and $\mathbf H\in\mathbb R^{n\times n}$ is a suitible SPD matrix. 
 
 
-\subsubsection{B-spline Norms as Cost Functions}\label{sec:b-spline-norms-as-cost-functions}
+
+\subsubsection{The B-spline Norms a a Cost Functions}\label{sec:b-spline-norms-as-cost-functions}
 Considering $\|f\|_\mathbf G^2$ as a cost function in an optimization problem, analyzing its eigenvalues and eigenvectors provides insights into the behavior of the optimal solution.
 
 
@@ -1113,6 +1088,54 @@ is a degree-$q$ NURBS with weights $w_i$, knot vector $\boldsymbol{\tau}$ and co
 
 
 
+\subsection{Python Library}\label{sec:python-implementation}
+
+The B-spline MINMPC is implemented in Python using CasADi \citep{casadi} and numpy \citep{numpy}. The code is organized into two components: a B-spline library and a CasADi wrapper. The B-spline library follows the structure of the OMGTools library by \citet{mercy2016spline} with enhancements for type safety, vector-valued spline support, small performance optimizations, and added compatibility with CasADi’s MIP solvers. All B-spline transformations and operations are hidden behind a clean interface, so that spline variables and constraints can be declared on symbolic variables just like native CasADi types.
+
+A single optimization-problem class provides a public interface mirroring CasADi’s Opti while extending it with B-spline variables, constraints, and integer/binary decision variables. 
+A key feature of this class is its modular design, enabling the representation of distinct entities such as the OS, TS, and reference trajectories as individual objects. These objects can then be seamlessly integrated into a unified optimization problem.  The subsequent example illustrates the construction of a complete optimization problem using this class, presenting a simplified version of the problem addressed in this paper:
+
+\begin{example}{Optimization Problem Setup}
+\begin{python}
+from cs_mpc import OptiObject, OptiCollection, BSplineBasis
+
+# Define a spline basis for the own ship
+os_basis = BSplineBasis.Uniform(degree=2, n_control_points=12)
+
+# Create own-ship object
+own_ship     = OptiObject('own_ship')
+os_pos       = own_ship.declare_spline_variable('pos', n_dim=2, basis=os_basis)
+os_pos_init  = own_ship.declare_parameter('pos_init',  n_dim=2)
+os_pos_final = own_ship.declare_parameter('pos_final',  n_dim=2)
+
+# Boundary constraints
+own_ship.declare_constraint(os_pos(0) - os_pos_init, lower_bound=0, upper_bound=0)
+own_ship.declare_constraint(os_pos(1) - os_pos_final, lower_bound=0, upper_bound=0)
+
+# Objective: minimize end-point error
+end_err = os_pos - os_pos_final
+own_ship.declare_objective(end_err.dot(end_err).definite_integral(0,1))
+
+# Create a target-ship object
+target_ship = OptiObject('target_ship')
+ts_basis    = BSplineBasis.Uniform(degree=1, n_control_points=2)
+ts_pos      = target_ship.declare_spline_parameter('pos', n_dim=2, basis=ts_basis)
+min_dist    = target_ship.declare_parameter('min_dist', n_dim=1)
+
+# Collision-avoidance constraint
+ts_err = os_pos - ts_pos
+target_ship.declare_constraint(ts_err.dot(ts_err) - min_dist**2, lower_bound=0)
+
+# Set paramter values and solve
+opti = OptiCollection([own_ship, target_ship])
+own_ship.set_value('pos_init', [0,0])
+own_ship.set_value('pos_final', [1000,0])
+target_ship.set_value('pos', [[500,200],[500,-200]])
+target_ship.set_value('min_dist', 50)
+solution = opti.solve()
+\end{python}
+\end{example}
+
 
 
 
@@ -1150,3 +1173,45 @@ where:
 The optimization variables are the B-spline coefficients of the spline functions
 $\mathbf{p}_\text{OS}(t)$, $\mathbf t(x)$, $\mathbf{n}_{p,j}(x)$, $\mathbf{n}_{s,j}(x)$, $b_{p,j}(x)$, $b_{s,j}(x)$ defined over a suitable knot vector $\mathbf{t}\in[0,1]$, and the binary variables $z_j$.
 
+
+
+
+This chapter presents a unified B-spline MINMPC framework built on four key components:
+
+\begin{enumerate}
+  \item \textbf{Double‐integrator spline model}  
+    We start from the continuous model
+    \begin{equation}
+      \dot{\mathbf p}(t)=\mathbf v(t),\quad
+      \dot{\mathbf v}(t)=\mathbf a(t),\quad
+      \|\mathbf v\|\le v_{\max},\;\|\mathbf a\|\le a_{\max},
+    \end{equation}
+    and introduce a time-parameter spline $t(x)$ (piecewise linear) so that
+    \begin{equation}
+        \begin{aligned}
+            \mathbf p(x)&=\sum_i\mathbf p_iB_i(x), \\
+            \mathbf p'(x)^\top\mathbf p'(x)&\le (t'(x)v_{\max})^2, \\
+            \mathbf p''(x)^\top\mathbf p''(x)&\le (t'(x)^2a_{\max})^2.
+        \end{aligned}
+    \end{equation}
+    All state and timing constraints become polynomial inequalities in the spline coefficients (\cref{sec:double-integrator}).
+
+  \item \textbf{Mixed‐integer COLREGS constraints}  
+    Collision avoidance is enforced by separating own‐ship (OS) and target‐ship (TS) via moving hyperplanes. Two hyperplanes per TS encode port/starboard passage, and a binary $z_j\in\{0,1\}$ activates the appropriate side through Big–M inequalities. This MIP formulation allows for handling the non-convexity of the collision constraints in a robust and efficient manner (\cref{sec:collision-constraints}).
+
+  \item \textbf{Structured cost function}  
+    The objective
+    \begin{equation}
+      J = J_\text{ref} + J_\text{mv} + J_\text{acc} + J_\text{end} + w_\text{time}\,t(1),
+    \end{equation}
+    blends four terms:
+    \begin{itemize}
+      \item $J_\text{ref}$ follows the reference using an inverse‐Gramian norm to suppress high‐frequency oscillations (\cref{sec:oscillations}).
+      \item $J_\text{mv}$ and $J_\text{acc}$ penalize course deviations and accelerations within maneuver windows, weighted by spline‐defined functions.
+      \item $J_\text{end}$ drives the endpoint toward the reference goal.
+      \item The final time $t(1)$ is penalized by $w_\text{time}$ for minimum‐time behavior.
+    \end{itemize}
+
+  \item \textbf{Python implementation}  
+    A custom Python/CasADi library encapsulates B-spline operations. Central to this is the basis‐transformation algorithm (\cref{sec:basis-transformation}), which computes coefficient mappings between spline spaces. This underlies differentiation, integration, products, inner‐products (Gramian), and the construction of all spline‐based constraints and costs in a seamless, symbolic manner.
+\end{enumerate}

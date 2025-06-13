@@ -547,14 +547,7 @@ As the B-spline basis functions are linearly independent, and the Greville absci
 \end{algorithm}
 
 \subsection{Knot Refinement and Degree Elevation}\label{sec:knot-refinement-degree-elevation}
-The method in \cref{sec:basis-transformation} can be utilized for the two most commonly used techniques for manipulating B-splines: knot refinement and degree elevation. Knot refinement is simply the process of adding new knots to the knot vector, keeping the degree of the B-spline constant. 
-
-Degree elevation, on the other hand, is the process of increasing the degree of the B-spline. There is a subtle caveat here, as the continuity of the B-spline at a knot is equal to the degree of the B-spline minus the multiplicity of the knot. This means that if a spline is to be represented in a higher degree basis, the knot multiplicity must be increased to maintain the same continuity at the knots. So, if a spline function in the basis $\mathbf B_{p,\mathbf t}$ is to be represented in the basis $\mathbf B_{p+1,\boldsymbol \tau}$, the knot vector $\boldsymbol \tau$ must contain the original knots $\mathbf t$ with multiplicity $p+1$.
-
-In both knot refinement and degree elevation, the transformation matrix $\mathbf T$ from \cref{eq:transformation-matrix-solution} can be used to find the coefficients in the new basis. The following examples illustrate how to perform knot refinement and degree elevation on a B-spline.
-
-$t = \{\underbrace{a, \dots, a}_{p+1}, \underbrace{\eta_1, \dots, \eta_1}_{m_1}, \dots, \underbrace{\eta_{n}, \dots, \eta_{n}}_{m_n}, \underbrace{b, \dots, b}_{p+1}\}$
-$\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
+The method in \cref{sec:basis-transformation} can be utilized for knot refinement (\cref{alg:knot-refinement}) and degree elevation (\cref{alg:degree-elevation}). Knot refinement adds new knots to the knot vector, keeping the degree constant, while degree elevation increases the degree. To maintain continuity at the knots during degree elevation, the knot multiplicity must be increased. In both cases, the transformation matrix $\mathbf T$ from \cref{eq:transformation-matrix-solution}, computed using \cref{alg:basis-transformation}, finds the coefficients in the new basis.
 
 \begin{algorithm}
     \caption{Degree Elevation}\label{alg:degree-elevation}
@@ -583,135 +576,133 @@ $\mathbf u = \unique(x) = \{a, \eta_1, \dots, \eta_n, b\}$
     \end{algorithmic}
 \end{algorithm}
 
-\todo[inline]{legg til plot av konstant spline og lineær spline}
-\begin{indentedexample}[Degree Elevation]
-    We want to express the constant spline $f(x) =\mathbf B_{0, \mathbf t}^\top\mathbf c$ with knot vector $\mathbf t = \left[0, 1\right]$ as a linear spline $g(x) = \mathbf B_{1, \boldsymbol \tau}^\top \mathbf d$ with knot vector $\boldsymbol \tau = \left[0, 0, 1, 1\right]$. 
 
-    The Greville abscissae for the linear spline are 
-    \begin{equation}
-        \boldsymbol \xi_{1,\boldsymbol \tau} = 
-        \begin{bmatrix}
-            \frac{\tau_0 + \tau_1 + \tau_2}{3} &
-            \frac{\tau_1 + \tau_2 + \tau_3}{3} 
-        \end{bmatrix}
-        =
-        \begin{bmatrix}
-            \frac{0 + 0 + 1}{3} & \frac{0 + 1 + 1}{3}
-        \end{bmatrix} = \begin{bmatrix}
-            \frac{1}{3} & \frac{2}{3}
-        \end{bmatrix}.
-    \end{equation}
-    Evaluating $\mathbf B_{0, \mathbf t}$ and $\mathbf B_{1, \boldsymbol \tau}$  at the Greville abscissae gives
-    \begin{equation}
-        \begin{aligned}
-            \mathbf B_{0, \mathbf t}\begin{pmatrix}\frac{1}{3}\end{pmatrix} &= \begin{bmatrix} 1 \end{bmatrix}, 
-            &\mathbf B_{0, \mathbf t}\begin{pmatrix}\frac{2}{3}\end{pmatrix} &= \begin{bmatrix} 1 \end{bmatrix} 
-            \\
-            \mathbf B_{1, \boldsymbol \tau}\begin{pmatrix}\frac{1}{3}\end{pmatrix} &= \begin{bmatrix} \frac{2}{3} & \frac{1}{3} \end{bmatrix}^\top, 
-            &\mathbf B_{1, \boldsymbol \tau}\begin{pmatrix}\frac{2}{3}\end{pmatrix} &= \begin{bmatrix} \frac{1}{3} & \frac{2}{3} \end{bmatrix}^\top
-        \end{aligned}
-    \end{equation}
-    Solving
-    \begin{equation}
-        \begin{bmatrix}
-            \frac{2}{3} & \frac{1}{3} \\
-            \frac{1}{3} & \frac{2}{3}
-        \end{bmatrix}
-        \begin{bmatrix} d_0 \\ d_1 \end{bmatrix}
-        =
-        \begin{bmatrix} 1 \\ 1 \end{bmatrix}
-        \begin{bmatrix} c_0 \end{bmatrix}
-    \end{equation}
-    gives the solution
-    \begin{equation}
-        \begin{bmatrix} d_0 \\ d_1 \end{bmatrix}
-        =
-        \begin{bmatrix} 2 & -1 \\ -1 & 2 \end{bmatrix}
-        \begin{bmatrix} 1 \\ 1 \end{bmatrix}
-        \begin{bmatrix} c_0 \end{bmatrix}
-        =
-        \begin{bmatrix} 1 \\ 1 \end{bmatrix}
-        \begin{bmatrix} c_0 \end{bmatrix}
-    \end{equation}
-\end{indentedexample}
+% \begin{indentedexample}[Degree Elevation]
+%     We want to express the constant spline $f(x) =\mathbf B_{0, \mathbf t}^\top\mathbf c$ with knot vector $\mathbf t = \left[0, 1\right]$ as a linear spline $g(x) = \mathbf B_{1, \boldsymbol \tau}^\top \mathbf d$ with knot vector $\boldsymbol \tau = \left[0, 0, 1, 1\right]$. 
 
-\begin{indentedexample}[Knot Refinement]
-    Given a linear spline function $f(x) = \mathbf B_{1, \mathbf t}^\top \mathbf c$ with knot vector $\mathbf t = \left\{ 0, 0, \frac{1}{2}, 1, 1\right\}$, the goal is to express it with in the basis $\mathbf B_{1, \boldsymbol \tau}$ with the refined knot vector $\boldsymbol \tau = \left\{ 0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1\right\}$.
+%     The Greville abscissae for the linear spline are 
+%     \begin{equation}
+%         \boldsymbol \xi_{1,\boldsymbol \tau} = 
+%         \begin{bmatrix}
+%             \frac{\tau_0 + \tau_1 + \tau_2}{3} &
+%             \frac{\tau_1 + \tau_2 + \tau_3}{3} 
+%         \end{bmatrix}
+%          = \begin{bmatrix}
+%             \frac{1}{3} & \frac{2}{3}
+%         \end{bmatrix}.
+%     \end{equation}
+%     Evaluating $\mathbf B_{0, \mathbf t}$ and $\mathbf B_{1, \boldsymbol \tau}$  at the Greville abscissae gives
+%     \begin{equation}
+%         \begin{aligned}
+%             \mathbf B_{0, \mathbf t}\begin{pmatrix}\frac{1}{3}\end{pmatrix} &= \begin{bmatrix} 1 \end{bmatrix}, 
+%             &\mathbf B_{0, \mathbf t}\begin{pmatrix}\frac{2}{3}\end{pmatrix} &= \begin{bmatrix} 1 \end{bmatrix} 
+%             \\
+%             \mathbf B_{1, \boldsymbol \tau}\begin{pmatrix}\frac{1}{3}\end{pmatrix} &= \begin{bmatrix} \frac{2}{3} & \frac{1}{3} \end{bmatrix}^\top, 
+%             &\mathbf B_{1, \boldsymbol \tau}\begin{pmatrix}\frac{2}{3}\end{pmatrix} &= \begin{bmatrix} \frac{1}{3} & \frac{2}{3} \end{bmatrix}^\top
+%         \end{aligned}
+%     \end{equation}
+%     Solving
+%     \begin{equation}
+%         \begin{bmatrix}
+%             \frac{2}{3} & \frac{1}{3} \\
+%             \frac{1}{3} & \frac{2}{3}
+%         \end{bmatrix}
+%         \begin{bmatrix} d_0 \\ d_1 \end{bmatrix}
+%         =
+%         \begin{bmatrix} 1 \\ 1 \end{bmatrix}
+%         \begin{bmatrix} c_0 \end{bmatrix}
+%     \end{equation}
+%     gives the solution
+%     \begin{equation}
+%         \begin{bmatrix} d_0 \\ d_1 \end{bmatrix}
+%         =
+%         \begin{bmatrix} 2 & -1 \\ -1 & 2 \end{bmatrix}
+%         \begin{bmatrix} 1 \\ 1 \end{bmatrix}
+%         \begin{bmatrix} c_0 \end{bmatrix}
+%         =
+%         \begin{bmatrix} 1 \\ 1 \end{bmatrix}
+%         \begin{bmatrix} c_0 \end{bmatrix}.
+%     \end{equation}
+%     This makes intuitive sense, as representing a constant in a linear basis simply means that the two coefficients of the linear spline are equal to the constant value.
+% \end{indentedexample}
 
-        The Greville abscissae for the refined basis are
-        \begin{equation}
-            \boldsymbol \xi_{1,\boldsymbol \tau} = 
-            \left\{
-                \frac{1}{12}, \frac{3}{12}, \frac{6}{12}, \frac{9}{12}, \frac{11}{12}
-            \right\}.
-        \end{equation}
-        Using \cref{tab:linear-spline-evaluation} to evaluate $\mathbf B_{1,\boldsymbol\tau}(x)$ at the Greville abscissae gives
-        \begin{equation}
-            \begin{aligned}
-                \mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{1}{12}\end{pmatrix} &= \begin{bmatrix} \frac{3}{4} & \frac{1}{4} & 0 & 0 & 0 \end{bmatrix}^\top,
-                &\mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{3}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 1 & 0 & 0 & 0 \end{bmatrix}^\top, \\
-                \mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{6}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 1 & 0 & 0 \end{bmatrix}^\top,
-                &\mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{9}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 0 & 1 & 0 \end{bmatrix}^\top, \\
-                \mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{11}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 0 & \frac{1}{4} & \frac{3}{4} \end{bmatrix}^\top,
-            \end{aligned}
-        \end{equation}
-        while evaluating $\mathbf B_{1,\mathbf t}(x)$ at the Greville abscissae gives
-        \begin{equation}
-            \begin{aligned}
-                \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{1}{12}\end{pmatrix} &= \begin{bmatrix} \frac{5}{6} & \frac{1}{6} & 0 \end{bmatrix}^\top,
-                &\mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{3}{12}\end{pmatrix} &= \begin{bmatrix} \frac{1}{2} & \frac{1}{2} & 0 \end{bmatrix}^\top, \\
-                \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{6}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 1 & 0 \end{bmatrix}^\top,
-                &\mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{9}{12}\end{pmatrix} &= \begin{bmatrix} 0 & \frac{1}{2} & \frac{1}{2} \end{bmatrix}^\top, \\
-                \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{11}{12}\end{pmatrix} &= \begin{bmatrix} 0 & \frac{1}{6} & \frac{5}{6} \end{bmatrix}^\top.
-            \end{aligned}
-        \end{equation}
-        Inserting the calculated values into \cref{eq:transformation-matrix} gives
-        \begin{equation}
-            \begin{bmatrix}
-                \frac{3}{4} & \frac{1}{4} & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 & 0 \\
-                0 & 0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & \frac{1}{4} & \frac{3}{4}
-            \end{bmatrix}
-            \mathbf{d}
-            =
-            \begin{bmatrix}
-                \frac{5}{6} & \frac{1}{6} & 0 \\
-                \frac{1}{2} & \frac{1}{2} & 0 \\
-                0 & 1 & 0 \\
-                0 & \frac{1}{2} & \frac{1}{2} \\
-                0 & \frac{1}{6} & \frac{5}{6}
-            \end{bmatrix}
-            \mathbf c,
-        \end{equation}
-        which has the solution
-        \begin{equation}
-            \mathbf d = \begin{bmatrix}
-                \frac{8}{9} & \frac{1}{9} & 0 \\
-                \frac{1}{2} & \frac{1}{2} & 0 \\
-                0 & 1 & 0 \\
-                0 & \frac{1}{2} & \frac{1}{2} \\
-                0 & \frac{1}{9} & \frac{8}{9}
-            \end{bmatrix}
-            \mathbf c.
-        \end{equation}
+% \begin{indentedexample}[Knot Refinement]
+%     Given a linear spline function $f(x) = \mathbf B_{1, \mathbf t}^\top \mathbf c$ with knot vector $\mathbf t = \left\{ 0, 0, \frac{1}{2}, 1, 1\right\}$, the goal is to express it with in the basis $\mathbf B_{1, \boldsymbol \tau}$ with the refined knot vector $\boldsymbol \tau = \left\{ 0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1\right\}$.
 
-            \centering
-            \begin{tabular}{c|c|c|c|c|c}
-                Knot Interval & $\mathbf B_{1, \boldsymbol\tau, 0}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 1}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 2}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 3}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 4}(x)$ \\[5pt]
-                \hline
-                \rule{0pt}{2.5ex} $\left[0,\tfrac{1}{4}\right]$ & $1-4x$ & $4x$ & 0 & 0 & 0 \\[5pt]
-                \hline
-                \rule{0pt}{2.5ex} $\left[\tfrac{1}{4},\tfrac{1}{2}\right]$ & 0 & $2-4x$ & $-1+4x$ & 0 & 0 \\[5pt]
-                \hline
-                \rule{0pt}{2.5ex} $\left[\tfrac{1}{2},\tfrac{3}{4}\right]$ & 0 & 0 & $3-4x$ & $-2+4x$ & 0 \\[5pt]
-                \hline
-                \rule{0pt}{2.5ex} $\left[\tfrac{3}{4},1\right]$ & 0 & 0 & 0 & $4-4x$ & $-3+4x$
-            \end{tabular}
-            \captionof{table}{The polynomials for each basis function in $\mathbf B_{1, \left[0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1\right]}$ in their respecive knot intervals}
-            \label{tab:linear-spline-evaluation}
-\end{indentedexample}
+%         The Greville abscissae for the refined basis are
+%         \begin{equation}
+%             \boldsymbol \xi_{1,\boldsymbol \tau} = 
+%             \left\{
+%                 \frac{1}{12}, \frac{3}{12}, \frac{6}{12}, \frac{9}{12}, \frac{11}{12}
+%             \right\}.
+%         \end{equation}
+%         Using \cref{tab:linear-spline-evaluation} to evaluate $\mathbf B_{1,\boldsymbol\tau}(x)$ at the Greville abscissae gives
+%         \begin{equation}
+%             \begin{aligned}
+%                 \mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{1}{12}\end{pmatrix} &= \begin{bmatrix} \frac{3}{4} & \frac{1}{4} & 0 & 0 & 0 \end{bmatrix}^\top,
+%                 &\mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{3}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 1 & 0 & 0 & 0 \end{bmatrix}^\top, \\
+%                 \mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{6}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 1 & 0 & 0 \end{bmatrix}^\top,
+%                 &\mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{9}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 0 & 1 & 0 \end{bmatrix}^\top, \\
+%                 \mathbf B_{1, \boldsymbol\tau}\begin{pmatrix}\frac{11}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 0 & 0 & \frac{1}{4} & \frac{3}{4} \end{bmatrix}^\top,
+%             \end{aligned}
+%         \end{equation}
+%         while evaluating $\mathbf B_{1,\mathbf t}(x)$ at the Greville abscissae gives
+%         \begin{equation}
+%             \begin{aligned}
+%                 \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{1}{12}\end{pmatrix} &= \begin{bmatrix} \frac{5}{6} & \frac{1}{6} & 0 \end{bmatrix}^\top,
+%                 &\mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{3}{12}\end{pmatrix} &= \begin{bmatrix} \frac{1}{2} & \frac{1}{2} & 0 \end{bmatrix}^\top, \\
+%                 \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{6}{12}\end{pmatrix} &= \begin{bmatrix} 0 & 1 & 0 \end{bmatrix}^\top,
+%                 &\mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{9}{12}\end{pmatrix} &= \begin{bmatrix} 0 & \frac{1}{2} & \frac{1}{2} \end{bmatrix}^\top, \\
+%                 \mathbf B_{1, \mathbf t}\begin{pmatrix}\frac{11}{12}\end{pmatrix} &= \begin{bmatrix} 0 & \frac{1}{6} & \frac{5}{6} \end{bmatrix}^\top.
+%             \end{aligned}
+%         \end{equation}
+%         Inserting the calculated values into \cref{eq:transformation-matrix} gives
+%         \begin{equation}
+%             \begin{bmatrix}
+%                 \frac{3}{4} & \frac{1}{4} & 0 & 0 & 0 \\
+%                 0 & 1 & 0 & 0 & 0 \\
+%                 0 & 0 & 1 & 0 & 0 \\
+%                 0 & 0 & 0 & 1 & 0 \\
+%                 0 & 0 & 0 & \frac{1}{4} & \frac{3}{4}
+%             \end{bmatrix}
+%             \mathbf{d}
+%             =
+%             \begin{bmatrix}
+%                 \frac{5}{6} & \frac{1}{6} & 0 \\
+%                 \frac{1}{2} & \frac{1}{2} & 0 \\
+%                 0 & 1 & 0 \\
+%                 0 & \frac{1}{2} & \frac{1}{2} \\
+%                 0 & \frac{1}{6} & \frac{5}{6}
+%             \end{bmatrix}
+%             \mathbf c,
+%         \end{equation}
+%         which has the solution
+%         \begin{equation}
+%             \mathbf d = \begin{bmatrix}
+%                 \frac{8}{9} & \frac{1}{9} & 0 \\
+%                 \frac{1}{2} & \frac{1}{2} & 0 \\
+%                 0 & 1 & 0 \\
+%                 0 & \frac{1}{2} & \frac{1}{2} \\
+%                 0 & \frac{1}{9} & \frac{8}{9}
+%             \end{bmatrix}
+%             \mathbf c.
+%         \end{equation}
+
+%             \centering
+%             \begin{tabular}{c|c|c|c|c|c}
+%                 Knot Interval & $\mathbf B_{1, \boldsymbol\tau, 0}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 1}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 2}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 3}(x)$ & $\mathbf B_{1, \boldsymbol\tau, 4}(x)$ \\[5pt]
+%                 \hline
+%                 \rule{0pt}{2.5ex} $\left[0,\tfrac{1}{4}\right]$ & $1-4x$ & $4x$ & 0 & 0 & 0 \\[5pt]
+%                 \hline
+%                 \rule{0pt}{2.5ex} $\left[\tfrac{1}{4},\tfrac{1}{2}\right]$ & 0 & $2-4x$ & $-1+4x$ & 0 & 0 \\[5pt]
+%                 \hline
+%                 \rule{0pt}{2.5ex} $\left[\tfrac{1}{2},\tfrac{3}{4}\right]$ & 0 & 0 & $3-4x$ & $-2+4x$ & 0 \\[5pt]
+%                 \hline
+%                 \rule{0pt}{2.5ex} $\left[\tfrac{3}{4},1\right]$ & 0 & 0 & 0 & $4-4x$ & $-3+4x$
+%             \end{tabular}
+%             \captionof{table}{The polynomials for each basis function in $\mathbf B_{1, \left[0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1\right]}$ in their respecive knot intervals}
+%             \label{tab:linear-spline-evaluation}
+% \end{indentedexample}
 
 \subsection{Addition and Subtraction}
 Finding the sum of two B-splines that share the same basis is a simple task as their coefficients can just be added together:
@@ -773,7 +764,7 @@ Writing the equation for the product of the two B-splines gives
     \end{align}
 \end{subequations}
 
-where $\otimes$ denotes the Kronecker product. In \cref{eq:b-spline-product-3}, the mixed product property of the Kronecker product has been used, while \cref{eq:b-spline-product-4} is obtained using the fact that the transpose is distributive over the Kronecker product \citep{LOAN200085}. \Cref{eq:b-spline-product-4} resembles the structure in \cref{eq:transformation-matrix-equation}, and the transformation matrix $\mathbf T$ required for computing the inner product can be derived analogously to the multiplication operation, as described in \cref{alg:multiplication}.
+where $\otimes$ denotes the Kronecker product. In \cref{eq:b-spline-product-3}, the mixed product property of the Kronecker product has been used, while \cref{eq:b-spline-product-4} is obtained using the fact that the transpose is distributive over the Kronecker product. \Cref{eq:b-spline-product-4} resembles the structure in \cref{eq:transformation-matrix-equation}, and the transformation matrix $\mathbf T$ required for computing the inner product can be derived analogously to the multiplication operation, as described in \cref{alg:multiplication}.
 
 So, to find the product $h(x) = f(x) g(x)$, one first finds a common basis for $f(x)$ and $g(x)$ using \cref{alg:common-basis}, before finding the transformation matrix $\mathbf T$ from $\mathbf c_1 \otimes \mathbf c_2$ to $\mathbf d$ using \cref{eq:transformation-matrix-solution}. The product is then given by
 \begin{equation}
@@ -792,71 +783,70 @@ So, to find the product $h(x) = f(x) g(x)$, one first finds a common basis for $
 \end{algorithm}
 
 
-\begin{indentedexample}[B-Spline Product]
-    \label{ex:linear-spline-multiplication}
-    Consider the two B-splines
-    \begin{equation}
-        f(x) = \mathbf{B}_{p_1, \mathbf t_1}^\top(x) \mathbf{c}_1
-        \quad g(x) = \mathbf{B}_{p_2, \mathbf t_2}^\top(x) \mathbf{c}_2
-    \end{equation}
-    with knot vectors $\mathbf t_1 = \left\{0, 0, \frac{1}{3}, \frac{2}{3}, 1, 1\right\}$,  $\mathbf t_2 = \left\{0, 0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1, 1\right\}$ and degrees  $p_1 = 1$, $p_2 = 2$. 
-    The common basis $\mathbf{B}_{q,\boldsymbol{\tau}}$ is then found using \cref{alg:common-basis}, to get:
-    \begin{equation}
-        q = p_1 + p_2 = 3,
-        \quad
-        \boldsymbol{\tau} = \left\{0, 0, 0, 0, \tfrac{1}{4}, \tfrac{1}{4}, \tfrac{1}{3}, \tfrac{1}{3}, \tfrac{1}{3}, \tfrac{1}{2}, \tfrac{1}{2}, \tfrac{2}{3}, \tfrac{2}{3}, \tfrac{2}{3}, \tfrac{3}{4}, \tfrac{3}{4}, 1, 1, 1, 1\right\},
-    \end{equation}
-    where the internal knots of $\mathbf t_1$ and $\mathbf t_2$ have been duplicated twice and once respectively to account for the degree elevation. 
-    The left hand side of \cref{eq:b-spline-product-4} is found as in \cref{eq:transformation-matrix}, sampling $\mathbf B_{q, \boldsymbol{\tau}}(x)$ at the Greville abscissae $\boldsymbol{\zeta_\tau}$.
-    For the right hand side, we can write out the product of the B-splines in matrix form using the Kronecker product:
-    \begin{equation}
-        \begin{aligned}
-            (\mathbf B_{p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) \otimes \mathbf B_{p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}))^\top \mathbf{c}_1 \otimes \mathbf{c}_2 = \begin{bmatrix}
-                B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{0, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
-                B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{1, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
-                B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{2, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
-                \vdots \\
-                B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{m, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
-                B_{1, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{0, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
-                \vdots \\
-                B_{n, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{m, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
-            \end{bmatrix}^\top 
-            \begin{bmatrix}
-                c_{0, 1} c_{0, 2} \\
-                c_{0, 1} c_{1, 2} \\
-                c_{0, 1} c_{2, 2} \\
-                \vdots \\
-                c_{0, 1} c_{m, 2} \\
-                c_{1, 1} c_{0, 2} \\
-                \vdots \\
-                c_{n, 1} c_{m, 2}
-            \end{bmatrix}                
-        \end{aligned}
-    \end{equation}
-    This is a matrix with $p_1 \cdot p_2$ rows and column number equal to the number of Greville abscissae in $\boldsymbol{\tau}$, which depend on the degrees of $\mathbf B_{p_1, \mathbf{t}_1}$ and $\mathbf B_{p_2, \mathbf{t}_2}$ and how many knots they share.
-    In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero-entries, but as the knot vectors get denser, this number will increase.
+% \begin{indentedexample}[B-Spline Product]
+%     \label{ex:linear-spline-multiplication}
+%     Consider the two B-splines
+%     \begin{equation}
+%         f(x) = \mathbf{B}_{p_1, \mathbf t_1}^\top(x) \mathbf{c}_1
+%         \quad g(x) = \mathbf{B}_{p_2, \mathbf t_2}^\top(x) \mathbf{c}_2
+%     \end{equation}
+%     with knot vectors $\mathbf t_1 = \left\{0, 0, \frac{1}{3}, \frac{2}{3}, 1, 1\right\}$,  $\mathbf t_2 = \left\{0, 0, 0, \frac{1}{4}, \frac{1}{2}, \frac{3}{4}, 1, 1, 1\right\}$ and degrees  $p_1 = 1$, $p_2 = 2$. 
+%     The common basis $\mathbf{B}_{q,\boldsymbol{\tau}}$ is then found using \cref{alg:common-basis}, to get:
+%     \begin{equation}
+%         q = p_1 + p_2 = 3,
+%         \quad
+%         \boldsymbol{\tau} = \left\{0, 0, 0, 0, \tfrac{1}{4}, \tfrac{1}{4}, \tfrac{1}{3}, \tfrac{1}{3}, \tfrac{1}{3}, \tfrac{1}{2}, \tfrac{1}{2}, \tfrac{2}{3}, \tfrac{2}{3}, \tfrac{2}{3}, \tfrac{3}{4}, \tfrac{3}{4}, 1, 1, 1, 1\right\},
+%     \end{equation}
+%     where the internal knots of $\mathbf t_1$ and $\mathbf t_2$ have been duplicated twice and once respectively to account for the degree elevation. 
+%     The left hand side of \cref{eq:b-spline-product-4} is found as in \cref{eq:transformation-matrix}, sampling $\mathbf B_{q, \boldsymbol{\tau}}(x)$ at the Greville abscissae $\boldsymbol{\zeta_\tau}$.
+%     For the right hand side, we can write out the product of the B-splines in matrix form using the Kronecker product:
+%     \begin{equation}
+%         \begin{aligned}
+%             (\mathbf B_{p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) \otimes \mathbf B_{p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}))^\top \mathbf{c}_1 \otimes \mathbf{c}_2 = \begin{bmatrix}
+%                 B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{0, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+%                 B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{1, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+%                 B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{2, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+%                 \vdots \\
+%                 B_{0, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{m, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+%                 B_{1, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{0, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+%                 \vdots \\
+%                 B_{n, p_1, \mathbf{t}_1}(\boldsymbol{\zeta_\tau}) B_{m, p_2, \mathbf{t}_2}(\boldsymbol{\zeta_\tau}) \\
+%             \end{bmatrix}^\top 
+%             \begin{bmatrix}
+%                 c_{0, 1} c_{0, 2} \\
+%                 c_{0, 1} c_{1, 2} \\
+%                 c_{0, 1} c_{2, 2} \\
+%                 \vdots \\
+%                 c_{0, 1} c_{m, 2} \\
+%                 c_{1, 1} c_{0, 2} \\
+%                 \vdots \\
+%                 c_{n, 1} c_{m, 2}
+%             \end{bmatrix}                
+%         \end{aligned}
+%     \end{equation}
+%     This is a matrix with $nm$ rows and column number equal to the number of Greville abscissae in $\boldsymbol{\tau}$, which depend on the degrees of $\mathbf B_{p_1, \mathbf{t}_1}$ and $\mathbf B_{p_2, \mathbf{t}_2}$ and how many knots they share.
+%     In order to save computational resources, the products with non-overlapping supports should be ignored. In this example the supports of the two B-splines are given in \cref{tab:ex-spline-supports}. Here we only get 6 zero-entries, but as the knot vectors get denser, this number will increase.
 
 
-    \centering
-    \small
-    \begin{tabular}{c|c||c|c|c|c|c|c}
-        \textbf{Basis} &  & $B_{0, p_2, \mathbf{t}_2}$ & $B_{1, p_2, \mathbf{t}_2}$ & $B_{2, p_2, \mathbf{t}_2}$ & $B_{3, p_2, \mathbf{t}_2}$ & $B_{4, p_2, \mathbf{t}_2}$ & $B_{5, p_2, \mathbf{t}_2}$ \\[5pt]
-        \hline
-        \rule{0pt}{2.5ex} & \textbf{Support} & $\left[0, \frac{1}{4}\right]$ & $\left[0, \frac{1}{2}\right]$ & $\left[0, \frac{3}{4}\right]$ & $\left[\frac{1}{4}, \frac{3}{4}\right]$ & $\left[\frac{1}{2}, 1\right]$ & $\left[\frac{3}{4}, 1\right]$ \\[5pt]
-        \hline\hline
-        \rule{0pt}{2.5ex}$B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{1}{3}\right]$ & 
-        1 & 1 & 1 & 1 & 0 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
-        $B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{2}{3}\right]$ &
-        1 & 1 & 1 & 1 & 1 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
-        $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{1}{3}, 1\right]$ &
-        0 & 1 & 1 & 1 & 1 & 1 \\[5pt]\hline\rule{0pt}{2.5ex}
-        $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{2}{3}, 1\right]$ & 
-        0 & 0 & 1 & 1 & 1 & 1 \\[5pt]
-    \end{tabular}
-    \captionof{table}{Overlapping supports of $B_{p_1, \mathbf{t}_1}$ and $B_{p_2, \mathbf{t}_2}$ in \cref{ex:linear-spline-multiplication}.}
-    \label{tab:ex-spline-supports}
-
-\end{indentedexample}
+%     \centering
+%     \small
+%     \begin{tabular}{c|c||c|c|c|c|c|c}
+%         \textbf{Basis} &  & $B_{0, p_2, \mathbf{t}_2}$ & $B_{1, p_2, \mathbf{t}_2}$ & $B_{2, p_2, \mathbf{t}_2}$ & $B_{3, p_2, \mathbf{t}_2}$ & $B_{4, p_2, \mathbf{t}_2}$ & $B_{5, p_2, \mathbf{t}_2}$ \\[5pt]
+%         \hline
+%         \rule{0pt}{2.5ex} & \textbf{Support} & $\left[0, \frac{1}{4}\right]$ & $\left[0, \frac{1}{2}\right]$ & $\left[0, \frac{3}{4}\right]$ & $\left[\frac{1}{4}, \frac{3}{4}\right]$ & $\left[\frac{1}{2}, 1\right]$ & $\left[\frac{3}{4}, 1\right]$ \\[5pt]
+%         \hline\hline
+%         \rule{0pt}{2.5ex}$B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{1}{3}\right]$ & 
+%         1 & 1 & 1 & 1 & 0 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
+%         $B_{0, p_1, \mathbf{t}_1}$ & $\left[0, \frac{2}{3}\right]$ &
+%         1 & 1 & 1 & 1 & 1 & 0 \\[5pt]\hline\rule{0pt}{2.5ex}
+%         $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{1}{3}, 1\right]$ &
+%         0 & 1 & 1 & 1 & 1 & 1 \\[5pt]\hline\rule{0pt}{2.5ex}
+%         $B_{2, p_1, \mathbf{t}_1}$ & $\left[\frac{2}{3}, 1\right]$ & 
+%         0 & 0 & 1 & 1 & 1 & 1 \\[5pt]
+%     \end{tabular}
+%     \captionof{table}{Overlapping supports of $B_{p_1, \mathbf{t}_1}$ and $B_{p_2, \mathbf{t}_2}$ in \cref{ex:linear-spline-multiplication}.}
+%     \label{tab:ex-spline-supports}
+% \end{indentedexample}
 
 \subsection{Inner Product, Norms and the B-spline Gramian}\label{sec:inner-product}
 \subsubsection{Inner Product}
@@ -923,7 +913,7 @@ where $\mathbf{c}\in\mathbb R^{n}$ is the coefficients of $\mathbf f$ as in and 
 
 
 
-\subsubsection{The B-spline Norms a a Cost Functions}\label{sec:b-spline-norms-as-cost-functions}
+\subsubsection{The B-spline Norms as a Cost Function}\label{sec:b-spline-norms-as-cost-functions}
 Considering $\|f\|_\mathbf G^2$ as a cost function in an optimization problem, analyzing its eigenvalues and eigenvectors provides insights into the behavior of the optimal solution.
 
 
@@ -1142,51 +1132,17 @@ solution = opti.solve()
 
 
 \section{Summary}
-
-The complete B-spline MINMPC problem can be written compactly as
-\begin{equation}
-\label{eq:minmpc-compact}
-    \begin{aligned}
-        \min
-        \quad & J(\mathbf p_\text{OS}) + w_\text{time}\, \mathbf t(1)
-        \\
-        \text{subject to}\quad
-        & \mathcal{D}_{DI}(\mathbf{p}_\text{OS})
-        \text{ or }
-        \mathcal{D}_{PH}(\mathbf{p}_\text{OS}),
-        \\
-        & \mathcal{O}_j\bigl(
-            \mathbf{n}_{p,j}, \mathbf{n}_{s,j}, b_{p,j}, b_{s,j}, z_j
-        \bigr),
-        \quad \forall j\in \{1,\ldots,N_\text{TS}\},
-    \end{aligned}
-\end{equation}
-
-where:
-\begin{itemize}
-    \item $J$ includes maneuver window costs, reference trajectory following costs, and acceleration costs as defined in \cref{eq:cost-maneuver-window-total}.
-    \item $\mathcal{D}_{DI}$ and $\mathcal{D}_{PH}$ denote the double‐integrator and PH‐spline Dubins model constraints, respectively.
-    \item $\mathcal{O}_j$ is the Big-M collision‐avoidance constraint set from \eqref{eq:colregs-bigM} for each target ship $j$ in the encounter.
-    \item $w_\text{time}$ is a weight on the final time of the variable $\mathbf t(x)$, which is a B-spline variable representing the time of the OS.
-\end{itemize}
-
-The optimization variables are the B-spline coefficients of the spline functions
-$\mathbf{p}_\text{OS}(t)$, $\mathbf t(x)$, $\mathbf{n}_{p,j}(x)$, $\mathbf{n}_{s,j}(x)$, $b_{p,j}(x)$, $b_{s,j}(x)$ defined over a suitable knot vector $\mathbf{t}\in[0,1]$, and the binary variables $z_j$.
-
-
-
-
 This chapter presents a unified B-spline MINMPC framework built on four key components:
 
 \begin{enumerate}
   \item \textbf{Double‐integrator spline model}  
-    We start from the continuous model
+    Using the continuous-time double-integrator model
     \begin{equation}
       \dot{\mathbf p}(t)=\mathbf v(t),\quad
       \dot{\mathbf v}(t)=\mathbf a(t),\quad
       \|\mathbf v\|\le v_{\max},\;\|\mathbf a\|\le a_{\max},
     \end{equation}
-    and introduce a time-parameter spline $t(x)$ (piecewise linear) so that
+    a time-parameter spline $t(x)$ (piecewise linear) is introduced so that the B-spline relaxation of the model becomes 
     \begin{equation}
         \begin{aligned}
             \mathbf p(x)&=\sum_i\mathbf p_iB_i(x), \\
@@ -1197,20 +1153,36 @@ This chapter presents a unified B-spline MINMPC framework built on four key comp
     All state and timing constraints become polynomial inequalities in the spline coefficients (\cref{sec:double-integrator}).
 
   \item \textbf{Mixed‐integer COLREGS constraints}  
-    Collision avoidance is enforced by separating own‐ship (OS) and target‐ship (TS) via moving hyperplanes. Two hyperplanes per TS encode port/starboard passage, and a binary $z_j\in\{0,1\}$ activates the appropriate side through Big–M inequalities. This MIP formulation allows for handling the non-convexity of the collision constraints in a robust and efficient manner (\cref{sec:collision-constraints}).
+    Collision avoidance is enforced by separating own‐ship (OS) and target‐ship (TS) via moving hyperplanes. Two hyperplanes per TS encode port/starboard passage, and a binary $z_j\in\{0,1\}$ activates the appropriate side through Big–M inequalities. This MIP formulation allows for handling the non-convexity of the collision constraints in a robust and efficient manner. These constraints are collected in the set $\mathcal{O}_j$, defined in \cref{sec:collision-constraints}, and are applied to the OS B-spline trajectory (\cref{sec:collision-constraints}).
 
   \item \textbf{Structured cost function}  
-    The objective
-    \begin{equation}
-      J = J_\text{ref} + J_\text{mv} + J_\text{acc} + J_\text{end} + w_\text{time}\,t(1),
-    \end{equation}
-    blends four terms:
-    \begin{itemize}
-      \item $J_\text{ref}$ follows the reference using an inverse‐Gramian norm to suppress high‐frequency oscillations (\cref{sec:oscillations}).
-      \item $J_\text{mv}$ and $J_\text{acc}$ penalize course deviations and accelerations within maneuver windows, weighted by spline‐defined functions.
-      \item $J_\text{end}$ drives the endpoint toward the reference goal.
-      \item The final time $t(1)$ is penalized by $w_\text{time}$ for minimum‐time behavior.
-    \end{itemize}
+    The objective function is designed to minimize a combination of factors, with a novel emphasis on suppressing high-frequency oscillations through the application of an inverse-Gramian norm (\cref{sec:oscillations}). The composite cost function is structured as follows:
+        \begin{equation}
+          J = J_\text{ref} + J_\text{mv} + J_\text{acc} + J_\text{end} + w_\text{time}\,t(1),
+        \end{equation}
+        This function comprises four distinct terms:
+        \begin{itemize}
+          \item \(J_\text{ref}\): A reference-tracking term that penalizes deviations from a desired trajectory.
+          \item \(J_\text{mv}\) and \(J_\text{acc}\): Terms that penalize course deviations and accelerations, respectively, within predefined maneuver windows. These penalties are modulated by weighting functions defined as splines, allowing for precise control over the maneuver dynamics.
+          \item \(J_\text{end}\): A terminal cost that encourages convergence towards the reference trajectory's endpoint.
+          \item \(w_\text{time}\,t(1)\): A minimum-time objective, where the final time \(t(1)\) is penalized by a weight \(w_\text{time}\), promoting faster trajectories.
+        \end{itemize}
+
+        The complete B-spline MINMPC problem can then be written compactly as
+        \begin{equation}
+        \label{eq:minmpc-compact}
+            \begin{aligned}
+                \min
+                \quad & J
+                \\
+                \text{subject to}\quad
+                & \mathcal{D}_{DI}(\mathbf{p}_\text{OS})
+                \\
+                & \mathcal{O}_j,
+                \quad \forall j\in \{1,\ldots,N_\text{TS}\},
+            \end{aligned}
+        \end{equation}
+    where \(\mathcal{D}_{DI}(\mathbf{p}_\text{OS})\) represents the double-integrator spline model constraints, and \(\mathcal{O}_j\) are the collision avoidance constraints for each target ship \(j\).
 
   \item \textbf{Python implementation}  
     A custom Python/CasADi library encapsulates B-spline operations. Central to this is the basis‐transformation algorithm (\cref{sec:basis-transformation}), which computes coefficient mappings between spline spaces. This underlies differentiation, integration, products, inner‐products (Gramian), and the construction of all spline‐based constraints and costs in a seamless, symbolic manner.

@@ -3,15 +3,10 @@
 
 \chapter{Simulation Results}\label{chap:simulation-results}
 
-- simulation setup
-- stationary target
-- head on situation
-- crossing situation
-- overtaking situation
+A comprehensive suite of simulation scenarios was designed to validate the B-spline MINMPC framework in dynamic obstacle encounters. First, the simulation environment and solver setup are detailed in \cref{sec:simulation-setup}. Then, trajectory generation around a stationary target is examined to illustrate the handling of non-convex constraints. Subsequent cases address COLREGS-relevant encounters: head-on approaches, crossing situations, and overtaking maneuvers. For each scenario, generated trajectories are evaluated in terms of path smoothness, constraint satisfaction, partial COLREGS compliance, thereby demonstrating the method’s robustness across diverse navigational challenges.
+
 
 \section{Simulation Setup}\label{sec:simulation-setup}
-
-The B-spline MINMPC is implemented in Python using the library presented in \cref{sec:python-implementation}. The simulation is run on a laptop with an AMD Ryzen 7 5000 Series CPU and 16 GB of RAM. The simulation parameters are summarized in \cref{tab:simulation-parameters}. 
 
 The double integrator model in \cref{sec:double-integrator} is used to represent the OS, which has a maximum speed of 6 m/s. The spline representing the time $\mathbf t(x)$ is defined in the simplest way possible, as a linear function $\mathbf t(x) = Tx$, where $T$ is the total time of the simulation. As all functions in the optimization problem involving this variable only uses its derivative $\mathbf t'(x)$, $\mathbf t(x)$ can be represented by a single scalar variable $T$ in the optimization problem. 
 More complex time splines are possible, giving more flexibility to the length and shapes of e.g. the maneuver windows, but this is not necessary for the simulation scenarios presented in this chapter.

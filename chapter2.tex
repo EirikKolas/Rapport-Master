@@ -2,6 +2,9 @@
 %===================================== CHAP 2 =================================
 
 \chapter{Background Theory}\label{chap:background-theory}
+In order to establish the theoretical foundations for the B-spline MINMPC framework, key topics in spline theory, maritime collision regulations, and optimal control are presented. First, the definition, properties, and fundamental operations of B-splines are reviewed to motivate their use in continuous-time trajectory representation and constraint formulation. Then, the relevant COLREGS rules and vessel-to-vessel encounter types are summarized to guide the design of collision-avoidance constraints. Finally, the principles of semi-infinite programming, multiple shooting, and spline-based relaxation in optimal control are introduced to frame the trajectory optimization method. These elements together provide the essential background for the development and analysis in subsequent chapters.
+
+
 
 \section{The B-spline}
 \label{sec:b-spline-theory}
@@ -36,7 +39,7 @@ The resulting curve is smooth, local, and lies within the convex hull of the con
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
         \includesvg[width=\textwidth]{fig/b-spline/convex hull.svg}
-        \caption{Convex hull of B-spline. The segment of the B-spline between the third and fourth control points (orange) lies within the convex hull of those points.}
+        \caption{Convex hull of B-spline. The third B-spline segment (blue) lies within the convex hull of the points $\{\mathbf c_1,\ldots,\mathbf c_4\}$ (orange).}
         \label{fig:b-spline-convex-hull} 
     \end{subfigure}
     \caption{Geometric interpretation of B-splines}
@@ -51,12 +54,12 @@ where \( c_j \) are the control points and \( B_{j,p}(x) \) are the B-spline bas
 
 In this thesis, B-splines are used to represent the trajectory of the vessel in a way that is:
 \begin{itemize}
-    \item \textbf{Differentiable} (for velocity and acceleration)
+    \item \textbf{Differentiable} (Conftinuuous derivatives up to order \( p \))
     \item \textbf{Efficient} (sparse representation)
-    \item \textbf{Well-behaved} (satisfies constraints over time)
+    \item \textbf{Well-behaved} (Local support and convex hull properties)
 \end{itemize}
 
-This allows trajectory optimization to be done in continuous time while ensuring global constraint satisfaction. 
+This allows a continuous-time trajectory optimization problems to be solved while ensuring global constraint satisfaction. 
 
 
 
@@ -128,7 +131,7 @@ This is a powerful property in optimization, as it allows for constraints on vec
 
 \subsection{Fundamental B-spline Operations}
 \label{sec:b-spline-operations-theory}
-The B-spline basis functions, for a given degree $p$ and knot vector $\mathbf{t}$, span a linear vector space denoted as $\mathcal{S}_{p, \mathbf{t}}$. This space, referred to as the spline space, encompasses all piecewise polynomials of degree less than or equal to $p$ defined over the knot vector $\mathbf{t}$ \citep{Grimstad2016}. The property of splines spanning a linear vector space is crucial for using B-splines in optimization. 
+The B-spline basis functions, for a given degree $p$ and knot vector $\mathbf{t}$, span a linear vector space  as $\mathcal{S}_{p, \mathbf{t}}$. This space, referred to as the spline space, encompasses all piecewise polynomials of degree less than or equal to $p$ defined over the knot vector $\mathbf{t}$ \citep{Grimstad2016}. The property of splines spanning a linear vector space is crucial for using B-splines in optimization. 
 It allows the spline representation of functions to be converted between various bases by simply applying a matrix transform on its coefficients. This enables efficient computation and manipulation of the B-spline objects.
 
 Because the spline space $\mathcal{S}_{p,\mathbf{t}}$ is a vector space, any operation that is linear on the spline itself can be carried out by a suitable matrix acting on those coefficients.  While the following operations---such as differentiation and integration---are important for understanding the application of B-splines in optimization, their practical implementation and role in the cost function and constraint construction are described in detail in \cref{sec:operations-on-b-splines}.
@@ -189,111 +192,10 @@ for which a NURBS curve is given by
 = \mathbf R_{p,\mathbf t, \mathbf w}(x)^\top \mathbf c.
 \end{equation}
 
-NURBS inherit the local support and non-negativity properties from B-splines. When all weights $w_i$ are equal, the NURBS reduces exactly to a B-spline curve. The partition of unity property is also preserved as long as all the weights are non-negative. \citep{Piegl1997}
+NURBS inherit the local support, partition of unity and non-negativity properties from B-splines. When all weights $w_i$ are equal, the NURBS reduces exactly to a B-spline curve. \citep{Piegl1997}
 
 A principal advantage of NURBS is their ability to represent conic sections---such as circles, ellipses, and parabolas---exactly using quadratic or cubic segments \citep{Piegl1997}. For example, a circle can be constructed by appropriate choice of four rational quadratic segments, each representing a quarter arc \citep{DenbighStarkeyNURBS}. Many CAD systems likewise rely on NURBS for the exactness of the conic-surface representation as well as the ability to create flexible free-form shapes \citep{Farin1991,PieglTillerSIGGRAPH,cottrell2009isogeometric}.
 
-In \cref{sec:b-spline-definition} it is mentioned that a B-spline function $f(x; p, \mathbf t)$ is part of the linear vector space $\mathcal S_{p, \mathbf t}$.
-, a NURBS function $f(x; p, \mathbf t, \mathbf w)$ is part of the rational spline space $\mathcal B_{p, \mathbf t, \mathbf w}$. This space contains all piecewise rational polynomials on the knot vector $\mathbf t$ with degree $p$ and weights $\mathbf w$. 
+In \cref{sec:b-spline-definition} it is mentioned that a B-spline function $f(x; p, \mathbf t)$ is part of the linear vector space $\mathcal S_{p, \mathbf t}$. A NURBS function $f(x; p, \mathbf t, \mathbf w)$ is part of the rational spline space $\mathcal B_{p, \mathbf t, \mathbf w}$. This space contains all piecewise rational polynomials on the knot vector $\mathbf t$ with degree $p$ and weights $\mathbf w$. 
 
 
-
-\subsection{Summary}
-
-This chapter has introduced the concept of B-splines, their properties, and how they can be used to represent curves and surfaces. B-splines are piecewise polynomial functions defined over a knot vector, and they have several important properties, including local support, non-negativity, and the ability to represent complex shapes. The chapter also discussed the operations of addition, multiplication, and inner product for B-splines, as well as their generalization to Non-Uniform Rational B-splines (NURBS).
-
-Table of operations for B-splines is given in \cref{tab:operations}. A summary of operations on \acrshort{NURBS} can be found in \cite{piegl1997symbolic}.
-
-
-\renewcommand{\arraystretch}{1.2}
-\begin{table}
-    \centering
-    \small
-    \begin{tabular}{|l|l|l|l|c|}
-    \hline
-    \textbf{Operation} 
-      & \textbf{Expression} 
-        & \textbf{Space} 
-          & \textbf{Coefficients} 
-            & \textbf{Implementation} \\
-    \hline
-    \hline
-    Evaluation   
-      & $\mathbf f(x)$ 
-        & $\mathcal S^n_{p}\to\mathbb{R}^n$ 
-          & Linear 
-            & \cref{eq:b-spline-recurrence} \\
-    \hline
-    Derivative   
-      & $\mathbf f'$  
-        & $\mathcal S^n_{p}\to\mathcal S^n_{p-1}$ 
-          & Linear 
-            & \cref{eq:b-spline-derivative} \\
-    \hline
-    Integral     
-      & \rule{0pt}{4ex}$\displaystyle\int \mathbf f(x)\,dx$ 
-        & $\mathcal S^n_{p}\to\mathcal S^n_{p+1}$ 
-          & Linear 
-            & \cref{eq:b-spline-integral} \\[1.5ex]
-    \hline
-    Degree elevation  
-      & $\mathbf f$  
-        & $\mathcal S^n_{p}\to\mathcal S^n_{p+1}$ 
-          & Linear 
-            & \Cref{alg:degree-elevation} \\      
-    \hline
-    Knot insertion    
-      & $\mathbf f$  
-        & $\mathcal S^n_{p}\to\mathcal S^n_{p}$ 
-          & Linear 
-            & \Cref{alg:knot-refinement} \\
-    \hline
-    \hline
-    Vector Addition  
-      & $\mathbf a + \mathbf f$  
-        & $\mathbb R^n \times\mathcal S^n_{p}\to\mathcal S^n_{p}$ 
-          & Linear 
-            & \Cref{alg:addition} \\
-    \hline
-    Scalar multiplication  
-      & $a\,\mathbf f$  
-        & $\mathbb R\times\mathcal S^n_{p}\to\mathcal S^n_{p}$ 
-          & Linear 
-            & $-$ \\
-    \hline
-    Addition     
-      & $\mathbf f +\mathbf g$  
-        & $\mathcal S^n_{p_1}\times\mathcal S^n_{p_2}\to\mathcal S^n_{\max(p_1,p_2)}$ 
-          & Linear 
-            & \Cref{alg:addition} \\[.5ex]
-    \hline
-    Multiplication   
-      & $\mathbf f\,g$  
-        & $\mathcal S^n_{p_1}\times\mathcal S_{p_2}\to\mathcal S^n_{p_1+p_2}$ 
-          & Bilinear 
-            & \Cref{alg:multiplication} \\
-    \hline
-    PW inner product  
-      & $\mathbf f \cdot \mathbf g$  
-        & $\mathcal S^n_{p_1}\times\mathcal S^n_{p_2}\to\mathcal S_{p_1+p_2}$
-          & Bilinear 
-            & \cref{eq:dot-product-pointwise} \\
-    \hline
-    Inner product    
-      & $\langle \mathbf f, \mathbf g \rangle$  
-        & $\mathcal S^n_{p_1}\times\mathcal S^n_{p_2}\to\mathbb R$ 
-          & Bilinear 
-            & \cref{eq:dot-product} \\
-    \hline
-    Division  
-      & \rule{0pt}{4ex}$\displaystyle\frac{\mathbf f}{g}$  
-        & $\mathcal S^n_{p_1}\times\mathcal S_{p_2}\to\mathcal B^n_{\max(p_1,p_2)}$
-          & Rational 
-            & \Cref{alg:nurbs-conversion} \\[1.5ex]
-    \hline
-    \end{tabular}
-    \caption{Summary of B-spline operations and their properties. The symbols $f$ and $g$ denote B-spline functions, while $a$ denotes a scalar. Their corresponding bold-faced symbols denote vector-valued functions and vectors in $\mathbf R^n$ space respectively. The ``Coefficients'' column indicates the transformation type of the operation on the coefficients. The ``Space'' column indicates the space of the resulting B-spline. The knot vectors for these spaces are ommited for brevity and can be found in the references in the ``Algorithms'' column.}
-    \label{tab:operations}
-\end{table}
-\renewcommand{\arraystretch}{1}
-    

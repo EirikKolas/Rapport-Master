@@ -378,7 +378,7 @@ where $\lambda$ is a parameter that controls the strength of the penalty. The co
                      &\langle p_\text{os}', p_\text{os}' \rangle \le v_\text{max}^2.
     \end{aligned}
 \end{equation}
-where the symbols are as defined in \cref{eq:conservativeness-objective}.
+where the symbols are as defined in \cref{eq:conservativeness-optimization}.
 For small penalties e.g. $\lambda=0.01$, the trajectory approaches that of \cref{fig:conservativeness-traj-integral}. Increasing the penalty to $\lambda=100$ gives a trajectory that only reaches about half the distance to the end of the reference. For no $\lambda$ in between does the trajectory not overshoot the North = 0m axis. As neither oscillations nor overshooting is desirable behaviour, using the integral over the squared reference error as a cost function is not a good choice. Adding the penalty term still leads to overshooting the reference. These two methods are therefore not suitible for the final implementation.
 
 \begin{figure}

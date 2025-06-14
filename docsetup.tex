@@ -47,7 +47,11 @@
 \usepackage{dcolumn}
 \usepackage{enumitem}
 
-\usepackage[pdftex,bookmarks=true,hypertexnames=false]{hyperref}
+\usepackage[
+    pdftex,
+    bookmarks=true,
+    % hypertexnames=false
+]{hyperref}
 % \usepackage[style=altsuper4colheader]{glossaries}
 % \usepackage[pdftex]{hyperref}
 \hypersetup{
@@ -57,12 +61,12 @@
     linkcolor=black,%
     urlcolor=black
 }
+\usepackage[hyperfirst=false,style=list,acronym]{glossaries}
 \usepackage[capitalize]{cleveref}
 \usepackage{zref-clever}
 \zcsetup{noname}
 \usepackage{autonum}
 
-\usepackage[hyperfirst=false,style=altsuper4col,acronym]{glossaries}
 % \usepackage[draft]{pdfcomment}
 
 \glsdisablehyper

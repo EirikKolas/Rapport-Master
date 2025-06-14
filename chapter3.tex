@@ -2,9 +2,78 @@
 %===================================== CHAP 3 =================================
 
 
+
+\section{Optimal Control Theory}
+\subsection{Semi-infinite Programming}\label{sec:semi-infinite-programming}
+
+Semi-infinite programming is a class of optimization problems where the objective function is defined over a finite number of variables, subject to an infinite numbuer of constraints  indexed by $\omega\in\Omega$ \citep{Bonnans2013-gt}:
+\begin{equation}\label{eq:semi-infinite-programming}
+  \min_{\mathbf x\in\mathbb R^n}\; f(\mathbf x)
+  \quad\text{s.t.}\quad g(\mathbf x,\omega)\le0,\;\forall\,\omega\in\Omega.
+\end{equation}
+If $\Omega=\{\omega_1,\dots,\omega_N\}$ is finite, \eqref{eq:semi-infinite-programming} reduces to a standard \acrfull{NLP} with constraints $g(\mathbf x,\omega_i)\le0$, $i=1,\dots,N$.
+
+An optimal control problem where the state and control variables are defined over a continuous time interval $T=[t_0,t_f]$ can be cast as a semi-infinite program.  The infinite set of constraints $\Omega$ is then indexed by time $t\in T$, and the problem can be formulated as follows:
+\begin{equation}\label{eq:optimal-control-problem}
+  \begin{aligned}
+    \min_{\mathbf{x}(\cdot),\mathbf{u}(\cdot)}\;&\int_{t_0}^{t_f}J(\mathbf x(t),\mathbf u(t),t)\,dt,\\
+    \text{s.t.}\;&\dot{\mathbf x}(t)=\mathbf f(\mathbf x(t),\mathbf u(t),t),\;\mathbf x(t_0)=\mathbf x_0,\\
+                &\mathbf g(\mathbf x(t),\mathbf u(t),t)\le\mathbf 0,\;\forall\,t\in T.
+  \end{aligned}
+\end{equation}
+where $T = [t_0, t_f]$ is the time interval, $\mathbf{x}(t) \in \mathbb R^{n_x}$ is the state, $\mathbf{u}(t) \in \mathbb R^{n_u}$ is the control input, $J : \mathbb R^{n_x} \times \mathbb R^{n_u} \times \mathbb R \to \mathbb R$ is the cost functional, $\mathbf f : \mathbb R^{n_x} \times \mathbb R^{n_u} \times T \to \mathbb R^{n_x}$ is the state equation, and $\mathbf g : \mathbb R^{n_x} \times \mathbb R^{n_u} \times T \to \mathbb R^{n_g}$ are the algebraic constraints. 
+
+
+As it is impossible to implement continuous constraints in a discrete computer, \eqref{eq:optimal-control-problem} must be converted into a finite-dimensional optimization problem. Two common approaches are time discretization and collocation methods, which transform the infinite constraints into a finite set of constraints that can be solved numerically:
+\begin{itemize}
+  \item \textbf{Multiple shooting:}  
+    Partition $T=[t_0,t_f]$ into nodes $t_k$, approximate $\mathbf x(t_k)\approx\mathbf x_k$, $\mathbf u(t_k)\approx\mathbf u_k$, replace $\dot{\mathbf x}=\mathbf f(\mathbf x,\mathbf u,t)$ by an explicit numerical integrator (e.g.\ Runge–Kutta), and enforce $\mathbf g(\mathbf x_k,\mathbf u_k)\le0$ at each node.
+  \item \textbf{Discrete Collocation:}  
+    Express $\mathbf x(t)$ and $\mathbf u(t)$ in a finite‐dimensional basis (most commonly piecewise polynomials) and enforce dynamics and path constraints at selected collocation points. The dynamics are implicitly integrated to satisfy continuity conditions.
+\end{itemize}
+
+ 
+\subsection{B-Spline Relaxation}\label{sec:b-spline-relaxation}
+B-spline relaxation can be seen as a specialized collocation approach. In classical collocation, state and path constraints are enforced at a finite set of nodes $t_i$, yielding algebraic conditions on the spline coefficients. In B-spline relaxation, the convex‐hull property of the basis replaces discrete collocation points with coefficient‐level constraints that guarantee feasibility for all $t\in T$. Key differences:
+\begin{itemize}
+  \item \textbf{Direct collocation:}  
+    Constraints $g(x(t_i),u(t_i))\le0$ at selected nodes only.
+  \item \textbf{B-spline relaxation:}  
+    Box or norm bounds on control‐point vectors ensure $g(x(t),u(t))\le0$ continuously, using a finite set of linear inequalities on coefficients.
+\end{itemize}
+
+This approach offers a powerful framework for solving optimal control problems with continuous constraints and is the primary method used in \citet{usenko2017real,mercy2016spline,cho2021colreg,zhang2021real}. These are the papers mentioned in \cref{sec:previous-work}. 
+
+
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bu}{\mathbf{u}}
+A trajectory or control law is written by requiring $\mathbf x(t)$ and $\bu(t)$ in \cref{eq:optimal-control-problem} to be B-spline functions:
+\[
+  \bx(t; p_\bx, \mathbf t_\bx)(t) 
+    = \mathbf B^\top_{p_\bx, \mathbf t_\bx}(t)\mathbf c_\bx,
+  \quad
+  \bu(t; p_\bu, \mathbf t_\bu)(t)
+    = \mathbf B^\top_{p_\bu, \mathbf t_\bu}(t)\mathbf c_\bu,
+\]
+where $p$ and $\mathbf t$ denote the degree, knot vector and basis of the B-spline basis $\mathbf B$, respectively. The control points $\mathbf c_\bx$ and $\mathbf c_\bu$ are the coefficients of the B-spline representation, which together define the optimization variable. Additionally, the cost functional $J$, the state equation $\mathbf f$, and the algebraic constraints $\mathbf g$ have to be polynomial functions of $\bx(t)$ and $\bu(t)$. This ensures that the entire optimization problem can be expressed within the B-spline framework.
+
+
+Using the B-splines as a basis for the collocation scheme yields the following advantages over direct collocation and multiple shooting methods:
+\begin{itemize}
+  \item \textbf{Built-in continuity:} B-splines are $C^{p-1}$ continuous by construction, so trajectory dynamics are inherently smooth and no separate integration or continuity constraints are needed.
+  \item \textbf{Convex-hull property:} The curve lies within the convex hull of its control points. Imposing box or norm bounds on $\{\mathbf c_i\}$ and $\{\mathbf d_i\}$ guarantees that state/control limits hold for all $t\in [t_0,t_f]$.
+  \item \textbf{Global feasibility:} Coefficient-level constraints replace discrete collocation checks, eliminating the need for implicit integration at collocation nodes and ensuring constraint satisfaction over the entire interval.
+  \item \textbf{Adaptive fidelity:} Knot insertion increases local flexibility and reduces conservatism by refining the basis where tighter constraints are required.
+  \item \textbf{Dimensionality reduction:} A modest number of coefficients can capture complex maneuvers, yielding smaller \acrshort{NLP}s than multiple shooting methods while maintaining high accuracy and robustness.
+\end{itemize}
+
+
 \section{COLREGS}\label{sec:colregs}
 
-The following rules (shortened and paraphrased) are relevant for the V2V encounter \citep{COLREGS}:
+The following rules are relevant for the task of automated collision avoidance in maritime navigation and are paraphrased from the Convention on the International Regulations for Preventing Collisions at Sea (COLREGS) \citep{COLREGS}.
+
+% These rules are unfortunately for the task of automated collision avoidance not very precise, as the COLREGS are designed to be interpreted by human mariners, who can use their judgment and experience to apply the rules in specific situations. This can lead to ambiguity and uncertainty in automated systems, which may struggle to interpret the rules correctly in complex scenarios.
+
 
 \begin{itemize}
     \item \textbf{Rule 8: Action to avoid Collision}
@@ -44,54 +113,37 @@ The following rules (shortened and paraphrased) are relevant for the V2V encount
 \end{itemize}
 
 
+These rules are designed to ensure safe navigation and collision avoidance between vessels at sea. They provide a framework for determining the appropriate actions to take in various encounter situations, such as overtaking, head-on, and crossing scenarios. The rules emphasize the importance of clear communication, timely action, and adherence to good seamanship practices. \Cref{fig:v2v-encounters} illustrates the different encounter types, which are classified based on the relative position, speed and heading of the vessels involved. 
+
 \begin{figure}
     \centering
-    \includesvg[width=.8\textwidth,pretex=\footnotesize]{fig/illustrations/V2V Encounters.svg}
+    \includesvg[width=.9\textwidth,pretex=\footnotesize]{fig/illustrations/V2V Encounters.svg}
     \caption{Vessel to vessel encounter types as seen from vessel A. Figure courtesy of \cite{Thyri2022-VO}}
+    \label{fig:v2v-encounters}
 \end{figure}
 
-\section{Encounter Classification}
+% \section{Encounter Classification}
 
 
-\begin{figure}
-    \centering
-    \includesvg[width=.85\textwidth,pretex=\scriptsize]{fig/illustrations/Encounter Classification.svg}
-    \caption{Encounter classification based on the relative position and heading of the vessels. Illustration adapted from \cite{Thyri2022-Confined-Waters}}
-    \label{fig:encounter-classification}
-\end{figure}
+% \begin{figure}
+%     \centering
+%     \includesvg[width=.85\textwidth,pretex=\scriptsize]{fig/illustrations/Encounter Classification.svg}
+%     \caption{Encounter classification based on the relative position and heading of the vessels. Illustration adapted from \cite{Thyri2022-Confined-Waters}}
+%     \label{fig:encounter-classification}
+% \end{figure}
 
 
-\section{Optimal Control Theory}
-\subsection{Semi-infinite Programming}\label{sec:semi-infinite-programming}
 
-Semi-infinite programming is a class of optimization problems where the objective function is defined over a finite number of variables, while the constraints are defined over an infinite number of variables \citep{Bonnans2013-gt}. The general form of a semi-infinite programming problem is given by
-\begin{equation}\label{eq:semi-infinite-programming}
-    \begin{aligned}
-        \min_{\mathbf x \in \mathbb R^n} \quad & f(\mathbf x) \\
-        \text{s.t.} \quad & g(\mathbf x, \omega) \leq 0, \quad \forall \omega \in \Omega,
-    \end{aligned}
-\end{equation}
-where $f : \mathbb R^n \to \mathbb R$ and $g : \mathbb R^n \times \Omega \to \mathbb R$ are continuous functions, and $\Omega$ is a compact metric space, usually a continuous interval. If $\Omega$ is a finite set, e.g. $\Omega = \{\omega_1,\ldots,\omega_n\}$, \cref{eq:semi-infinite-programming} is reduced to a standard non-linear programming problem, as the feasible set can then be written as $g_i(\cdot) \leq 0, i = 1,\ldots,n$, where $g_i(\cdot) := g(\cdot, \omega_i)$ \citep{Bonnans2013-gt}.
 
-An optimal control problem in its continuous form can be formulated as a semi-infinite programming problem:
-\begin{equation}\label{eq:optimal-control-problem}
-    \begin{aligned}
-        \min_{\mathbf{x}(\cdot), \mathbf{u}(\cdot)} \quad & \int_{T} J(\mathbf{x}(t), \mathbf{u}(t), t) \, dt \\
-        \text{s.t.} \quad & \dot{\mathbf{x}}(t) = \mathbf f(\mathbf{x}(t), \mathbf{u}(t), t), \quad \mathbf{x}(t_0) = \mathbf{x}_0, \\
-        & \mathbf g(\mathbf{x}(t), \mathbf{u}(t), t) \leq \mathbf 0, \quad \forall t \in T,
-    \end{aligned}
-\end{equation}
-where $T = [t_0, t_f]$ is the time interval, $\mathbf{x}(t) \in \mathbb R^{n_x}$ is the state, $\mathbf{u}(t) \in \mathbb R^{n_u}$ is the control input, $J : \mathbb R^{n_x} \times \mathbb R^{n_u} \times \mathbb R \to \mathbb R$ is the cost functional, $\mathbf f : \mathbb R^{n_x} \times \mathbb R^{n_u} \times T \to \mathbb R^{n_x}$ is the state equation, and $\mathbf g : \mathbb R^{n_x} \times \mathbb R^{n_u} \times T \to \mathbb R^{n_g}$ are the algebraic path constraints.
-
-There are two main approaches to solve semi-infinite programming problems: discretization and relaxation. Discretization methods transform the infinite-dimensional problem into a finite-dimensional one by sampling the infinite set of constraints $\Omega$ at a finite number of points $\omega_i \in \Omega, i = 1, \ldots, N$. The resulting problem can then be solved using standard optimization techniques. Relaxation methods also replace the infinite constraint set with a finite set of constraints, but instead of sampling the infinite set, they introduce auxiliary variables to approximate the infinite-dimensional problem. This is often done by writing $g(\cdot, \omega)$ and $f$ in terms of a finite-dimentional basis, such as B-splines, and then solving the resulting finite-dimensional problem \citep{Dierckx1993}. More details on these methods are given in \cref{sec:multiple-shooting,sec:b-spline-relaxation}.
-
-\subsection{Multiple Shooting}\label{sec:multiple-shooting}
-Multiple shooting discretizes the infinite set of constraints by splitting the time interval $T = [t_0,t_f]$ into a finite set of points $\{t_0, t_1, \ldots, t_N\}$. At each shooting node, the state and control are introduced as separate variables. The continuous dynamics are then integrated on each subinterval, typically using Runge-Kutta methods, to ensure continuity between successive nodes.
- 
-\subsection{B-Spline Relaxation}\label{sec:b-spline-relaxation}
+\section{Summary}
+This chapter provides the theoretical foundation for the B-spline-based Model Predictive Control (MINMPC) framework. It introduces the relevant concepts from optimal control theory, semi-infinite programming, and B-spline theory, as well as the regulations that govern vessel-to-vessel encounters (COLREGS).
+The key elements of this chapter are summarized as follows:
 \begin{itemize}
-    \item B-spline basis functions
-    \item Convex hull property
-    \item Conservativeness
-    \item Knot insertion
+    \item \textbf{B-spline theory:}  
+      Definition, basis recursion, and key properties (non-negativity, local support, partition of unity, convex hull). Fundamental operations (addition, differentiation, integration, degree elevation, knot insertion) reduce to sparse linear or bilinear mappings on control coefficients. Extensions to PH B-splines admit closed-form curvature and arc-length; NURBS allow exact rational-curve representation.
+    \item \textbf{Optimal control methods:}  
+      Continuous trajectory optimization is cast as a semi‐infinite program. Two discretization/relaxation schemes were presented: multiple shooting (time‐grid integration with continuity constraints) and spline‐based relaxation (finite-dimensional B-spline basis exploiting convex-hull properties).
+  \item \textbf{COLREGS:}  
+    Relevant vessel-to-vessel encounter rules 8 and 13–17 have been summarized and classified into head-on, crossing, and overtaking situations, guiding the design of collision-avoidance constraints.
 \end{itemize}
+This theoretical foundation is essential for understanding the subsequent chapters, where the B-spline-based MINMPC framework is developed and applied to vessel-to-vessel encounters.

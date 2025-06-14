@@ -3,12 +3,16 @@
 
 \chapter{B-spline MINMPC}\label{chap:b-spline-minmpc}
 
-This chapter presents a unified framework for Mixed‐Integer Nonlinear Model Predictive Control (MINMPC) based on B‐spline trajectory representations. Ship motion, timing and collision‐avoidance constraints are expressed as polynomial inequalities in the B‐spline coefficients, yielding a smooth, continuous formulation capable of minimum‐time planning under dynamic and COLREGS requirements. Two vessel models are introduced: a spline‐relaxed double‐integrator and a Pythagorean‐hodograph (PH) Dubins model, each producing convex or polynomial constraints on velocity and acceleration. Collision avoidance against multiple targets is enforced via hyperplane separation and a Big–M mixed‐integer approach, allowing port‐ or starboard‐side passage decisions. A structured cost combines reference tracking, maneuver windows, and minimum‐time objectives, leveraging inverse‐Gramian norms to suppress high‐frequency oscillations. The complete MINMPC formulation is implemented in a Python/CasADi library with modular components for own‐ship, target‐ships and reference trajectories. 
+This chapter presents a unified framework for \acrfull{MINMPC} based on B‐spline trajectory representations. Ship motion, timing and collision‐avoidance constraints are expressed as polynomial inequalities in the B‐spline coefficients, yielding a smooth, continuous formulation capable of minimum‐time planning under dynamic and COLREGS requirements. Two vessel models are introduced: a spline‐relaxed double‐integrator and a Pythagorean‐hodograph (PH) Dubins model, each producing convex or polynomial constraints on velocity and acceleration. Collision avoidance against multiple targets is enforced via hyperplane separation and a Big–M mixed‐integer approach, allowing port‐ or starboard‐side passage decisions. A structured cost combines reference tracking, maneuver windows, and minimum‐time objectives, leveraging inverse‐Gramian norms to suppress high‐frequency oscillations. The complete MINMPC formulation is implemented in a Python/CasADi library with modular components for own‐ship, target‐ships and reference trajectories. 
 
 The chapter is organized into four parts: (i) dynamic models, (ii) collision constraints, (iii) objective design, and (iv) software implementation.
 
 
 \section{Dynamic Model}
+
+Two continuous‐time vessel models are relaxed into B‐spline form for MINMPC. First, a double‐integrator model enforces continuous position, velocity and acceleration with speed and thrust limits. Second, a Pythagorean‐hodograph Dubins model incorporates heading‐dependent motion and turn‐rate constraints. Each formulation yields convex or polynomial inequalities in the spline coefficients, enabling smooth, minimum‐time trajectory optimization under dynamic and COLREGS requirements.
+
+
 \subsection{Double Integrator}\label{sec:double-integrator}
 The double integrator model is a simple model that ensures a continuous position, velocity, and acceleration for the ship. The model is described by the following equations:
 \begin{subequations}\label{eq:double-integrator}
@@ -72,19 +76,17 @@ The only optimization variables needed are the B-Spline coefficients $\mathbf{p}
 
 
 \subsection{Dubins Model}\label{sec:dubins-model}
-\todo{Legg til tid på samme måte som i dobbeltintegratormodellen}
-
 The double integrator model is a simple model that ensures a continuous position, velocity, and acceleration for the ship. However, it does not take into account the ship's heading and turning radius. Dubins model (also referred to as the unicycle model) is a more realistic model for ship dynamics, as it describes a vehicle moving in a plane where the velocity points in the direction of the heading. In the motion control literature, there exists a variety of parameterizations for this kind of model. Notably \citet{mercy2017spline}, which uses the tangent half-angle substitution to represent the heading angle in a B-spline framework and \citet{Wang2020}, which uses a convex relaxation technique with sequential convex programming to exchange nonlinear equality constraints with convex inequalities. 
 
-The model in \cite{Wang2020} technique was discarded as the assumtions for the relaxation technique are not valid under a reference following scenario. \cite{mercy2017spline} used the tangent half-angle to parameterize the bicycle model, which also includes the steering angle as a control input. In this work, the simplified Dubins model was tested, but ultimately discarded as the Pythogerean-hodograph (PH) B-spline model has the same properties as the tangent half-angle model, but has in addition all the nice properties described in \cref{sec:pythogerean-hodograph}. See \cref{app:tangent-half-angle} for a more detailed description of the Dubins model and the tangent half-angle substitution.
+The model in \cite{Wang2020} was discarded as the assumtions for the relaxation technique are not valid under a reference following scenario. \cite{mercy2017spline} used the tangent half-angle to parameterize the bicycle model, which also includes the steering angle as a control input. In this work, the simplified Dubins model was tested, but ultimately discarded as the Pythogerean-hodograph (PH) B-spline model has the same properties as the tangent half-angle model, but has in addition all the nice properties described in \cref{sec:pythogerean-hodograph}. See \cref{app:tangent-half-angle} for a more detailed description of the Dubins model and the tangent half-angle substitution.
 
 Dubins model can be described by the following equations:
 \begin{subequations}\label{eq:dubins-model}
     \begin{align}
-        \dot p_N &= V \cos(\chi),       \label{eq:dubins-x} \\
-        \dot p_E &= V \sin(\chi),       \label{eq:dubins-y} \\
-        \dot \chi &= \omega,          \label{eq:dubins-chi} \\
-        |\omega| &\leq \omega_{\max}, \label{eq:dubins-omega} \\
+        \dot p_N(t) &= V \cos(\chi(t)),       \label{eq:dubins-x} \\
+        \dot p_E(t) &= V \sin(\chi(t)),       \label{eq:dubins-y} \\
+        \dot \chi(t) &= \omega(t),          \label{eq:dubins-chi} \\
+        |\omega(t)| &\leq \omega_{\max}, \label{eq:dubins-omega} \\
         0 \leq V &\leq V_{\max},      \label{eq:dubins-V} 
     \end{align}
 \end{subequations}
@@ -93,42 +95,61 @@ where $p_N$ and $p_E$ are the North and East position coordinates of the ship, a
     \begin{align}
         \dot p_N(x) &= u(x)^2 - v(x)^2, \label{eq:dubins-ph-x} \\
         \dot p_E(x) &= 2u(x)v(x),       \label{eq:dubins-ph-y} \\
-        \dot \chi(x) &= \omega(x) = \frac{2\big(u(x)v'(x) - u'(x)v(x)\big)}{u(x)^2 + v(x)^2},  \label{eq:dubins-ph-chi} \\
+        \dot \chi(x) &= \omega(x) 
+        = \frac{2}{t'(x)}\frac{\big(u(x)v'(x) - u'(x)v(x)\big)}{u(x)^2 + v(x)^2},  \label{eq:dubins-ph-chi} \\
         |\omega(x)| &\leq \omega_{\max},  \\
         V(x) &= u(x)^2 + v(x)^2 \\
         0 \leq V(x) &\leq V_{\max}, 
     \end{align}
 \end{subequations}
-where \cref{eq:dubins-ph-x,eq:dubins-ph-y} correspond to \cref{eq:hodograph-derivatives-a,eq:hodograph-derivatives-b} and \cref{eq:dubins-ph-chi} follows from \cref{eq:turn-rate}.
+where \cref{eq:dubins-ph-x,eq:dubins-ph-y} correspond to the PH parameterization in \cref{eq:ph-b-spline} and the turn rate \cref{eq:dubins-ph-chi} follows from \cref{eq:turn-rate} which is given in \cref{app:ph-spline-derivation}. The time variable $t(x)$ is introduced as a function of the parameter $x$, similar to the double integrator model in \cref{sec:double-integrator}. The speed $V(x)$ is given by a polynomial expression in the B-spline variables $u(x)$ and $v(x)$, and is therefore a B-spline expression as well. 
 
 To implement this model in an optimization framework, $u(x)$ and $v(x)$ are represented as B-spline functions, and the turn-rate constraints are derived as follows
 \begin{equation}
     \begin{aligned}
         |\omega(x)| &\le \omega_{\max} \\
-        \implies \left|\frac{2\big(u(x)v'(x) - u'(x)v(x)\big)}{u(x)^2 + v(x)^2}\right| &\le \omega_{\max} \\
-        \implies \left|u(x)v'(x) - u'(x)v(x)\right| &\le \frac{\omega_{\max}}{2}\left(u(x)^2 + v(x)^2\right),
+        \implies \left|\frac{2}{t'(x)}\frac{\big(u(x)v'(x) - u'(x)v(x)\big)}{u(x)^2 + v(x)^2}\right| &\le \omega_{\max} \\
+        \implies \left|u(x)v'(x) - u'(x)v(x)\right| &\le \frac{\omega_{\max}}{2}t'(x)V(x),
     \end{aligned}
 \end{equation}
 yeilding the polynomial constraints
 \begin{subequations}\label{eq:dubins-ph-turn-rate}
     \begin{align}
-        u(x)v'(x) - u'(x)v(x) &\le \frac{\omega_{\max}}{2}\left(u(x)^2 + v(x)^2\right), \\
-        u(x)v'(x) - u'(x)v(x) &\ge -\frac{\omega_{\max}}{2}\left(u(x)^2 + v(x)^2\right).
+        u(x)v'(x) - u'(x)v(x) &\le \frac{\omega_{\max}}{2}t'(x)V(x), \\
+        u(x)v'(x) - u'(x)v(x) &\ge -\frac{\omega_{\max}}{2}t'(x)V(x).
     \end{align}
 \end{subequations}
-
-The constraint in \cref{eq:dubins-ph-chi} is a rational B-spline function and could in theory be implemented as a NURBS directly in an optimization framework. However, this is not done as unlike the bilinear terms in \cref{eq:dubins-ph-turn-rate}, the rational term in \cref{eq:dubins-ph-chi} has a singularity when $u(x)$ and $v(x)$ are both zero.
-
+To retrieve the position $\mathbf{p}(x)$, the velocity is multiplied by the time derivative and integrated:
+\begin{equation}\label{eq:dubins-ph-position}
+    \mathbf{p}(x) = \mathbf p(t_0) 
+    + \int_0^x \begin{bmatrix} 
+        u(s)^2-v(s)^2 \\ 2 u(s)v(s)
+    \end{bmatrix} t'(s) ds,
+\end{equation}
+where $\mathbf p(0)$ is the initial position of the ship at $t=0$.
 
 \section{Target Ships}
-\todo{skriv introduksjon til dette avsnittet}
+Target ships (TS) are treated as dynamic obstacles whose trajectories are approximated by simple spline‐based kinematic models. TS motion is typically represented by a constant‐velocity B‐spline, enabling analytic position evaluation and integration. Collision‐avoidance constraints against each TS are then formulated via hyperplane separation within the same spline framework, ensuring continuous minimum‐separation guarantees. Mixed integer programming (MIP) is employed to enforce port or starboard passage decisions, allowing flexible COLREGS‐compliant maneuvers.
+
+\subsection{Constant Velocity Model}\label{sec:constant-velocity-model}
+The \acrshort{TS} is modeled as a constant velocity model:
+\begin{equation}
+    \dot{\mathbf{p}}_{\text{TS}}(t) = \mathbf{v}_{\text{TS}}(t)
+\end{equation}
+To fit this model into the B-spline framework with time as a variable, the velocity of the \acrshort{TS} is expressed as a B-spline function of the parameter $x$, and the position is retrieved by integrating the velocity multiplied by the time derivative:
+\begin{equation}\label{eq:ts-constant-velocity}
+    \mathbf{p}_{\text{TS}}(x) = \mathbf p_\text{TS}(0) + \int_0^x \mathbf{v}_{\text{TS}}(s) t'(s) ds,
+\end{equation}
+where $\mathbf p_\text{TS}(t_0)$ is the initial position of the \acrshort{TS} at $t=0$. 
+
+Unfortunately, using time as a variable $t(s)$ in the optimization problem, does not allow for anything other than constant velocity TSs, as the velocity as a function of the parameter $x$ is not a polynomial function of the position parameterized by the actual time passed $t$. In most cases, a constant velocity model is sufficient, as the \acrshort{TS} is usually not maneuvering. However, if a more complex model is needed, the optimization problem can be formulated with the time as a fixed variable, or by parameterizing on $t$ directly instead of $x$. To keep notation consistent, the former is used in this work.
 
 \subsection{Hyperplane Separation Theorem}
-The standard way to enforce collision constraints between the OS and TS is to apply a minumum distance constraint between the two ships as
+A simple approach to enforce collision constraints between the OS and TS is to apply a minumum distance constraint between the two ships as
 \begin{equation}\label{eq:minimum-distance}
     (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}})^\top (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \geq d_{\text{min}}^2,
 \end{equation}
-where $\mathbf p_{\text{OS}}$ and $\mathbf p_{\text{TS}}$ are the positions of the OS and TS, respectively, and $d_{\text{min}}$ is the minimum distance between the two ships. Examples of this type of constraint can be found in \cite{Thyri2022-MPC}.\todo{flere kilder} This constraint is non-convex, as the feasible region for the OS lies outside the circle with radius $d_{\text{min}}$ centered at the TS.
+where $\mathbf p_{\text{OS}}$ and $\mathbf p_{\text{TS}}$ are the positions of the OS and TS, respectively, and $d_{\text{min}}$ is the minimum distance between the two ships. This constraint is non-convex, as the feasible region for the OS lies outside the circle with radius $d_{\text{min}}$ centered at the TS.
 
 Another method of enforcing collision avoidance is to use the hyperplane separation theorem. Although still non-convex, this method allows for a more flexible formulation of the constraint, as it is not only restricted to circular shapes. 
 The hyperplane separation theorem states that for two disjoint convex sets $\mathcal A$ and $\mathcal B$, there exists $\mathbf n\in \mathbb R^n\backslash\{\mathbf0\}$ and $b\in\mathbb R$ such that the hyperplane $H=\{\mathbf x\in\mathbb R^n \mid \mathbf n^\top \mathbf x = b\}$ separates $\mathcal A$ and $\mathcal B$ \citep{Boyd2004-ih}. In other words, there exists a function $a^\top x - b$ that is non-negative for all $x \in \mathcal A$ and non-positive for all $x \in \mathcal B$. 
@@ -205,13 +226,13 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
 
 \begin{figure}
     \centering
-    \begin{subfigure}[t]{\textwidth}
+    \begin{subfigure}[t]{.8\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\scriptsize]{fig/b-spline/non-convex-obstacle-mi-sb.svg}
         \caption{Starboard maneuver ($z_j=1$)}
         \label{fig:non-convex-obstacle-mi-sb}
     \end{subfigure}
-    \begin{subfigure}[t]{\textwidth}
+    \begin{subfigure}[t]{.8\textwidth}
         \centering
         \includesvg[width=\textwidth,pretex=\scriptsize]{fig/b-spline/non-convex-obstacle-mi-port.svg}
         \caption{Port maneuver ($z_j=0$)}
@@ -475,7 +496,7 @@ and $q_{j,p,\mathbf{t}} = (t_{j+p}-t_j)$ still.
 
 
 \subsection{Transforming Between Bases}\label{sec:basis-transformation}
-In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$\todo[inlinepar]{ikke helt sant} \citep{Grimstad2016}. Moreover, the coefficients in the new basis can be found by solving a linear system of equations. The following basis transformation method is employed in many algorithms in literature, and forms the foundation for the rest of the implementations in this chapter, which is why a thorough explanation of this method is given attention here.
+In order to perform binary operations on spline functions such as multiplication and addition, it is necessary to be able to represent the same spline function in different bases. A powerful result from theory is that any spline function $\mathbf S$ expressed in a given basis $\mathbf B_{p,\mathbf t}$ can be represented in any other basis $\mathbf B_{q,\boldsymbol \tau}$ as long as $q \geq p$ and $\mathbf t \subseteq \boldsymbol \tau$ \citep{Grimstad2016}. Moreover, the coefficients in the new basis can be found by solving a linear system of equations. The following basis transformation method is employed in many algorithms in literature, and forms the foundation for the rest of the implementations in this chapter, which is why a thorough explanation of this method is given attention here.
 
 The goal is to find the transformation matrix $\mathbf T$ such that $\mathbf c_{q, \boldsymbol \tau} = \mathbf T \mathbf c_{p, \mathbf t}$, where $\mathbf c_{q, \boldsymbol \tau}$ and $\mathbf c_{p, \mathbf t}$ are the coefficients of the spline function $f(x)$ in the bases $\mathbf B_{q,\boldsymbol \tau}$ and $\mathbf B_{p,\mathbf t}$, respectively.
 
@@ -529,7 +550,11 @@ The matrix $\mathbf T$ is then simply
 \begin{equation}\label{eq:transformation-matrix-solution}
     \mathbf T = [\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \xi_{q,\boldsymbol \tau})^\top]^{-1} [\mathbf B_{p,\mathbf t}(\boldsymbol \xi_{q,\boldsymbol \tau})^{\top}].
 \end{equation}
-As the B-spline basis functions are linearly independent, and the Greville abscissae are chosen such that each basis function is sampled at a point near the ``center'' of its support, the matrix $[\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \xi_{q,\boldsymbol \tau})^\top]$ is always invertible. This method follows from the Schoenberg-Whitney Theorem \citep{schoenberg1988polya} for which a simple proof can be found in \cite{schoenberg2022proof}. The matrix $\mathbf A$ in \cref{eq:transformation-matrix} is known as a \emph{Collocation matrix} in the literature \todo[inlinepar]{Finn kilde} and can be used to interpolate an arbitrary function with a B-spline by replacing the right hand side of \cref{eq:transformation-matrix} with the function values sampled at the Greville abscissae.
+As the B-spline basis functions are linearly independent, and the Greville abscissae are chosen such that each basis function is sampled at a point near the center of its support, the matrix $[\mathbf B_{q,\boldsymbol \tau}(\boldsymbol \xi_{q,\boldsymbol \tau})^\top]$ is always invertible. This method follows from the Schoenberg-Whitney Theorem \citep{schoenberg1988polya} and a simple proof of this entire method can be found in \cite{schoenberg2022proof}. 
+
+The matrix $\mathbf A$ in \cref{eq:transformation-matrix} is known as a \emph{Collocation matrix} and can be used to approximate an arbitrary function with a B-spline by replacing the right hand side of \cref{eq:transformation-matrix} with the function values sampled at the Greville abscissae. 
+If the basis of the target spline is chosen such that it is the minimal basis (lowest degree and fewest knots) that can represent the b-spline expression on the right hand side, then the transformation matrix $\mathbf T$ always gives the \textit{exact} coefficients of the target spline in the new basis. This is a powerful result, as it allows for the transformation of B-spline coefficients between different bases without the need for numerical integration or interpolation.
+And while this is seldom the most efficient way to compute this transformatiobn, it is one of the most general and robust methods.
 
 \begin{algorithm}
     \caption{B-spline Basis Transformation}\label{alg:basis-transformation}
@@ -905,7 +930,7 @@ The norm is a measure of the size of the function, and its square is useful in a
         &= \mathbf c^\top \mathbf G \mathbf c,
 \end{aligned}
 \end{equation}
-where the matrix $\mathbf G$ is the Gramian matrix of the B-spline basis $\mathbf B_{p, \mathbf t}(x)$. The Gramian matrix encodes the autocorrelation  structure of the B-spline basis functions with one of its defining properties being that it is symmetric and positive semi-definite \citep{horn2013positive}. With a basis defined on a regular knot vector, the Gramian can be shown to be symmetric and positive definite \acrshort{SPD}, which means that the norm is well-defined and non-zero for all non-zero B-splines.  Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. In this work, the B-spline norm $\|\mathbf f\|_\mathbf H$ on a spline function $f: \mathbb R\to\mathbb R$ with $n$ basis functions, will refer to computing the bilinear form
+where the matrix $\mathbf G$ is the Gramian matrix of the B-spline basis $\mathbf B_{p, \mathbf t}(x)$. The Gramian matrix encodes the autocorrelation  structure of the B-spline basis functions with one of its defining properties being that it is symmetric and positive semi-definite \citep{horn2013positive}. With a basis defined on a regular knot vector, the Gramian can be shown to be symmetric and positive definite \acrshort{SPD}, which means that the norm is well-defined and non-zero for all non-zero B-splines.  Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. In this work, the $\bf H$-norm $\|\mathbf f\|_\mathbf H$ on a spline function $f: \mathbb R\to\mathbb R$ with $n$ basis functions, will refer to computing the bilinear form
 \begin{equation}\label{eq:b-spline-norm}
     \|f\|_\mathbf H^2 = \mathbf{c}^\top \mathbf H \mathbf {c}
 \end{equation}
@@ -1077,7 +1102,107 @@ is a degree-$q$ NURBS with weights $w_i$, knot vector $\boldsymbol{\tau}$ and co
 \end{algorithm}
 
 
+\subsection{Summary of B-spline operations}\label{sec:summary-b-spline-operations}
+All spline operations are implemented via basis transformations: each input spline is mapped into a chosen target B-spline basis by solving the collocation system at Greville abscissae (Algorithm~\ref{alg:basis-transformation}), producing sparse coefficient mappings. Once in the common basis, differentiation, integration, addition, multiplication, inner products, and rational-to-NURBS conversion reduce to simple linear or bilinear operations on the control coefficients. Although this general collocation-based approach is robust and uniform, specialized closed-form or recursive algorithms exist for each operation (e.g.\ explicit derivative matrices, direct knot insertion, Cox–de Boor recursions) that offer greater computational efficiency.
 
+
+\Cref{tab:operations} lists the core B-spline operations, their input/output spline spaces, the transformation type applied to the coefficient vectors, and the implementation reference. All operations are realized via sparse linear or bilinear mappings on the control coefficients; rational operations are handled through NURBS conversion.
+
+\renewcommand{\arraystretch}{1.2}
+\begin{table}
+    \centering
+    \small
+    \begin{tabular}{|l|l|l|l|c|}
+    \hline
+    \textbf{Operation} 
+      & \textbf{Expression} 
+        & \textbf{Space} 
+          & \textbf{Coefficients} 
+            & \textbf{Implementation} \\
+    \hline
+    \hline
+    Evaluation   
+      & $\mathbf f(x)$ 
+        & $\mathcal S^n_{p}\to\mathbb{R}^n$ 
+          & Linear 
+            & \cref{eq:b-spline-recurrence} \\
+    \hline
+    Derivative   
+      & $\mathbf f'$  
+        & $\mathcal S^n_{p}\to\mathcal S^n_{p-1}$ 
+          & Linear 
+            & \cref{eq:b-spline-derivative} \\
+    \hline
+    Integral     
+      & \rule{0pt}{4ex}$\displaystyle\int \mathbf f(x)\,dx$ 
+        & $\mathcal S^n_{p}\to\mathcal S^n_{p+1}$ 
+          & Linear 
+            & \cref{eq:b-spline-integral} \\[1.5ex]
+    \hline
+    Degree elevation  
+      & $\mathbf f$  
+        & $\mathcal S^n_{p}\to\mathcal S^n_{p+1}$ 
+          & Linear 
+            & \Cref{alg:degree-elevation} \\      
+    \hline
+    Knot insertion    
+      & $\mathbf f$  
+        & $\mathcal S^n_{p}\to\mathcal S^n_{p}$ 
+          & Linear 
+            & \Cref{alg:knot-refinement} \\
+    \hline
+    \hline
+    Vector Addition  
+      & $\mathbf a + \mathbf f$  
+        & $\mathbb R^n \times\mathcal S^n_{p}\to\mathcal S^n_{p}$ 
+          & Linear 
+            & \Cref{alg:addition} \\
+    \hline
+    Scalar multiplication  
+      & $a\,\mathbf f$  
+        & $\mathbb R\times\mathcal S^n_{p}\to\mathcal S^n_{p}$ 
+          & Linear 
+            & $-$ \\
+    \hline
+    Addition     
+      & $\mathbf f +\mathbf g$  
+        & $\mathcal S^n_{p_1}\times\mathcal S^n_{p_2}\to\mathcal S^n_{\max(p_1,p_2)}$ 
+          & Linear 
+            & \Cref{alg:addition} \\[.5ex]
+    \hline
+    Multiplication   
+      & $\mathbf f\,g$  
+        & $\mathcal S^n_{p_1}\times\mathcal S_{p_2}\to\mathcal S^n_{p_1+p_2}$ 
+          & Bilinear 
+            & \Cref{alg:multiplication} \\
+    \hline
+    PW inner product  
+      & $\mathbf f \cdot \mathbf g$  
+        & $\mathcal S^n_{p_1}\times\mathcal S^n_{p_2}\to\mathcal S_{p_1+p_2}$
+          & Bilinear 
+            & \cref{eq:dot-product-pointwise} \\
+    \hline
+    Inner product    
+      & $\langle \mathbf f, \mathbf g \rangle$  
+        & $\mathcal S^n_{p_1}\times\mathcal S^n_{p_2}\to\mathbb R$ 
+          & Bilinear 
+            & \cref{eq:dot-product} \\
+    \hline
+    Division  
+      & \rule{0pt}{4ex}$\displaystyle\frac{\mathbf f}{g}$  
+        & $\mathcal S^n_{p_1}\times\mathcal S_{p_2}\to\mathcal B^n_{\max(p_1,p_2)}$
+          & Rational 
+            & \Cref{alg:nurbs-conversion} \\[1.5ex]
+    \hline
+    \end{tabular}
+    \caption{Summary of B-spline operations and their properties. The symbols $f$ and $g$ denote B-spline functions, while $a$ denotes a scalar. Their corresponding bold-faced symbols denote vector-valued functions and vectors in $\mathbf R^n$ space respectively. The ``Coefficients'' column indicates the transformation type of the operation on the coefficients. The ``Space'' column indicates the space of the resulting B-spline. The knot vectors for these spaces are ommited for brevity and can be found in the references in the ``Implementation'' column.}
+    \label{tab:operations}
+\end{table}
+\renewcommand{\arraystretch}{1}
+    
+
+
+\FloatBarrier
 \subsection{Python Library}\label{sec:python-implementation}
 
 The B-spline MINMPC is implemented in Python using CasADi \citep{casadi} and numpy \citep{numpy}. The code is organized into two components: a B-spline library and a CasADi wrapper. The B-spline library follows the structure of the OMGTools library by \citet{mercy2016spline} with enhancements for type safety, vector-valued spline support, small performance optimizations, and added compatibility with CasADi’s MIP solvers. All B-spline transformations and operations are hidden behind a clean interface, so that spline variables and constraints can be declared on symbolic variables just like native CasADi types.

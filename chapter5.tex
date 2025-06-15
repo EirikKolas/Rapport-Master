@@ -164,11 +164,10 @@ In Case 1.0 a solution is found that passes the TS on the south side. This is ex
     \label{fig:stationary-targets-subfigures}
 \end{figure}
 
-\todo[inline]{generer nye plot som representerer det som er skrevet i figurteksten.}
 
-Cases 1.1-1.3 in \cref{fig:stationary-targets-subfigures} introduces a second TS. Here it is demonstrated that for the same initial conditions and parameters, the B-MINMPC finds different solutions regarding starboard and port passing depending on the position of the second TS\todo{endre kostfunksjonen igjen slik at dette faktisk skjer}. This is the main goal of this constraint formulation in this work. 
+Cases 1.1-1.3 in \cref{fig:stationary-targets-subfigures} introduces a second TS. Here it is demonstrated that for the same initial conditions and parameters, the B-MINMPC finds different solutions regarding starboard and port passing depending on the position of the second TS. This is the main goal of this constraint formulation in this work. 
 
-Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of changing the weights of the cost function. In \cref{fig:stationary-target-5} $w_\text{time}$ is set to 100, which means that minimizing the total time of the trajectory is prioritized. This results in a trajectory that passes both TSs with a starboard maneuver, as this is the fastest route. Another effect of this is that the trajectory is more aggressive, yielding sharp turns between straight segments. With $w_\text{ref}$ set to 100 in case 1.5, (\cref{fig:stationary-target-6}), the solution trajectory passes between the two TSs, as this yields the lowest overall reference error. The same argument can be made for case 1.6 from \cref{fig:stationary-target-7}, where $w_\text{mv}$ is set to $1/100$, a port side maneuver is chosen to minimize the control effort. This is a result of how the TS at $(-10, 200)$ is positioned with a bias towards the south close to the end of the reference trajectory, and so a less agressive maneuver is possible on the northern side. \todo{endre kostfunksjonen igjen slik at dette faktisk skjer}
+Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of changing the weights of the cost function. In \cref{fig:stationary-target-5} $w_\text{time}$ is set to 100, which means that minimizing the total time of the trajectory is prioritized. This results in a trajectory that passes both TSs with a port maneuver, as this is the fastest route. Another effect of this is that the trajectory is more aggressive, yielding sharp turns between straight segments. With $w_\text{ref}$ set to 100 in case 1.5, (\cref{fig:stationary-target-6}), the solution trajectory passes between the two TSs, as this yields the lowest overall reference error. The same argument can be made for case 1.6 from \cref{fig:stationary-target-7}, where $w_\text{mv}$ is set to $1/100$, a port side maneuver is chosen to minimize the control effort. This is a result of how the TS at $(-10, 200)$ is positioned with a bias towards the south close to the end of the reference trajectory, and so a less agressive maneuver is possible on the northern side.
 
 In all cases, while being initialized with the reference, the B-MINMPC is able to find a solution that passes the TSs while respecting the constraints. In other words, using the mixed integer constraints presented in \cref{sec:collision-constraints} and a simple initialization scheme, a convex optimizer is able to more robustly find the optimal solution in a non-convex environment than a convex optimizer without these constraints. This is an improvement over the previous work in \cite{Thyri2022-MPC,prosjektoppgave} where a carefully crafted initial guess had to be construced to facilitate a maneuver towards the desired passing side.
 
@@ -489,10 +488,29 @@ The simulation study confirms that the B-spline MINMPC framework delivers smooth
     Time‐, reference‐error‐, maneuver‐, and acceleration‐weights enable fine‐grained control over speed and course change trade‐offs. This flexibility comes with scenario-dependent tuning: aggressive time weights straighten trajectories, high reference weights tighten path tracking, and maneuver‐window weights concentrate course changes. 
   \item \textbf{Basis fidelity:}  
     Quadratic bases (12–24 control points) capture primary maneuvers with moderate variable counts. Knot refinement and degree elevation localize course changes and reduce speed dips at the expense of larger NLPs. Matching knot spacing and degree to maneuver duration is critical for achieving desired deviation magnitudes.
-  \item \textbf{Implementation ease:}  
-    The Python/CasADi library with modular classes simplifies scenario setup, solver configuration, and reuse of model components for own‐ship, targets, and references.
 \end{itemize}
 
 Overall, the results validate that the B-spline MINMPC achieves a practical balance between trajectory quality, COLREGS compliance, and computational tractability in non-convex maritime motion‐planning tasks. However, the reliance on scenario‐specific tuning and the complexity of COLREGS compliance metrics highlight the need for further research into more generalizable, parameter‐free evaluation methods. 
 The primary strength of the B-MINMPC framework lies in its capacity to generate trajectories that adhere to COLREGS through the adjustment of a limited set of parameters, as detailed in \cref{tab:simulation-parameters}. This feature simplifies the development of COLREGS-compliant motion planners by establishing a clear relationship between parameter settings and the resultant trajectory characteristics. Other methods such as \citet{Hagen2018,cho2021colreg,Menges2024} do not rely on such a parameterization, but at the cost of having limited control over the trajectory shape. 
 Future research will focus on bridging the gap between the human-interpretable COLREGS rules and clear tractable COLREGS-compliant metrics, and using these to further automate the tuning of the B-MINMPC parameters.
+
+
+\begin{table}[htbp]
+    \centering
+    % \small
+    \begin{tabular}{|l|l|p{5cm}|}
+        \hline
+        \textbf{Parameter} & \textbf{Coefficient Values} & \textbf{Effect} \\
+        \hline
+        $w_\text{ref}$ & \rule{0pt}{2.5ex}$[10, 0, 0, 0, 0, 0, 0, 0, 0, 10]^\top$ & \multirow{3}{5cm}{Localizes course changes to within maneuver windows, and convergence to the reference trajectory outside them.} \\
+        $w_\text{mv}$ & $[1, 0, 0, 0, 1, 1, 0, 0, 0, 1]^\top$ &  \\
+        $w_\text{acc}$ & $\begin{bmatrix}0, 0, \frac{1}{10}, 0, 0, 0, 0, \frac{1}{10}, 0, 0\end{bmatrix}^\top$ & \\[2.5ex]
+        \hline
+        $w_\text{ref}$ & \rule{0pt}{2.5ex}$10$ & \multirow{3}{5cm}{Enforces strict adherence to the reference trajectory, facilitating speed over course changes in maneuver windows.} \\
+        $w_\text{mv}$ & $[1, 0, 0, 0, 1, 1, 0, 0, 0, 1]^\top$ & \\
+        $w_\text{acc}$ & $\begin{bmatrix}0, 0, \frac{1}{10}, 0, 0, 0, 0, \frac{1}{10}, 0, 0\end{bmatrix}^\top$ & \\[2.5ex]
+        \hline
+    \end{tabular}
+    \caption{Summary of the parameters used in the simulation study and their effects on the trajectory generation.}
+    \label{tab:simulation-parameters-summary}
+\end{table}

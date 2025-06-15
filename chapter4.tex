@@ -772,10 +772,9 @@ Scalar addition in the form of $f(x) + a$ can be performed by simply adding the 
 
 \subsection{Multiplication}\label{sec:multiplication}
 
-For addition, the common basis had to have degree $q \geq \max(p_1, p_2)$, but for multiplication, the degree of the common basis must be $q = p_1 + p_2$\todo[inlinepar]{forklar hvorfor}. Intuitively, this is because the product of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $p_1 + p_2$ while the sum of two polynomials of degree $p_1$ and $p_2$ will have degree of at most $\max(p_1, p_2)$.
-
 In order to find the product of two B-splines, an approach similar to \cref{sec:basis-transformation} can be used. Given two spline functions $f(x) = \mathbf{B}_{p_1, \mathbf{t}_1}^{\top}(x) \mathbf{c}_1$ and $g(x) = \mathbf{B}_{p_2, \mathbf{t}_2}^{\top}(x) \mathbf{c}_2$, the goal is to find a common basis $\mathbf{B}_{q, \boldsymbol{\tau}}^{\top}(x)$ with degree $q$ and knot vector $\boldsymbol{\tau}$ such that $h(x) = \mathbf{B}_{q, \boldsymbol{\tau}}^{\top}(x) \mathbf{d} = f(x)  g(x)$.
 
+Unlike addition (where $q \geq \max(p_1, p_2)$), multiplication requires $q \ge p_1 + p_2$, which is analagous to the fact that the product of polynomials with degrees $p_1$ and $p_2$ results in a polynomial of degree $p_1 + p_2$.
 Writing the equation for the product of the two B-splines gives
 \begin{subequations}\label{eq:b-spline-product}
     \begin{align}
@@ -930,7 +929,7 @@ The norm is a measure of the size of the function, and its square is useful in a
         &= \mathbf c^\top \mathbf G \mathbf c,
 \end{aligned}
 \end{equation}
-where the matrix $\mathbf G$ is the Gramian matrix of the B-spline basis $\mathbf B_{p, \mathbf t}(x)$. The Gramian matrix encodes the autocorrelation  structure of the B-spline basis functions with one of its defining properties being that it is symmetric and positive semi-definite \citep{horn2013positive}. With a basis defined on a regular knot vector, the Gramian can be shown to be symmetric and positive definite \acrshort{SPD}, which means that the norm is well-defined and non-zero for all non-zero B-splines.  Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. In this work, the $\bf H$-norm $\|\mathbf f\|_\mathbf H$ on a spline function $f: \mathbb R\to\mathbb R$ with $n$ basis functions, will refer to computing the bilinear form
+where the matrix $\mathbf G$ is the Gramian matrix of the B-spline basis $\mathbf B_{p, \mathbf t}(x)$. The Gramian matrix encodes the autocorrelation  structure of the B-spline basis functions with one of its defining properties being that it is symmetric and positive semi-definite \citep{horn2013positive}. With a basis defined on a regular knot vector, the Gramian can be shown to be \acrfull{SPD}, which means that the norm is well-defined and non-zero for all non-zero B-splines.  Knowing the Gramian of the B-spline basis, the squared norms of the corresponding B-spline can be easily computed. In this work, the $\bf H$-norm $\|\mathbf f\|_\mathbf H$ on a spline function $f: \mathbb R\to\mathbb R$ with $n$ basis functions, will refer to computing the bilinear form
 \begin{equation}\label{eq:b-spline-norm}
     \|f\|_\mathbf H^2 = \mathbf{c}^\top \mathbf H \mathbf {c}
 \end{equation}

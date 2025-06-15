@@ -16,5 +16,7 @@
 \vspace{0.5cm}
 
 
+Autonomous electric ferries offer a sustainable alternative for urban waterborne transit, yet safe navigation in crowded waterways demands strict adherence to the international regulations for preventing collisions at sea. This paper presents a novel mixed‐integer nonlinear model‐predictive control framework that leverages B-spline trajectory parameterizations for both vessel states and time, transforming kinematic, dynamic, and COLREGS constraints into convex or polynomial inequalities on control‐point coefficients. A Big–M mixed-integer scheme encodes port/window passage decisions via separating hyperplanes, while an inverse-Gramian weighting suppresses high-frequency oscillations in the tracking error.
+The method is implemented in a Python/CasADi library offering modular components for own-ship dynamics, obstacle models, and structured cost functions. Simulation scenarios---including stationary obstacles, head-on encounters, crossing situations, and overtaking maneuvers---demonstrate seamless integration of continuous-time collision avoidance, and tunable trajectory shaping through spline weights on the objective function. 
 
 \cleardoublepage

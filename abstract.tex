@@ -11,12 +11,29 @@
 \fancyfoot[LE,RO]{\thepage}
 \fancypagestyle{plain}{\fancyhf{}\fancyfoot[LE,RO]{\thepage}\renewcommand{\headrulewidth}{0ex}}
 
-\section*{Abstract}
+\section*{\large Abstract}
 \addcontentsline{toc}{chapter}{Abstract}	
 \vspace{0.5cm}
 
 
-Autonomous electric ferries offer a sustainable alternative for urban waterborne transit, yet safe navigation in crowded waterways demands strict adherence to the international regulations for preventing collisions at sea. This paper presents a novel mixed‐integer nonlinear model‐predictive control framework that leverages B-spline trajectory parameterizations for both vessel states and time, transforming kinematic, dynamic, and COLREGS constraints into convex or polynomial inequalities on control‐point coefficients. A Big–M mixed-integer scheme encodes port/window passage decisions via separating hyperplanes, while an inverse-Gramian weighting suppresses high-frequency oscillations in the tracking error.
-The method is implemented in a Python/CasADi library offering modular components for own-ship dynamics, obstacle models, and structured cost functions. Simulation scenarios---including stationary obstacles, head-on encounters, crossing situations, and overtaking maneuvers---demonstrate seamless integration of continuous-time collision avoidance, and tunable trajectory shaping through spline weights on the objective function. 
+Safe navigation in crowded waterways demands strict adherence to the international regulations for preventing collisions at sea (COLREGS). 
+This paper presents a novel mixed‐integer nonlinear model‐predictive control framework that leverages B‐spline trajectory parameterizations for both vessel states and time. It transforms kinematic, dynamic, and COLREGS constraints into convex or polynomial inequalities on the spline control‐point coefficients.
+A Big–M mixed-integer scheme encodes port/starboard passage decisions via separating hyperplanes, enabling efficient resolution of the nonconvex collision-avoidance problem in a single mixed-integer nonlinear program (MINLP).
+A novel inverse-Gramian weighting suppresses high-frequency oscillations in the tracking error without affecting maneuverability or requiring additional tuning. The resulting optimization problem is a sparse finite-dimensional  MINLP with gauranteed continuous-time constraint adherence, enabling smooth, safe, COLREGS-compliant trajectories that can be efficiently solved using a standard MINLP solver.
+
+The method is implemented in Python with CasADi offering modular components for own-ship dynamics, obstacle models, and structured cost functions, made available as an open source library. Simulation scenarios---including stationary obstacles, head-on encounters, crossing situations, and overtaking maneuvers---demonstrate seamless integration of continuous-time collision avoidance constraints, and tunable trajectory shaping through spline weights on the different objective function terms. The framework achieves smooth trajectories facilitating COLREGS compliance, with robust convergence in nonconvex dynamic environments. 
+
+\cleardoublepage
+
+\section*{Sammendrag}
+\addcontentsline{toc}{chapter}{Sammendrag}
+\vspace{0.5cm}
+
+Trygg navigasjon i travle farvann krever streng etterlevelse av de internasjonale reglene for å forhindre sammenstøt til sjøs (COLREGS).
+Denne artikkelen presenterer et rammeverk for modellprediktiv kontroll med blandet-heltallsprogrammering som benytter en B-spline-parametrisering av både fartøystsbaner og tid. Kinematiske, dynamiske og COLREGS-betingelser omformes til konvekse eller polynomielle ulikheter i spline-koeffisientene.
+En Big–M blandet-heltallsløsning koder beslutninger om babord/styrbord passering ved hjelp av separerende hyperplan, noe som muliggjør effektiv løsning av det ikke-konvekse kollisjonsunngåelsesproblemet i én enkelt blandet-heltalls ikkelineær program (MINLP).
+En ny inverse-Gramian-vektlegging demper høyfrekvente svingninger i sporingsfeilen uten å redusere manøvrerbarhet eller kreve ekstra tuning. Det resulterende optimaliseringsproblemet er et glissent endelig-dimensjonalt MINLP med garantert kontinuerlig-tid overholdelse av beskrankningene, som tilrettelegger for jevne, trygge og COLREGS-kompatible baner som kan løses effektivt med en standard MINLP-løser.
+
+Metoden er implementert i Python med CasADi og tilbyr modulære komponenter for egenfartøysdynamikk, modellering av hindringer og strukturerte kostnadsfunksjoner, tilgjengelig som et open source kode-bibliotek. Simuleringsscenarier — inkludert stasjonære hindringer, møte i motgående kurs, kryssende situasjoner og forbikjøringer — demonstrerer sømløs integrasjon av kontinuerlig-tid kollisjonsunngåelsesbegrensninger og justerbar baneform gjennom spline-vekter på ulike ledd i objektivfunksjonen. Rammeverket oppnår jevne baner som fremmer COLREGS-etterlevelse, med robust konvergens i ikke-konvekse dynamiske miljøer.
 
 \cleardoublepage

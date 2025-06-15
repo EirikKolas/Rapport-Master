@@ -171,9 +171,7 @@ Cases 1.1-1.3 in \cref{fig:stationary-targets-subfigures} introduces a second TS
 Cases 1.4-1.6 in \cref{fig:stationary-targets-subfigures-2} show the effect of changing the weights of the cost function. In \cref{fig:stationary-target-5} $w_\text{time}$ is set to 100, which means that minimizing the total time of the trajectory is prioritized. This results in a trajectory that passes both TSs with a starboard maneuver, as this is the fastest route. Another effect of this is that the trajectory is more aggressive, yielding sharp turns between straight segments. With $w_\text{ref}$ set to 100 in case 1.5, (\cref{fig:stationary-target-6}), the solution trajectory passes between the two TSs, as this yields the lowest overall reference error. The same argument can be made for case 1.6 from \cref{fig:stationary-target-7}, where $w_\text{mv}$ is set to $1/100$, a port side maneuver is chosen to minimize the control effort. This is a result of how the TS at $(-10, 200)$ is positioned with a bias towards the south close to the end of the reference trajectory, and so a less agressive maneuver is possible on the northern side. \todo{endre kostfunksjonen igjen slik at dette faktisk skjer}
 
 In all cases, while being initialized with the reference, the B-MINMPC is able to find a solution that passes the TSs while respecting the constraints. In other words, using the mixed integer constraints presented in \cref{sec:collision-constraints} and a simple initialization scheme, a convex optimizer is able to more robustly find the optimal solution in a non-convex environment than a convex optimizer without these constraints. This is an improvement over the previous work in \cite{Thyri2022-MPC,prosjektoppgave} where a carefully crafted initial guess had to be construced to facilitate a maneuver towards the desired passing side.
-\todo{diskuter at det er vanskelig med metrikker for tidlig manøver. Si hvorfor vi ikke bruker metrikker.}
-\todo{kan drøfte total bruk av hstighetsendring, vs total kursendring.}
-\todo[inline]{poengter at der er like høy kompleksitet i å lage metrikker for colregs compliance som en colregs compliant motion planner, fordi colregs er skrevet for mennesker. Bygger på kapteinens tolkning av situasjonen. lite vennlig for programmering. Kyle Vohler har lagd metrikker, men de er tuningavhengig.}
+
 \begin{figure}
     \centering
     \begin{subfigure}[b]{\textwidth}
@@ -375,9 +373,9 @@ where
 \begin{equation}
 P'_i = \tfrac1h (P_{i+1} - P_i),
 \qquad
-P'_{i+1} = \tfrac1h(P_{i+2} - P_{i+1}).
+P'_{i+1} = \tfrac1h(P_{i+2} - P_{i+1}),
 \end{equation}
-When the maximum speed constraint on $\mathbf p_\text{OS}$ is active: $\|P'_i\|=\|P'_{i+1}\|=v_{\max}$ .  Let $\theta\in[0,\pi]$ be the smallest angle between the three consecutive points $P_i,P_{i+1},P_{i+2}$ so that
+denote the velocities at the control points for the derivative spline. When the maximum speed constraint on $\mathbf p_\text{OS}$ is active, $\|P'_i\|=\|P'_{i+1}\|=v_{\max}$, which simplifies the following equation:  Let $\theta\in[0,\pi]$ be the smallest angle between the three consecutive points $P_i,P_{i+1},P_{i+2}$ so that
 \begin{equation}
 P'_i\cdot P'_{i+1} = v_{\max}^2\cos\theta.
 \end{equation}
@@ -397,11 +395,6 @@ The situation in Case 2.1 for a 13 control point degree 3 basis for $\mathbf p_\
 
 \subsubsection{Cases 2 and 3: Head-on and Overtaking Situations}
 Similar results are seen for the crossing and overtaking cases, where the only differences are number of OSs that have to maneuver and the distances they have to travel to avoid the TS. These scenarios are run with the same weight parameters as Case 2.0 (see \cref{tab:batch-params}), but with different TS courses and speeds. For completeness' sake the results are shown in \cref{fig:head-on} and \cref{fig:overtaking} for the head-on and overtaking cases respectively. 
-
-
-\todo[inline]{ikke passer 200m foran beamen + en hastighetsfaktor. Kan gå nærme bak dersom det har skjedd en manøver nærme CPA, men er vanskelig å vurdere om denne manøveren er stor nok. DNV}
-\todo{søk på litteratur (DNV) om colregs. Tom Arne Pedersen. 95280695}
-
 
 
 
@@ -445,17 +438,61 @@ Similar results are seen for the crossing and overtaking cases, where the only d
 
 
 
-\section{Confined Waters}
+\section{Confined Waters}\label{sec:confined-waters}
+In cases where there isn't sufficient sea room for the OS to maneuver, COLREGS rule 8c) does not apply, and the best course of action isn't necessarily to alter course. Case 5 illustrates this scenario, where the OS is confined to following a reference trajectory in a narrow channel, while the TS is heading towards the OS at a 40\degree angle, as in the crossing cases 2.1-2.3. To facilitate a speed change for the OS, the XTE weight $w_\text{ref}$ is set to 10 across the entire parameter range, while the rest of the weights are kept the same as in cases 2-4. The support of the weight functions is shown in \cref{fig:weight-functions-confined-waters}. 
+
+\Cref{fig:crossing-advanced-scenario-10-2-xte-weight-traj} shows the trajectories for the OSs and TSs in Case 5. The high XTE weight $w_\text{ref}$ keeps the OSs at the reference trajectory, as seen in \cref{fig:crossing-advanced-scenario-10-2-xte-weight} where the change in course and XTE is zero for all OSs for the entire simulation time. As in the other scenarios the costs on acceleration and reference speed still apply, and the OSs concentrate their maneuvering in the maneuver windows, but the XTE weight prevents them from deviating from the reference trajectory. The optimal trajectory for the OSs is thus to lower their speed to avoid collision with the TS, which is exactly what \cref{fig:crossing-advanced-scenario-10-2-xte-weight} shows. 
+Thus, this example illustrates the flexibility of this optimization framework, where the cost function can intuitively be adapted to the scenario at hand with only changes to the weights. 
+
+As with the other cases, the weights and knot vector for $\mathbf p_\text{OS}$ can be modified further to achieve the desired trajectory shape. In Case 5, the OSs speed up after the first maneuver window, and before the point of closest approach to the TS, which is not necessarily the desired behavior. This is however the expected behaviour under the current weight settings, as the reference speed weight $w_\text{mv}$ is set during this segment, and the acceleration weight $w_\text{acc}$ is not active. As the purpose of this case is to illustrate the flexibility of the B-MINMPC framework, no further modifications are made to the weights or knot vector for $\mathbf p_\text{OS}$. It is clear that the trajectory can be modified to achieve a desired speed profile by adjusting the weights and knot density.
+
+\begin{figure}[phtb]
+    \centering
+    \includesvg[width=\textwidth,pretex=\footnotesize]{fig/illustrations/weight_functions_confined_waters.svg}
+    \caption{\textit{Case 5:} Support of the weighting functions for PXTE $w_\text{ref}$, reference speed $w_\text{mv}$, and acceleration $w_\text{acc}$ in the cost function for Case 5. The PXTE weight is set to 10 across the entire parameter range.}
+    \label{fig:weight-functions-confined-waters}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/crossing_advanced/crossing_advanced_scenario_10_2_xte_weight.svg}
+        \caption{\textit{Case 5:} Trajectories for $\mathbf p_\text{OS}$ and $\mathbf p_\text{TS}$ in Case 5. Identically colored triangles represent the same relative time for the OSs and TSs. They are spaced 60 seconds apart, the first at $t=0$ s and the last at $t=480$ s}
+        \label{fig:crossing-advanced-scenario-10-2-xte-weight-traj}
+    \end{subfigure}
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_10_2_xte_weight_course_40.svg}
+        \caption{Speed, change in course, and distance to the reference trajectory for the OSs in Case 5}
+        \label{fig:crossing-advanced-scenario-10-2-xte-weight}
+    \end{subfigure}
+    \caption{\textit{Case 5:} Trajectories and metrics for the crossing scenario with a degree 2 B-spline basis for $\mathbf p_\text{OS}$, where the PXTE weight is set to 10 across the entire parameter range.}
+\end{figure}
+
+% \section{Pure Reference Following}
 
 
-\section{Pure Reference Following}
+% \section{PH B-Spline OS Model}
 
-
-\section{PH B-Spline OS Model}
-Does not work well :(
 
 \section{Summary}
 
-mixed integer -reliable to find solutions in non-convex environments
+The simulation study confirms that the B-spline MINMPC framework delivers smooth, COLREGS-compliant trajectories across a variety of encounter scenarios:
 
-weight functions - a lot of control on the shape of the resulting trajectory, but also a lot of parameters to tune, and is situation dependent. Choice of basis allows arbitrary continuity of the trajectory, but care must be taken to match knot vector and basis degree so that the chosen fidelity of the trajectory is sufficient to allow for the desired maneuvers.
+\begin{itemize}
+  \item \textbf{Non-convex obstacle avoidance:}  
+    The Big–M mixed‐integer formulation reliably selects port or starboard passages around static and moving targets without manual initialization.
+  \item \textbf{COLREGS encounters:}  
+    Head-on, crossing, and overtaking cases all yield the correct right‐of‐way decisions (Rules 8, 13–17) under eight shifted start conditions, demonstrating robustness to variations in initial geometry.
+  \item \textbf{Weight functions:}  
+    Time‐, reference‐error‐, maneuver‐, and acceleration‐weights enable fine‐grained control over speed and course change trade‐offs. This flexibility comes with scenario-dependent tuning: aggressive time weights straighten trajectories, high reference weights tighten path tracking, and maneuver‐window weights concentrate course changes. 
+  \item \textbf{Basis fidelity:}  
+    Quadratic bases (12–24 control points) capture primary maneuvers with moderate variable counts. Knot refinement and degree elevation localize course changes and reduce speed dips at the expense of larger NLPs. Matching knot spacing and degree to maneuver duration is critical for achieving desired deviation magnitudes.
+  \item \textbf{Implementation ease:}  
+    The Python/CasADi library with modular classes simplifies scenario setup, solver configuration, and reuse of model components for own‐ship, targets, and references.
+\end{itemize}
+
+Overall, the results validate that the B-spline MINMPC achieves a practical balance between trajectory quality, COLREGS compliance, and computational tractability in non-convex maritime motion‐planning tasks. However, the reliance on scenario‐specific tuning and the complexity of COLREGS compliance metrics highlight the need for further research into more generalizable, parameter‐free evaluation methods. 
+The primary strength of the B-MINMPC framework lies in its capacity to generate trajectories that adhere to COLREGS through the adjustment of a limited set of parameters, as detailed in \cref{tab:simulation-parameters}. This feature simplifies the development of COLREGS-compliant motion planners by establishing a clear relationship between parameter settings and the resultant trajectory characteristics. Other methods such as \citet{Hagen2018,cho2021colreg,Menges2024} do not rely on such a parameterization, but at the cost of having limited control over the trajectory shape. 
+Future research will focus on bridging the gap between the human-interpretable COLREGS rules and clear tractable COLREGS-compliant metrics, and using these to further automate the tuning of the B-MINMPC parameters.

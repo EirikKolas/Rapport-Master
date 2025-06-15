@@ -3,3 +3,23 @@
 \chapter{Conclusions and Further Work}
 \label{chap:conclusions}
 
+This work introduces a unified framework for collision avoidance and trajectory planning of autonomous surface vessels that facilitates compliance with the international regulations for preventing collisions at sea (COLREGS) by leveraging B‐splines for mixed integer nonlinear model‐predictive control (B-MINMPC).  Key features include:
+
+\begin{itemize}
+    \item \textbf{COLREGS-facilitating optimal control formulation:}  Casts COLREGS-compliant path following as a finite-dimensional nonlinear program using B-splines for both ship states and time, so that kinematic and dynamic limits become convex or polynomial constraints on spline coefficients. Introduces a novel inverse-Gramian weighting for the pseudo–cross-track error to suppress high-frequency oscillations. The individual objectives of the cost function are weighted by B-splines, allowing for flexible time-varying trade-offs between speed, path-following accuracy and maneuverability without sacrificing convexity in the objective function.
+
+    \item \textbf{Mixed-integer collision modeling:}  Encodes port/starboard passage decisions around multiple moving obstacles via Big–M mixed-integer constraints on separating hyperplanes. A single binary per target ship selects the compliant side, efficiently resolving the nonconvex collision-avoidance problem in one mixed-integer nonlinear program (MINLP).
+
+    \item \textbf{Open-source B-spline optimization library:}  Delivers a Python/CasADi package implementing all B-spline operations---differentiation, integration, basis transforms, products and inner products---via a general collocation-based coefficient transform, plus high-level APIs for declaring spline variables, mixed-integer constraints and structured costs.
+
+    \item \textbf{Extensive performance analysis:}  Validates the framework across stationary, head-on, crossing, overtaking and confined-waters scenarios. Demonstrates correct COLREGS decisions, smooth trajectory generation, tunable speed-vs-course trade-offs via spline weights, and robust convergence in nonconvex environments. 
+
+    \item \textbf{Identification of limitations:}  Highlights challenges such as scenario-specific weight tuning, speed reductions inherent to polynomial spline parameterizations and convergence difficulty under highly nonlinear motion models. 
+\end{itemize}
+
+
+Overall, the B‐spline MINMPC framework achieves smooth, provably safe and COLREGS‐facilitated trajectories with moderate problem sizes and robust convergence in nonconvex maritime environments. Precise control over trajectory characteristics via B-spline weights enables flexible trade-offs between speed, path-following accuracy and maneuverability, while the inverse Gramian-based cost function mitigates oscillations without sacrificing maneuverability.
+
+The primary strength of the B-MINMPC framework lies in its capacity to generate trajectories that adhere to COLREGS through the adjustment of a limited set of parameters. This feature simplifies the development of COLREGS-compliant motion planners by establishing a clear relationship between parameter settings and the resultant trajectory characteristics. Other methods such as \citet{Hagen2018,cho2021colreg,Menges2024} do not rely on such a parameterization, but at the cost of having limited control over the trajectory shape.
+
+Future research will focus on bridging the gap between human-interpretable COLREGS rules and tractable compliance metrics, and on using these metrics to automate the tuning of B-MINMPC parameters. By codifying compliance into measurable criteria, the framework would automatically adjust its weight functions and constraints, which is critical for a real-world implementation of this framework.

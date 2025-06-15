@@ -89,8 +89,7 @@ This thesis builds upon \citet{Thyri2022-MPC} and \citet{zhang2021real}, combini
 \section{Problem Description}
 Building on, and exploring different aspects of the work presented in the project thesis \citet{prosjektoppgave}, this thesis aims to develop a robust and real-time capable \acrshort{COLREGS} aware motion planning algorithm for autonomous sea vessels. The algorithm should produce safe and predictable trajectories for the vessel, ensuring compliance with \acrshort{COLREGS} while navigating in the presence of other vessels. The algorithm should be able to handle multiple target ships and provide a stable solution that can adapt to dynamic environments. The specific goals of the thesis are as follows:
 \begin{itemize}
-    \item Provide an introduction to B-spline curves, covering the steps from mathematical representation to a practical implementation.
-    \item Develop a B-Spline-based trajectory planning algorithm that is aware of COLREGS.
+    \item Develop a B-Spline-based trajectory planning algorithm that facilitates COLREGS compliance.
     \item Ensure the algorithm finds the optimal solution by exploring options that pass vessels on either side, avoiding local minima issues, and ensuring the solution is stable.
     \item Create a library for B-spline optimization to make the implementation of general B-spline optimization problems easier and more efficient.
     \item Test the algorithm in various COLREGS relevant scenarios, and verify the solutions through simulations. Use these results to provide a detailed analysis of the algorithm's performance, including metrics such as reference path tracking, energy consumption, and computational efficiency.

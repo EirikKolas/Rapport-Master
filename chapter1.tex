@@ -105,7 +105,7 @@ Combining B-spline theory, mixed integer programming, and classical optimal cont
     \item A formulation of projected cross-track error (PXTE) as a cost function term, adapted for spline-based references and used as a smooth and intuitive tracking cost.
     \item  A theoretical derivation showing that transient speed reductions are a structural consequence of spline continuity constraints in constrained motion planning.
     \item A novel method for constructing the reference tracking objective is presented and discussed in detail. The result is that weights in the cost function terms can be parameterized by B-spline curves, allowing for an easily adaptable objective function, facilitating COLREGS compliance.
-    \item A \acrfull{MIP} formulation is used to address the non-convexity of the problem to ensure passage on the COLREGs-compliant side of the target ships.
+    \item A \acrfull{MIP} formulation is used to address the non-convexity of the problem to ensure passage on the COLREGS-compliant side of the target ships.
     The side to pass the target ships on are decided using one binary decision variable each, limiting the exponential growth of the number of sub-problems in the mixed integer programming formulation.
     \item A B-spline optimization library is developed based on CasAdi \citep{casadi}, building on the work presented in \citet{mercy2016spline} to include the use of \gls{MIP} formulations in B-spline based optimization problems.
     \item A thorough analysis of the algorithm's performance. Multiple variations of the same scenario are compared against each other to catch potential local minima issues and to ensure the algorithm's robustness.
@@ -117,7 +117,7 @@ Combining B-spline theory, mixed integer programming, and classical optimal cont
 The thesis is structured as follows:
 \begin{itemize}
     \item \cref{chap:background-theory} provides the necessary background theory on B-splines, optimal control, and mixed integer programming.
-    \item \cref{chap:b-spline-minmpc} presents the method used to develop the COLREGS-aware trajectory planning algorithm, including the mathematical formulation and implementation details.
+    \item \cref{chap:b-spline-minmpc} presents the method used to develop the trajectory planning algorithm, including the mathematical formulation and implementation details.
     \item \cref{chap:simulation-results} presents the results of the simulations and tests conducted to evaluate the performance of the algorithm.
     \item \cref{chap:conclusions} discusses the results, potential issues with the algorithm, and suggestions for future work.
 \end{itemize}

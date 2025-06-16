@@ -3,14 +3,14 @@
 
 \chapter{B-spline MINMPC}\label{chap:b-spline-minmpc}
 
-This chapter presents a unified framework for \acrfull{MINMPC} based on B‐spline trajectory representations. Ship motion, timing and collision‐avoidance constraints are expressed as polynomial inequalities in the B‐spline coefficients, yielding a smooth, continuous formulation capable of minimum‐time planning under dynamic and COLREGS requirements. Two vessel models are introduced: a spline‐relaxed double‐integrator and a Pythagorean‐hodograph (PH) Dubins model, each producing convex or polynomial constraints on velocity and acceleration. Collision avoidance against multiple targets is enforced via hyperplane separation and a Big–M mixed‐integer approach, allowing port‐ or starboard‐side passage decisions. A structured cost combines reference tracking, maneuver windows, and minimum‐time objectives, leveraging inverse‐Gramian norms to suppress high‐frequency oscillations. The complete MINMPC formulation is implemented in a Python/CasADi library with modular components for own ship (\acrshort{OS}), target ships (\acrshort{TS}) and reference trajectories. 
+This chapter presents a unified framework for \acrfull{MINMPC} based on B‐spline trajectory representations. Ship motion, timing, and collision‐avoidance constraints are expressed as polynomial inequalities in the B‐spline coefficients, yielding a smooth, continuous formulation capable of minimum‐time planning under dynamic and COLREGS requirements. Two vessel models are introduced: a spline‐relaxed double‐integrator and a Pythagorean‐hodograph (PH) Dubins model, each producing convex or polynomial constraints on velocity and acceleration. Collision avoidance against multiple targets is enforced via hyperplane separation and a Big–M mixed‐integer approach, allowing port‐ or starboard‐side passage decisions. A structured cost combines reference tracking, maneuver windows, and minimum‐time objectives, leveraging inverse‐Gramian norms to suppress high‐frequency oscillations. The complete MINMPC formulation is implemented in a Python/CasADi library with modular components for own ship (\acrshort{OS}), target ships (\acrshort{TS}) and reference trajectories. 
 
 The chapter is organized into four parts: (i) dynamic models, (ii) collision constraints, (iii) objective design, and (iv) software implementation.
 
 
 \section{Dynamic Model}
 
-Two continuous‐time vessel models are relaxed into B‐spline form for MINMPC. First, a double‐integrator model enforces continuous position, velocity and acceleration with speed and thrust limits. Second, a Pythagorean‐hodograph Dubins model incorporates heading‐dependent motion and turn‐rate constraints. Each formulation yields convex or polynomial inequalities in the spline coefficients, enabling smooth, minimum‐time trajectory optimization under dynamic and COLREGS requirements.
+Two continuous‐time vessel models are relaxed into B‐spline form for MINMPC. First, a double‐integrator model enforces continuous position, velocity, and acceleration with speed and thrust limits. Second, a Pythagorean‐hodograph Dubins model incorporates heading‐dependent motion and turn‐rate constraints. Each formulation yields convex or polynomial inequalities in the spline coefficients, enabling smooth, minimum‐time trajectory optimization under dynamic and COLREGS requirements.
 
 
 \subsection{Double Integrator}\label{sec:double-integrator}
@@ -112,7 +112,7 @@ To implement this model in an optimization framework, $u(x)$ and $v(x)$ are repr
         \implies \left|u(x)v'(x) - u'(x)v(x)\right| &\le \frac{\omega_{\max}}{2}t'(x)V(x),
     \end{aligned}
 \end{equation}
-yeilding the polynomial constraints
+yielding the polynomial constraints
 \begin{subequations}\label{eq:dubins-ph-turn-rate}
     \begin{align}
         u(x)v'(x) - u'(x)v(x) &\le \frac{\omega_{\max}}{2}t'(x)V(x), \\
@@ -136,7 +136,7 @@ The \acrshort{TS} is modeled as a constant velocity model:
 \begin{equation}
     \dot{\mathbf{p}}_{\text{TS}}(t) = \mathbf{v}_{\text{TS}}(t)
 \end{equation}
-To fit this model into the B-spline framework with time as a variable, the velocity of the \acrshort{TS} is expressed as a B-spline function of the parameter $x$, and the position is retrieved by integrating the velocity multiplied by the time derivative:
+To fit this model into the B-spline framework with time as a variable, the velocity of the \acrshort{TS} is expressed as a B-spline function of the parameter $x$. The position is retrieved by integrating the velocity multiplied by the time derivative:
 \begin{equation}\label{eq:ts-constant-velocity}
     \mathbf{p}_{\text{TS}}(x) = \mathbf p_\text{TS}(0) + \int_0^x \mathbf{v}_{\text{TS}}(s) t'(s) ds,
 \end{equation}
@@ -145,7 +145,7 @@ where $\mathbf p_\text{TS}(t_0)$ is the initial position of the \acrshort{TS} at
 Unfortunately, using time as a variable $t(s)$ in the optimization problem, does not allow for anything other than constant velocity TSs, as the velocity as a function of the parameter $x$ is not a polynomial function of the position parameterized by the actual time passed $t$. In most cases, a constant velocity model is sufficient, as the \acrshort{TS} is usually not maneuvering. However, if a more complex model is needed, the optimization problem can be formulated with the time as a fixed variable, or by parameterizing on $t$ directly instead of $x$. To keep notation consistent, the former is used in this work.
 
 \subsection{Hyperplane Separation Theorem}
-A simple approach to enforce collision constraints between the \acrshort{OS} and \acrshort{TS} is to apply a minumum distance constraint between the two ships as
+A simple approach to enforce collision constraints between the \acrshort{OS} and \acrshort{TS} is to apply a minimum distance constraint between the two ships as
 \begin{equation}\label{eq:minimum-distance}
     (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}})^\top (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \geq d_{\text{min}}^2,
 \end{equation}
@@ -178,8 +178,7 @@ Collision avoidance is non-convex: with fixed start/end points one cannot deform
 
 For designing a COLREGS-compliant trajectory, being able to decide which side of a given target ship to pass on is essential. So to address the aforementioned issue, which side to pass the obstacle on is made a decision variable in a mixed integer programming (MIP) problem as follows:
 
-The idea is that each target ship is represented by two obstacles, each obstacle having only one feasible side to be passed on. The passing side of the target ship is enforced by adding additional points to each obstacle on the opposide side of the passing side using the normal $\mathbf{\hat n}_\text{ref}$ of the reference trajectory $\mathbf p_\text{ref}$. The two obstacles are then moved into and out of the feasible region by introducing a binary variable $z_j\in\{0,1\}$ for each target ship $j$ which controls an offset $M \mathbf{\hat n}_\text{ref}$, where $M$ is a large positive number. More formally, the constraints are given by
-
+The idea is that each target ship is represented by two obstacles, each obstacle having only one feasible side to be passed on. The passing side of the target ship is enforced by adding additional points to each obstacle on the opposite side of the passing side using the normal $\mathbf{\hat n}_\text{ref}$ of the reference trajectory $\mathbf p_\text{ref}$. The two obstacles are then moved into and out of the feasible region by introducing a binary variable $z_j\in\{0,1\}$ for each target ship $j$ which controls an offset $M \mathbf{\hat n}_\text{ref}$, where $M$ is a large positive number. More formally, the constraints are given by
 \begin{subnumcases}{\label{eq:colregs-bigM}\mathcal{O}_j:}
     \mathbf{n}_{p,j}(t)^\top\mathbf{p}_{\mathrm{OS}}(t)
       & \label{eq:colregs-bigM-os-p}$\ge b_{p,j}(t) + d_{\text{OS}}$\\
@@ -209,7 +208,7 @@ Here,
     \item $M$ is a large constant that renders inactive constraints nonbinding.
     \item and $\mathbf{\hat n}_{\mathrm{ref}}(t)$ is the unit normal of the reference trajectory $\mathbf p_\text{ref}(t)$, defined as
     \begin{equation}\label{eq:reference-normal}
-        \mathbf{\hat n}_{\mathrm{ref}}(t) = \mathbf R\frac{\mathbf p_\text{ref}'(t)}{\|\mathbf p_\text{ref}'(t)\|_2}.
+        \mathbf{\hat n}_{\mathrm{ref}}(t) = \mathbf R\frac{\mathbf p_\text{ref}'(t)}{\|\mathbf p_\text{ref}'(t)\|_2},
     \end{equation}
     where $\mathbf R$ is a rotation matrix that rotates 90 degrees counterclockwise around the down axis in a North-East-Down coordinate system.
 \end{itemize}
@@ -246,7 +245,7 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
 
 \section{Objective Function}
 The goals of the objective function should be 1) to find a safe, COLREGS-compliant trajectory, and 2) to follow a reference trajectory. These objectives are conflicting as rule 8b) of the COLREGS (see \cref{sec:colregs}) states that any alteration of course should be large enough to be readily apparent to another vessel. Following a reference trajectory on the other hand often involves the squared error between the vessel and the reference trajectory, which inherently penalizes sudden deviations in course. 
-Thus a careful choice of the objective function is important to ensure robust and predictable behaviour. 
+Thus, a careful choice of the objective function is important to ensure robust and predictable behavior. 
 The following section will examine the behavior of the B-spline method when applied to a basic reference-following task. The subsequent section will then address COLREGS considerations.
 
 
@@ -266,7 +265,7 @@ Literature distinguishes between path following (geometric relations) and trajec
 \begin{equation}\label{eq:total-track-error}
     \mathbf e(t) = \mathbf p_\text{OS}(t) - \mathbf p_\text{ref}(t).
 \end{equation}
-TTE can cause the OS to converge towards a point ahead of the geometrically closest point on the reference trajectory when the OS lags the reference trajectory.
+optimizing for TTE can cause the OS to converge towards a point ahead of the geometrically closest point on the reference trajectory when the OS lags the reference trajectory.
 
 A novel reference‐following metric is proposed to capture both geometric and temporal alignment: the \acrfull{PXTE}, defined by
 \begin{equation}\label{eq:pxte}
@@ -317,7 +316,7 @@ Because $\mathbf{\hat G}_{we}^{-1}$ has the reciprocal eigenvalues of $\mathbf{\
 
 
 As far as the author is aware, this is the first time the inverse Gramian matrix is used as a cost function in the context of B-spline optimization.
-Other cost weighting schemes have also been considered for this work, using more classical methods sucha as penalizing the integral of the squared acceleration, or the squared velocity, but with unsatisfactory results. These and other methods are briefly discussed in \cref{app:failed-reference-following}.
+Other cost weighting schemes have also been considered for this work, using more classical methods such as penalizing the integral of the squared acceleration, or the squared velocity, but with unsatisfactory results. These and other methods are briefly discussed in \cref{app:failed-reference-following}.
 
 \begin{figure}
     \centering
@@ -367,7 +366,7 @@ where the individual costs are defined as follows:
         J_\mathrm{end} &= \|w_\text{end}(x)\;(\mathbf p_\text{OS}(x)-\mathbf p_\text{ref}(1))\|_{\mathbf{\hat G}^{-1}}^2 , \label{eq:cost-maneuver-window-end}\\
     \end{align}
 \end{subequations}
-where $J_\text{mv}$ is the cost for deviationg from the reference course. $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text{mv}(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. An additional cost $J_\mathrm{acc}$ is included to penalize course and speed alterations where desired. To provide a driving force in the direction of the reference trajectory, a cost $J_\mathrm{end}$ is included as the PXTE alone does not penalize moving in the opposing direction of the reference course. 
+where $J_\text{mv}$ is the cost for deviationg from the reference course. $w_\text e(x)$ is the weight for the reference trajectory following cost, and $w_\text{mv}(x)$ is the weight for the maneuver window cost as shown in \cref{fig:maneuver-window}. An additional cost $J_\mathrm{acc}$ is included to penalize course and speed alterations where desired. To provide a driving force in the direction of the reference trajectory, a cost $J_\mathrm{end}$ is included as the PXTE alone does not penalize moving in the opposing direction of the reference course.
 
 The advantage of the B-spline framework in this case is that the weights can be defined as B-spline functions themselves. This allows for great flexibility in shaping the desired encounter trajectory. The function shape shown in \cref{fig:maneuver-window}, can be represented using a zero-degree B-spline. If smoother transitions are desired, higher degree B-splines can be used.
 If the weights are fixed as a function of time before the optimization problem is solved, then the costs are constant with respect to the optimization variables and the optimization problem is convex as opposed to that of \cref{fig:turn-rate-cost}.
@@ -773,7 +772,7 @@ Scalar addition in the form of $f(x) + a$ can be performed by simply adding the 
 
 In order to find the product of two B-splines, an approach similar to \cref{sec:basis-transformation} can be used. Given two spline functions $f(x) = \mathbf{B}_{p_1, \mathbf{t}_1}^{\top}(x) \mathbf{c}_1$ and $g(x) = \mathbf{B}_{p_2, \mathbf{t}_2}^{\top}(x) \mathbf{c}_2$, the goal is to find a common basis $\mathbf{B}_{q, \boldsymbol{\tau}}^{\top}(x)$ with degree $q$ and knot vector $\boldsymbol{\tau}$ such that $h(x) = \mathbf{B}_{q, \boldsymbol{\tau}}^{\top}(x) \mathbf{d} = f(x)  g(x)$.
 
-Unlike addition (where $q \geq \max(p_1, p_2)$), multiplication requires $q \ge p_1 + p_2$, which is analagous to the fact that the product of polynomials with degrees $p_1$ and $p_2$ results in a polynomial of degree $p_1 + p_2$.
+Unlike in addition where $q \geq \max(p_1, p_2)$, multiplication requires $q \ge p_1 + p_2$, which is analaguos to the fact that the product of polynomials with degrees $p_1$ and $p_2$ results in a polynomial of degree $p_1 + p_2$.
 Writing the equation for the product of the two B-splines gives
 \begin{subequations}\label{eq:b-spline-product}
     \begin{align}
@@ -786,7 +785,6 @@ Writing the equation for the product of the two B-splines gives
         &= \left(\mathbf{B}_{p_1, \mathbf{t}_1}(x) \otimes \mathbf{B}_{p_2, \mathbf{t}_2}(x)\right)^{\top} \left(\mathbf{c}_1 \otimes \mathbf{c}_2\right), \label{eq:b-spline-product-4}
     \end{align}
 \end{subequations}
-
 where $\otimes$ denotes the Kronecker product. In \cref{eq:b-spline-product-3}, the mixed product property of the Kronecker product has been used, while \cref{eq:b-spline-product-4} is obtained using the fact that the transpose is distributive over the Kronecker product. \Cref{eq:b-spline-product-4} resembles the structure in \cref{eq:transformation-matrix-equation}, and the transformation matrix $\mathbf T$ required for computing the inner product can be derived analogously to the multiplication operation, as described in \cref{alg:multiplication}.
 
 So, to find the product $h(x) = f(x) g(x)$, one first finds a common basis for $f(x)$ and $g(x)$ using \cref{alg:common-basis}, before finding the transformation matrix $\mathbf T$ from $\mathbf c_1 \otimes \mathbf c_2$ to $\mathbf d$ using \cref{eq:transformation-matrix-solution}. The product is then given by
@@ -873,7 +871,7 @@ So, to find the product $h(x) = f(x) g(x)$, one first finds a common basis for $
 
 \subsection{Inner Product, Norms and the B-spline Gramian}\label{sec:inner-product}
 \subsubsection{Inner Product}
-The inner product of two (vector-valued) functions is a scalar that measures the similarity between the functions. combines the components of the two vector-valued functions. This operation is useful in applications such as calculating projections, or defining cost functions in optimization problems. The $\mathcal L_2$ inner product (henceforth referred to as the inner product) for vector-valued functions is defined as:
+The inner product of two functions is a scalar that measures the similarity between the functions. This operation is useful in applications such as calculating projections, or defining cost functions in optimization problems. The $\mathcal L_2$ inner product (henceforth referred to as the inner product) for vector-valued functions is defined as:
 \begin{equation}
     \label{eq:dot-product}
     \langle\mathbf f(x), \mathbf g(x)\rangle = \int_{-\infty}^\infty \mathbf f^\top(x) \mathbf g(x)
@@ -932,7 +930,7 @@ where the matrix $\mathbf G$ is the Gramian matrix of the B-spline basis $\mathb
 \begin{equation}\label{eq:b-spline-norm}
     \|f\|_\mathbf H^2 = \mathbf{c}^\top \mathbf H \mathbf {c}
 \end{equation}
-where $\mathbf{c}\in\mathbb R^{n}$ is the coefficients of $\mathbf f$ as in and $\mathbf H\in\mathbb R^{n\times n}$ is a suitible SPD matrix. 
+where $\mathbf{c}\in\mathbb R^{n}$ is the coefficients of $\mathbf f$ as in and $\mathbf H\in\mathbb R^{n\times n}$ is a suitable SPD matrix. 
 
 
 
@@ -993,7 +991,7 @@ with corresponding eigenvalues
     \end{aligned}
 \end{equation}
 The $u_1$ direction can be interpreted as a direction where all the coefficients have the same sign, while the $u_4$ direction can be interpreted as a direction where subsequent coefficients alternate in sign. 
-As the cost in the $u_1$ direction compared to the $u_4$ direction is $\frac{\lambda_1}{\lambda_4} \approx 10$ times smaller, the cost function will amplify high frequency oscillations in the coefficients. In \cref{fig:conservativeness-eigenvectors-integral}, each eigenvector is shown as a weight on each B-spline coefficient. Here, the relative eigenvalues $\hat\lambda_i = \lambda_i/\sum_{i=1}^{N} \lambda_i$ are shown to better compare the costs between different Hessians. That high frequency directions are amplified is more appearent when increasing the number of B-spline basis functions $n$. This is shown in \cref{fig:integral-basis-eigenvectors-20} for $n=20$.
+As the cost in the $u_1$ direction compared to the $u_4$ direction is $\frac{\lambda_1}{\lambda_4} \approx 10$ times smaller, the cost function will amplify high frequency oscillations in the coefficients. In \cref{fig:conservativeness-eigenvectors-integral}, each eigenvector is shown as a weight on each B-spline coefficient. Here, the relative eigenvalues $\hat\lambda_i = \lambda_i/\sum_{i=1}^{N} \lambda_i$ are shown to better compare the costs between different Hessians. That high frequency directions are amplified is more apparent when increasing the number of B-spline basis functions $n$. This is shown in \cref{fig:integral-basis-eigenvectors-20} for $n=20$.
 
 
 \begin{figure}
@@ -1016,7 +1014,7 @@ To illustrate the oscillations using the Gramian, consider the following optimiz
     \end{aligned}
 \end{equation}
 Here, $\mathbf p_0$ is the initial position of the OS. The B-spline basis functions $\mathbf B$ and $\mathbf B_\text{ref}$ are defined as uniform B-splines of degree $p$ and 1, respectively, with the parameter domain $x\in[0,1]$. The control points $\mathbf C$ of the OS B-spline function are optimized to minimize the TTE to a reference trajectory $\mathbf p_\text{ref}$, which is defined by the control points $\mathbf C_\text{ref}$.
-This optimization problem is then analyzied for different choices of $p$ and number $N$ of uniform B-spline basis functions $\mathbf B$. The resulting trajectories are shown in \cref{fig:conservativeness-traj-integral} with the parameters for the optimization problem set to
+This optimization problem is then analyzed for different choices of $p$ and number $N$ of uniform B-spline basis functions $\mathbf B$. The resulting trajectories are shown in \cref{fig:conservativeness-traj-integral} with the parameters for the optimization problem set to
 \begin{equation}\label{eq:conservativeness-parameters}
     \begin{aligned}
         \mathbf p_0 &= \begin{bmatrix} 1 & 0 \end{bmatrix} \\
@@ -1054,7 +1052,7 @@ The inverse Gramian has the same eigenvectors as the Gramian, but the eigenvalue
 \end{figure}
 
 
-To the authors knowledge, this is the first time that the inverse Gramian has been used as a Hessian in a B-spline-based optimization problem, or that a similar analysis of the eigenvectors and eigenvalues of the Gramian has been performed in the context of B-spline trajectory following. Other cost functions have also been considered, but with poor results in terms of feasibility for the optimization problem in question. A brief overview of these costs is given in \cref{app:failed-reference-following}.
+To the author's knowledge, this is the first time that the inverse Gramian has been used as a Hessian in a B-spline-based optimization problem, or that a similar analysis of the eigenvectors and eigenvalues of the Gramian has been performed in the context of B-spline trajectory following. Other cost functions have also been considered, but with poor results in terms of feasibility for the optimization problem in question. A brief overview of these costs is given in \cref{app:failed-reference-following}.
 
 
 
@@ -1089,7 +1087,7 @@ is a degree-$q$ NURBS with weights $w_i$, knot vector $\boldsymbol{\tau}$ and co
 \begin{algorithm}
     \caption{Convert rational B-spline to NURBS}\label{alg:nurbs-conversion}
     \begin{algorithmic}[1]
-        \State \textbf{Input:} B-splines $N(x)$ and $D(x)$ with correspondingknot vectors $\mathbf t_N$ and $\mathbf t_D$, and degrees $p_N$ and $p_D$
+        \State \textbf{Input:} B-splines $N(x)$ and $D(x)$ with corresponding knot vectors $\mathbf t_N$ and $\mathbf t_D$, and degrees $p_N$ and $p_D$
         \State $q \gets \max(p_N, p_D)$
         \State $\mathbf B_{q,\boldsymbol{\tau}}(x) \gets $ result from \cref{alg:common-basis} with bases $\mathbf B_{p_N,\mathbf t_N}(x)$ and $\mathbf B_{p_D,\mathbf t_D}(x)$ and desired degree $q$
         \State $\mathbf T_N \gets $ result from \cref{alg:basis-transformation} with transformation from $\mathbf B_{p_N,\mathbf t_N}(x)$ to $\mathbf B_{q,\boldsymbol{\tau}}(x)$
@@ -1196,7 +1194,7 @@ All spline operations are implemented via basis transformations: each input spli
             & \Cref{alg:nurbs-conversion} \\[1.5ex]
     \hline
     \end{tabular}
-    \caption{Summary of B-spline operations and their properties. The symbols $f$ and $g$ denote B-spline functions, while $a$ denotes a scalar. Their corresponding bold-faced symbols denote vector-valued functions and vectors in $\mathbf R^n$ space respectively. The ``Coefficients'' column indicates the transformation type of the operation on the coefficients. The ``Space'' column indicates the space of the resulting B-spline. The knot vectors for these spaces are ommited for brevity and can be found in the references in the ``Implementation'' column.}
+    \caption{Summary of B-spline operations and their properties. The symbols $f$ and $g$ denote B-spline functions, while $a$ denotes a scalar. Their corresponding bold-faced symbols denote vector-valued functions and vectors in $\mathbf R^n$ space respectively. The ``Coefficients'' column indicates the transformation type of the operation on the coefficients. The ``Space'' column indicates the space of the resulting B-spline. The knot vectors for these spaces are ommitted for brevity and can be found in the references in the ``Implementation'' column.}
     \label{tab:operations}
 \end{table}
 \renewcommand{\arraystretch}{1}

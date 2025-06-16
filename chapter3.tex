@@ -21,7 +21,7 @@ An optimal control problem where the state and control variables are defined ove
   \begin{aligned}
     \min_{\mathbf{x}(\cdot),\mathbf{u}(\cdot)}\;&\int_{t_0}^{t_f}J(\mathbf x(t),\mathbf u(t),t)\,dt,\\
     \text{s.t.}\;&\dot{\mathbf x}(t)=\mathbf f(\mathbf x(t),\mathbf u(t),t),\;\mathbf x(t_0)=\mathbf x_0,\\
-                &\mathbf g(\mathbf x(t),\mathbf u(t),t)\le\mathbf 0,\;\forall\,t\in T.
+                &\mathbf g(\mathbf x(t),\mathbf u(t),t)\le\mathbf 0,\;\forall\,t\in T,
   \end{aligned}
 \end{equation}
 where $T = [t_0, t_f]$ is the time interval, $\mathbf{x}(t) \in \mathbb R^{n_x}$ is the state, $\mathbf{u}(t) \in \mathbb R^{n_u}$ is the control input, $J : \mathbb R^{n_x} \times \mathbb R^{n_u} \times \mathbb R \to \mathbb R$ is the cost functional, $\mathbf f : \mathbb R^{n_x} \times \mathbb R^{n_u} \times T \to \mathbb R^{n_x}$ is the state equation, and $\mathbf g : \mathbb R^{n_x} \times \mathbb R^{n_u} \times T \to \mathbb R^{n_g}$ are the algebraic constraints. 
@@ -116,7 +116,7 @@ The following rules are relevant for the task of automated collision avoidance i
 \end{itemize}
 
 
-These rules are designed to ensure safe navigation and collision avoidance between vessels at sea. They provide a framework for determining the appropriate actions to take in various encounter situations, such as overtaking, head-on, and crossing scenarios. The rules emphasize the importance of clear communication, timely action, and adherence to good seamanship practices. \Cref{fig:v2v-encounters} illustrates the different encounter types, which are classified based on the relative position, speed and heading of the vessels involved. 
+These rules are designed to ensure safe navigation and collision avoidance between vessels at sea. They provide a framework for determining the appropriate actions to take in various encounter situations, such as overtaking, head-on, and crossing scenarios. The rules emphasize the importance of clear communication, timely action, and adherence to good seamanship practices. \Cref{fig:v2v-encounters} illustrates the different encounter types, which are classified based on the relative position, speed, and heading of the vessels involved. 
 
 \begin{figure}[htbp]
     \centering

@@ -11,7 +11,7 @@ In order to establish the theoretical foundations for the B-spline MINMPC framew
 
 % \subsection{Why B-splines?}
 
-Trajectory planning requires representing a smooth curve through space, constrained by start and end points, and potentially some desired shape. B-splines are an ideal choice for this, offering a compact and flexible way to describe such curves with a small number of parameters.
+Trajectory planning requires representing a smooth curve through space, constrained by start and end points, and potentially some desired shape. B-splines are an ideal choice for this, offering a compact and flexible way to describe such curves with only a few parameters.
 
 B-splines (basis splines) are piecewise polynomial functions defined by:
 \begin{itemize}
@@ -40,7 +40,7 @@ The resulting curve is smooth, local, and lies within the convex hull of the con
         \caption{Convex hull of B-spline. The third B-spline segment (blue) lies within the convex hull of the points $\{\mathbf c_1,\ldots,\mathbf c_4\}$ (orange).}
         \label{fig:b-spline-convex-hull} 
     \end{subfigure}
-    \caption{Geometric interpretation of B-splines}
+    \caption{Geometric interpretation of B-splines.}
     \label{fig:b-spline-geometric}
 \end{figure}
 
@@ -52,7 +52,7 @@ where \( c_j \) are the control points and \( B_{j,p}(x) \) are the B-spline bas
 
 In this thesis, B-splines are used to represent the trajectory of the vessel in a way that is:
 \begin{itemize}
-    \item \textbf{Differentiable} (Conftinuuous derivatives up to order \( p \))
+    \item \textbf{Differentiable} (Continuous derivatives up to order \( p \))
     \item \textbf{Efficient} (sparse representation)
     \item \textbf{Well-behaved} (Local support and convex hull properties)
 \end{itemize}

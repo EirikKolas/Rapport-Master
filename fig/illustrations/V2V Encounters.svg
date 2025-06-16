@@ -24,9 +24,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.74394521"
-     inkscape:cx="332.0137"
-     inkscape:cy="385.10901"
+     inkscape:zoom="1.4878904"
+     inkscape:cx="317.56371"
+     inkscape:cy="160.29406"
      inkscape:window-width="2880"
      inkscape:window-height="1496"
      inkscape:window-x="-12"
@@ -48,8 +48,8 @@
        refY="0"
        orient="auto-start-reverse"
        inkscape:stockid="Concave triangle arrow"
-       markerWidth="1"
-       markerHeight="1"
+       markerWidth="0.6"
+       markerHeight="0.6"
        viewBox="0 0 1 1"
        inkscape:isstock="true"
        inkscape:collect="always"
@@ -324,10 +324,10 @@
        id="text5"><tspan
          x="-26.680368"
          y="80.241974"
-         id="tspan2"><tspan
+         id="tspan8"><tspan
            dx="0 3.9239664"
            style="stroke-width:0.8"
-           id="tspan1">$$</tspan></tspan></text>
+           id="tspan4">$$</tspan></tspan></text>
     <text
        xml:space="preserve"
        transform="scale(0.26458333)"

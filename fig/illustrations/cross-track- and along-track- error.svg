@@ -24,8 +24,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="1.5597022"
-     inkscape:cx="322.81804"
-     inkscape:cy="634.73655"
+     inkscape:cx="322.49746"
+     inkscape:cy="635.05713"
      inkscape:window-width="2880"
      inkscape:window-height="1496"
      inkscape:window-x="-12"
@@ -137,16 +137,15 @@
            y="-8.4622955">\scriptsize{XTE}</tspan></text>
       <text
          xml:space="preserve"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;display:inline;fill:#000000;stroke-width:1.28635"
-         x="-8.6402798"
-         y="11.502285"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;text-anchor:start;display:inline;fill:#000000;stroke-width:1.28635"
+         x="-8.8522768"
+         y="10.438209"
          id="text8"
          transform="rotate(-130.75739)"><tspan
            sodipodi:role="line"
-           id="tspan8"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;stroke-width:1.28635"
-           x="-8.6402798"
-           y="11.502285">$\mathbf p(t)$</tspan></text>
+           id="tspan1"
+           x="15.428467"
+           y="10.438209">$\mathbf p_\text{OS}(t)$</tspan></text>
       <text
          xml:space="preserve"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.53796px;font-family:Arial;-inkscape-font-specification:'Arial, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle;display:inline;fill:#000000;stroke-width:1.28635"

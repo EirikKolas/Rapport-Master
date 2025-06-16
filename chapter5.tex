@@ -208,11 +208,9 @@ Evaluating the compliance of autonomous vessels with the COLREGS through formal,
 
 Assessing COLREGS compliance in motion planners via post hoc metrics inevitably introduces circularity: each metric must be tailored to the specific scenario it evaluates, and a good planner should be designed to optimize the same metric. 
 As a result, metric design becomes as bespoke and complex as developing a COLREGS-compliant motion planner itself, precluding truly objective assessment.  As an example, take the simple case of a minimum distance requirement: When a distance constraint is correctly encoded in the optimization problem, the passing distance is guaranteed to hold by the constrained optimization, while if the distance requirement in the optimization problem is too small, it may lead to a dangerous situation in the real world.  If the minimum distance requirement is known through the metric, it may as well be encoded in the optimization problem, rendering the metric redundant. 
-Instead of relying on such tuning-dependent measures, the intrinsic geometric and kinematic properties of the optimized trajectories are analyzed.  Given a set of metrics and requirements, the B-MINMPC can---by only tuning the parameters in \cref{tab:simulation-parameters}---be configured to reliably generate trajectories that are compliant with COLREGS 
-parameterized to generate trajectories
+Instead of relying on such tuning-dependent measures, the intrinsic geometric and kinematic properties of the optimized trajectories are analyzed.  Given a set of metrics and requirements, the B-MINMPC can---by only tuning the parameters in \cref{tab:simulation-parameters}---be configured to reliably generate trajectories that are compliant with COLREGS. 
 
-% In particular, the cumulative ratio of speed change to course change is introduced, a parameter-free indicator that depends solely on the trajectory’s shape and can be computed directly from the solution.
-
+More concretely: \acrfull{DCPA} and \acrfull{TCPA} are common metrics used to evaluate the safety of a trajectory in a COLREGS context. The parameter $d_p$ in \cref{tab:simulation-parameters} is set to 50m, which gives a hard constraint on the minimum passing distance and hence the \acrshort{DCPA} between the OS and TS. As the method presented in this paper has no intrinisic way of determining the correct \acrshort{TCPA} and \acrshort{DCPA} for a given scenario, these and other COLREGS-oriented metrics are not included in the evaluation. 
 
 
 The next cases serve to illustrate the robustness of the B-MINMPC in situations where COLREGS rules 8 and 13-17 are applicable. These are constructed such that an OS following an eastwards reference trajectory at $N=0$ is on a collision course with a TS at $(0, 0)$, 250 seconds into the simulation. For each scenario, eight additional simulations are run where the starting points and reference trajectories for the OS are shifted both north and south by an appropriate distance. The shifted scenarios will all be referred to as belonging to the same \emph{batch simulation}.
@@ -351,7 +349,7 @@ If such discontinuities are undesirable, increasing the B-spline basis degree en
 The initial maneuver in the first window results in a more significant speed reduction, dropping to approximately 4.2 m/s. Subsequently, the OSs maintain a course parallel to the reference trajectory without reconverging. After further inspection it was found that the acceleration cost in $t\in[350, 400]$ s inhibits trajectory convergence. 
 Comparing \cref{fig:crossing-metrics} and \cref{fig:crossing-scenario-degree-3-metrics} reveals that the discontinuous course change $\dot{\chi}$ in the former allows the OSs to sharply revert to $\dot{\chi}=0$ between maneuvers, where the acceleration cost is active, whereas the continuity constraints in the latter force a smoother transition. This creates conflicting objectives between minimizing acceleration and converging back to the reference trajectory, and in this case---with the given parameters---the acceleration cost is prioritized over the reference trajectory convergence. The basis is in other words too coarse to allow for a degree 3 parameterization of $\mathbf p_\text{OS}$ with these parameters.
 
-\subsubsection{Case 2.2: Refined Degree 2 Basis for $\mathbf p_\text{OS}$}
+\subsubsection{Case 2.2: Refined Degree 2 Basis for $\mathbf p_\text{OS}$}\label{sec:case-2-2-refined-degree-2-basis}
 As mentioned, a finer knot vector for $\mathbf p_\text{OS}$ localizes the course change, and allows for the degree 3 parameterization to be used without the acceleration cost conflicting with the reference trajectory convergence. This is demonstrated in Case 2.2, where the knot vector for $\mathbf p_\text{OS}$ is refined to 22 knots, while the degree of the B-spline basis is kept at 2. The results are shown in \cref{fig:crossing-advanced-scenario-20-2} where the speed, course change, and distance to the reference trajectory for the OSs are plotted. The trajectory is shown in \cref{fig:crossing-advanced-scenario-20-2-traj}. 
 
 With the refined basis, the course change exhibits piecewise continuity over 25-second intervals. As depicted in \cref{fig:crossing-advanced-scenario-20-2}, the OS originating at $N=250$ m achieves a course alteration of $27\degree$, mirroring the result in \cref{fig:crossing-metrics}. However, this change now occurs over a compressed timeframe of $t=50-75$ seconds, effectively doubling the rate of course alteration. This observation encapsulates the trend associated with refining the B-spline basis for $\mathbf p_\text{OS}$: the localization of course changes intensifies until the acceleration constraints become active.
@@ -385,7 +383,7 @@ v_{\min}
 =v_{\max}\sqrt{\frac{1+\cos\theta}{2}}
 =v_{\max}\cos\Bigl(\tfrac\theta2\Bigr).
 \end{equation}
-As the derived expressions for $t^*$ and $v_{\min}$ are independent of $h$, the knot interval, the minimum achievable speed is solely dependent on the turning angle $\theta$ and the maximum speed $v_{\max}$. Consequently, mitigating speed reduction during maneuvers necessitates a reduction in $\theta$ between successive control points. While knot refinement alone is insufficient, it facilitates closer approximation of the spline by the control points. This, in turn, allows the constraint on the maximum acceleration of the OS to effectively limit the angle between consecutive control points, thereby reducing the speed reduction during maneuvers.
+As the derived expressions for $t^*$ and $v_{\min}$ are independent of $h$, the knot interval, the minimum achievable speed is solely dependent on the turning angle $\theta$ and the maximum speed $v_{\max}$. Consequently, mitigating the transient deceleration necessitates a reduction in $\theta$ between successive control points. While knot refinement alone is insufficient, it facilitates closer approximation of the spline by the control points. This, in turn, allows the constraint on the maximum acceleration of the OS to effectively limit the angle between consecutive control points, thereby reducing the speed reduction during maneuvers.
 
 
 \subsubsection{Case 2.3: Refined Degree 3 Basis for $\mathbf p_\text{OS}$}
@@ -471,9 +469,62 @@ As with the other cases, the weights and knot vector for $\mathbf p_\text{OS}$ c
 
 % \section{Pure Reference Following}
 
+\FloatBarrier
+\subsection{PH B-Spline OS Model}\label{sec:ph-b-spline-os-model}
 
-% \section{PH B-Spline OS Model}
+To assess the impact of a heading‐dependent vessel model, the crossing scenario of Case 2 using the Pythagorean‐hodograph (PH) Dubins formulation of \cref{sec:dubins-model} is repeated. The own‐ship trajectory is parameterized by two scalar B‐splines \(u(x)\) and \(v(x)\), each of degree 2 on a uniform knot vector with 0.1 spacing---identical to the basis used for \(\mathbf p_\text{OS}\) in the previous cases. All other simulation parameters (encounter geometry, solver settings, cost weights and minimum‐separation distances) remain unchanged.
 
+The results, shown in \cref{fig:crossing-advanced-scenario-10-2-dubins}, reveal that two of the own‐ship solutions decelerate to zero speed during the maneuver windows. At those instants, the computed turn rate \(\dot\chi\) becomes undefined, producing spurious course profiles and indicating solver difficulty in maintaining forward motion under the mixed‐integer hyperplane constraints.
+
+Although the PH B‐spline Dubins model offers closed‐form expressions for speed, curvature and turn rate---facilitating direct incorporation of richer compliance metrics into the MINMPC cost---the highly nonlinear and nonconvex nature of the kinematic constraints impedes reliable convergence. The polynomial–rational expressions for \(\dot\chi(x)\) interact poorly with the Big–M separation inequalities, leading to failure modes not seen under the simpler double‐integrator model. Preliminary tests of an alternative Dubins model formulation (Appendix \ref{app:tangent-half-angle}) produced similar solver instabilities. Further research is required to integrate realistic heading‐dependent vessel models into B‐spline MINMPC without sacrificing numerical robustness.
+
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/crossing_advanced/crossing_advanced_scenario_10_2_dubins.svg}
+        \caption{\textit{Case 6:} Trajectories for the OSs and TSs in Case 2.0, where the OSs are modeled as Dubins vehicles with a maximum turning radius of 50 m. The OSs are parameterized with a degree 2 B-spline basis with 12 control points. The TS is heading west at 4.5 m/s with a course of -90\degree.}
+        \label{fig:crossing-advanced-scenario-10-2-dubins-traj}
+    \end{subfigure}
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+        \includesvg[width=\textwidth,pretex=\footnotesize]{fig/scenarios/metrics/crossing_advanced_scenario_10_2_dubins_course_40.svg}
+        \caption{\textit{Case 6:} Speed, change in course, and distance to the reference trajectory for the OSs in Case 6. As the speeds for the OSs at $N=100$ m and $N=250$ m drops to 0 m/s, the course change is undefined, which explains the spikes in the course change metric.}
+        \label{fig:crossing-advanced-scenario-10-2-dubins-metrics}
+    \end{subfigure}
+    \caption{\textit{Case 6:} Trajectories and metrics for the crossing scenario with a degree 2 B-spline basis for $u(x)$ and $v(x)$ in the PH B-spline-based Dubins model defined in \cref{sec:dubins-model}. The numerical solver fails to converge to the optimal solution for certain initial conditions, resulting in spurious maneuvers. The Dubins model is not able to generate COLREGS-compliant trajectories in this scenario.}
+    \label{fig:crossing-advanced-scenario-10-2-dubins}
+\end{figure}
+
+\section{Computational Tractability and Solution Stability}\label{sec:stability-and-tractability}
+
+Simulations were conducted on a laptop with an AMD Ryzen 7 5000 series CPU and 16 GB RAM. \Cref{tab:solve-times} summarizes solve times for the one-target-ship scenarios under different models and knot spacings.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabular}{|l|c|c|}
+    \hline
+    \textbf{Model} & \textbf{Number of basis functions} & \textbf{Solve time (s)} \\
+    \hline
+    Double integrator       & 12  & 0.5–1.0    \\
+    Double integrator       & 22  & 5–10       \\
+    PH B-spline Dubins      & 12  & 5–10       \\
+    \hline
+    \end{tabular}
+    \caption{Solve times for one-target-ship scenarios on AMD Ryzen 7/16 GB RAM.}
+    \label{tab:solve-times}
+\end{table}
+
+The 0.5–1.0 s solve time for the double-integrator model with 12 basis functions is a promising result in regards real-time re‐planning, as updates need not occur faster than once per second. The Python implementation is not optimized for performance either, giving room for faster solve times from a more efficient implementation. Finer discretization (22 basis functions) increases problem size and raises solve times to 5–10 s, which approaches on not being fast enough for certain maritime scenarios. The PH B-spline Dubins model exhibits similar solve times but suffers from reduced solver reliability and convergence failures due to its highly nonlinear and bilinear constraints.
+
+Under the double integrator model, all non‐convexity arises from the hyperplane separation constraints. Under fixed simulation time, all model constraints become quadratic; fixing the hyperplane normals to a predefined value a priori then reduces the MINLP to a mixed-integer second order cone program (MI-SOCP), for which highly efficient solvers exist. Since expected trajectory shapes and maneuver windows are known a priori, fixing normals is a viable strategy.
+
+In its current form, the B-MINMPC problem is a mixed-integer nonlinear program (MINLP), which neither guarantees a global optimum nor bounds on solution time.  The robust convergence seen in simulations relies on warm-starting both the own-ship spline and the hyperplane normals using the expected maneuver geometry.  Without such initialization, the solver can fail to converge or settle in suboptimal local minima.  This sensitivity is particularly pronounced in the PH Dubins model, where internal bilinear variable couplings introduce even stronger non-convexities.
+
+Future work will therefore focus on the double‐integrator model and on simplifying the hyperplane constraints to achieve a MI-SOCP formulation, which would guarantee global optimality and substantially faster solve times.
 
 \section{Summary}
 
@@ -483,15 +534,19 @@ The simulation study confirms that the B-spline MINMPC framework delivers smooth
   \item \textbf{Non-convex obstacle avoidance:}  
     The Big–M mixed‐integer formulation reliably selects port or starboard passages around static and moving targets without manual initialization.
   \item \textbf{COLREGS encounters:}  
-    Head-on, crossing, and overtaking cases all yield the correct right‐of‐way decisions (Rules 8, 13–17) under eight shifted start conditions, demonstrating robustness to variations in initial geometry.
+    Head-on, crossing, and overtaking cases all yield the correct right‐of‐way decisions (Rules 8, 13–17) under eight shifted start conditions, demonstrating robustness to variations in initial geometry. 
   \item \textbf{Weight functions:}  
     Time‐, reference‐error‐, maneuver‐, and acceleration‐weights enable fine‐grained control over speed and course change trade‐offs. This flexibility comes with scenario-dependent tuning: aggressive time weights straighten trajectories, high reference weights tighten path tracking, and maneuver‐window weights concentrate course changes. 
   \item \textbf{Basis fidelity:}  
     Quadratic bases (12–24 control points) capture primary maneuvers with moderate variable counts. Knot refinement and degree elevation localize course changes and reduce speed dips at the expense of larger NLPs. Matching knot spacing and degree to maneuver duration is critical for achieving desired deviation magnitudes.
+  \item \textbf{Computational tractability:}
+    The framework shows promise for real-time replanning, with solve times of 0.5–1.0 s for the double‐integrator model with 12 basis functions. Increasing the number of basis functions and model complexity (e.g., PH Dubins) raises solve times to 5–10 s, which may be too slow for certain scenarios. Remedies include fixing hyperplane normals to expected values, which reduces the MINLP to a MI-SOCP with guaranteed global optimality and faster solve times.
 \end{itemize}
 
-Overall, the results validate that the B-spline MINMPC achieves a practical balance between trajectory quality, COLREGS compliance, and computational tractability in non-convex maritime motion‐planning tasks. However, the reliance on scenario‐specific tuning and the complexity of COLREGS compliance metrics highlight the need for further research into more generalizable, parameter‐free evaluation methods. 
-The primary strength of the B-MINMPC framework lies in its capacity to generate trajectories that adhere to COLREGS through the adjustment of a limited set of parameters, as detailed in \cref{tab:simulation-parameters}. This feature simplifies the development of COLREGS-compliant motion planners by establishing a clear relationship between parameter settings and the resultant trajectory characteristics. Other methods such as \citet{Hagen2018,cho2021colreg,Menges2024} do not rely on such a parameterization, but at the cost of having limited control over the trajectory shape. 
+Overall, the results validate that the B-spline MINMPC achieves a practical balance between trajectory quality and computational tractability in non-convex maritime motion‐planning tasks while facilitating COLREGS compliance through intuitive parameterization. 
+No post-hoc COLREGS metrics are evaluated, as the method is not explicitly designed to enforce rule compliance, and such evaluation would not reflect the algorithm's internal priorities.
+However, the reliance on scenario‐specific tuning and the complexity of COLREGS compliance metrics highlight the need for further research into more generalizable, parameter‐free evaluation methods. 
+The primary strength of the B-MINMPC framework lies in its capacity to generate trajectories that adhere to COLREGS through the adjustment of a limited set of parameters, as detailed in \cref{tab:simulation-parameters}. This feature simplifies the development of COLREGS-compliant motion planners by establishing a clear relationship between parameter settings and the resultant trajectory characteristics. The set of parameters used in sumilations and their corresponding behaviour is shown in \cref{tab:simulation-parameters-summary}. Other methods such as \citet{Hagen2018,cho2021colreg,Menges2024} do not rely on such a parameterization, but at the cost of having limited control over the trajectory shape. 
 Future research will focus on bridging the gap between the human-interpretable COLREGS rules and clear tractable COLREGS-compliant metrics, and using these to further automate the tuning of the B-MINMPC parameters.
 
 

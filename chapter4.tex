@@ -3,7 +3,7 @@
 
 \chapter{B-spline MINMPC}\label{chap:b-spline-minmpc}
 
-This chapter presents a unified framework for \acrfull{MINMPC} based on B‐spline trajectory representations. Ship motion, timing and collision‐avoidance constraints are expressed as polynomial inequalities in the B‐spline coefficients, yielding a smooth, continuous formulation capable of minimum‐time planning under dynamic and COLREGS requirements. Two vessel models are introduced: a spline‐relaxed double‐integrator and a Pythagorean‐hodograph (PH) Dubins model, each producing convex or polynomial constraints on velocity and acceleration. Collision avoidance against multiple targets is enforced via hyperplane separation and a Big–M mixed‐integer approach, allowing port‐ or starboard‐side passage decisions. A structured cost combines reference tracking, maneuver windows, and minimum‐time objectives, leveraging inverse‐Gramian norms to suppress high‐frequency oscillations. The complete MINMPC formulation is implemented in a Python/CasADi library with modular components for own‐ship, target‐ships and reference trajectories. 
+This chapter presents a unified framework for \acrfull{MINMPC} based on B‐spline trajectory representations. Ship motion, timing and collision‐avoidance constraints are expressed as polynomial inequalities in the B‐spline coefficients, yielding a smooth, continuous formulation capable of minimum‐time planning under dynamic and COLREGS requirements. Two vessel models are introduced: a spline‐relaxed double‐integrator and a Pythagorean‐hodograph (PH) Dubins model, each producing convex or polynomial constraints on velocity and acceleration. Collision avoidance against multiple targets is enforced via hyperplane separation and a Big–M mixed‐integer approach, allowing port‐ or starboard‐side passage decisions. A structured cost combines reference tracking, maneuver windows, and minimum‐time objectives, leveraging inverse‐Gramian norms to suppress high‐frequency oscillations. The complete MINMPC formulation is implemented in a Python/CasADi library with modular components for own ship (\acrshort{OS}), target ships (\acrshort{TS}) and reference trajectories. 
 
 The chapter is organized into four parts: (i) dynamic models, (ii) collision constraints, (iii) objective design, and (iv) software implementation.
 
@@ -145,7 +145,7 @@ where $\mathbf p_\text{TS}(t_0)$ is the initial position of the \acrshort{TS} at
 Unfortunately, using time as a variable $t(s)$ in the optimization problem, does not allow for anything other than constant velocity TSs, as the velocity as a function of the parameter $x$ is not a polynomial function of the position parameterized by the actual time passed $t$. In most cases, a constant velocity model is sufficient, as the \acrshort{TS} is usually not maneuvering. However, if a more complex model is needed, the optimization problem can be formulated with the time as a fixed variable, or by parameterizing on $t$ directly instead of $x$. To keep notation consistent, the former is used in this work.
 
 \subsection{Hyperplane Separation Theorem}
-A simple approach to enforce collision constraints between the OS and TS is to apply a minumum distance constraint between the two ships as
+A simple approach to enforce collision constraints between the \acrshort{OS} and \acrshort{TS} is to apply a minumum distance constraint between the two ships as
 \begin{equation}\label{eq:minimum-distance}
     (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}})^\top (\mathbf p_{\text{OS}} - \mathbf p_{\text{TS}}) \geq d_{\text{min}}^2,
 \end{equation}
@@ -238,7 +238,7 @@ In the NLP relaxation of the MINLP (letting $z_j$ be continuous), there is now a
         \caption{Port maneuver ($z_j=0$)}
         \label{fig:non-convex-obstacle-mi-port}
     \end{subfigure}
-    \caption{Visualization of the Big–$M$ collision-avoidance constraints in \cref{eq:colregs-bigM}: the top panel shows a starboard maneuver and the bottom panel a port maneuver. The red/orange polygon represents the target ship (TS) and the blue polygon the own ship (OS). Grey areas indicate infeasible regions (not to scale). The solid line denotes the reference trajectory, while the dashed line depicts the planned trajectory under the current optimization variables.}
+    \caption{Visualization of the Big–$M$ collision-avoidance constraints in \cref{eq:colregs-bigM}: the top panel shows a starboard maneuver and the bottom panel a port maneuver. The red/orange polygon represents the target ship (TS) and the blue polygon the own ship (\acrshort{OS}). Grey areas indicate infeasible regions (not to scale). The solid line denotes the reference trajectory, while the dashed line depicts the planned trajectory under the current optimization variables.}
     \label{fig:non-convex-obstacle-mi}
 \end{figure}
 
@@ -256,7 +256,7 @@ The following section will examine the behavior of the B-spline method when appl
 \begin{figure}
     \centering
     \includesvg[width=\textwidth]{fig/illustrations/cross-track- and along-track- error.svg}
-\caption{Cross-track error (XTE), total track error (TTE) and psuedo cross-track error (PXTE) between an OS $\mathbf p_\text{OS}(t)$ and a reference trajectory $\mathbf p_\text{ref}(t)$. Each identically colored arrow represents the position of $\mathbf p_\text{OS}(t_i)$ and $\mathbf p_\text{ref}(t_i)$ at a given time $t_i$.}
+\caption{Cross-track error (XTE), total track error (TTE) and projected cross-track error (PXTE) between an OS $\mathbf p_\text{OS}(t)$ and a reference trajectory $\mathbf p_\text{ref}(t)$. Each identically colored arrow represents the position of $\mathbf p_\text{OS}(t_i)$ and $\mathbf p_\text{ref}(t_i)$ at a given time $t_i$.}
     \label{fig:cross-track-along-track-error}
 \end{figure}
 
@@ -268,8 +268,7 @@ Literature distinguishes between path following (geometric relations) and trajec
 \end{equation}
 TTE can cause the OS to converge towards a point ahead of the geometrically closest point on the reference trajectory when the OS lags the reference trajectory.
 
-
-A reference‐following metric that balances geometric and temporal alignment is the \acrfull{PXTE}, defined by
+A novel reference‐following metric is proposed to capture both geometric and temporal alignment: the \acrfull{PXTE}, defined by
 \begin{equation}\label{eq:pxte}
   \bar e(t)
   = \mathbf e(t)^\top \mathbf{\hat n}_{\mathrm{ref}}(t),
@@ -338,7 +337,7 @@ See \cref{fig:turn-rate-cost} for an illustration of the problem.
 \begin{figure}
     \centering
     \includesvg[width=0.6\textwidth]{fig/illustrations/Turn rate cost.svg}
-    \caption{Imagined Turn rate cost for a vessel following Rule 8b) of the COLREGS.}
+    \caption{Illustration of non-convex cost as a function of turn rate for a vessel following Rule 8b) of the COLREGS.}
     \label{fig:turn-rate-cost}
 \end{figure}
 
@@ -390,8 +389,8 @@ The B-spline MINMPC is realized as a Python/CasADi library with two layers:
 
 In the subsections that follow the following topics are discussed in detail:
 \begin{enumerate}
-  \item \emph{Operations on B-splines}: differentiation, integration, basis transformations and more (\cref{sec:operations-on-b-splines} to \cref{sec:inner-product}).
-  \item \emph{Cost implementation}: Gramian‐based norms, inverse‐Gramian weighting, maneuver-window costs (\cref{sec:norms,sec:b-spline-norms-as-cost-functions}).
+  \item \emph{Operations on B-splines}: differentiation, integration, basis transformations and more (\cref{sec:operations-on-b-splines} to \cref{sec:multiplication}).
+  \item \emph{Cost implementation}: Gramian‐based norms, inverse‐Gramian weighting, maneuver-window costs (\cref{sec:norms,sec:b-spline-norms-as-cost-functions,sec:nurbs-conversion,sec:summary-b-spline-operations}).
   \item \emph{Python API}: OptiObject/OptiCollection usage for problem setup and solving B-spline based optimization problems (\cref{sec:python-implementation}).
 \end{enumerate}
 
@@ -1057,7 +1056,7 @@ To the authors knowledge, this is the first time that the inverse Gramian has be
 
 
 \FloatBarrier
-\subsection{Rational B-spline expression to NURBS conversion}
+\subsection{Rational B-spline expression to NURBS conversion}\label{sec:nurbs-conversion}
 
 
 To convert a general rational B-spline
